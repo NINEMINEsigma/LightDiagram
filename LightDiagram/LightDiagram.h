@@ -465,23 +465,22 @@ _LFramework_Config_API_Struct ___utype{ size_t ignore; __LFramework_T(Type) cons
 
 #pragma endregion
 
-
 #pragma region Exist (Static)
 
 #define _LFKE_API(var,name)	_LFK_API( Exist_##var )(name)
 #define _LFKE_DEF(var,name)	_LFK_DEF( Exist_##var )(name)
 
-#pragma region Class::Type 
+#pragma region Class::Member
 
-#define _LFramework_Kit_API_Exist_Type_Define(name)										\
-template< typename , typename = void>													\
-struct __exist_type_##name							: std::false_type	{ };			\
-template< typename T >																	\
-struct __exist_type_##name <T,std::void_t<typename T::name>>	: std::true_type	{ };\
-template< typename T > constexpr bool __exist_type_##name##_v = __exist_type_##name<T>();
-#define _LFramework_Kit_API_Exist_Type(name) __exist_type_##name##_v
-#define if_type_exist_def(name)	_LFKE_DEF(Type,name)
-#define if_type_exist(name)		_LFKE_API(Type,name)
+#define _LFramework_Kit_API_Exist_Member_Define(name)											\
+template< typename , typename = void>															\
+_LF_C_API(Struct) __exist_member_##name									: std::false_type	{ };\
+template< typename T >																			\
+_LF_C_API(Struct) __exist_member_##name <T,std::void_t<typename T::name>>	: std::true_type	{ };\
+template< typename T > _LF_C_API(DLL) constexpr bool __exist_member_##name##_v = __exist_member_##name<T>();
+#define _LFramework_Kit_API_Exist_Member(name) __exist_member_##name##_v
+#define if_member_exist_def(name)	_LFKE_DEF(Member,name)
+#define if_member_exist(name)		_LFKE_API(Member,name)
 // if_type_exist(name)<type>
 
 #pragma endregion
@@ -524,44 +523,48 @@ template< typename T, typename MType> constexpr bool __exist_field_##name##_v = 
 
 #pragma region Typen (Define)
 
-struct bad_indicator
-{
-	using tag = void;
-	constexpr static bool value = false;
-};
-template< typename indicator>
-constexpr bool is_bad_indicator_v = std::is_same_v<indicator, bad_indicator>;
-struct empty_indicator
-{
-	using tag = void;
-	constexpr static bool value = true;
-};
-template< typename indicator>
-constexpr bool is_empty_indicator_v = std::is_same_v<indicator, empty_indicator>;
-struct void_indicator
-{
-	using tag = void;
-	constexpr static bool value = false;
-};
-template< typename indicator>
-constexpr bool is_void_indicator_v = std::is_same_v<indicator, void_indicator> || std::is_same_v<indicator, void>;
+#define _LFramework_Indicator_Def(name,_tag,_value)	\
+_LF_C_API(Struct) name##_indicator					\
+{													\
+	using tag = _tag;								\
+	constexpr static bool value = _value;			\
+};													\
+template< typename indicator>						\
+constexpr bool is_##name##_indicator_v = std::is_same_v<indicator, name##_indicator>
+
+_LFramework_Indicator_Def(bad, void, false);
+_LFramework_Indicator_Def(empty, void, false);
+_LFramework_Indicator_Def(void, void, false);
 
 #pragma endregion
 
-#pragma region Traits (Static)
+#pragma region Global
 
-/*
-	build a static temporary memory
-*/
-_LF_T(_T)	_Ret_notnull_	_T* _LF_C_API(DLL)	_LF_C_API(Call)	make_temp_s()
+// case1: T* can cast to C*
+template <template <typename...> class C, typename...Ts>
+std::true_type is_base_of_template_impl(const C<Ts...>*);
+// case2: T* cannot cast to C*
+template <template <typename...> class C>
+std::false_type is_base_of_template_impl(...);
+
+template <template <typename...> class C, typename T>
+using is_base_of_template = decltype(is_base_of_template_impl<C>(std::declval<T*>()));
+
+template < bool value, typename _True, typename _False> struct choose_type;
+template < typename _True, typename _False>
+struct choose_type<true, _True, _False>
 {
-	static _T* self = new _T();
-	_LF_if_exist(_T, Init)
-	{
-		self->Init();
-	}
-	return self;
-}
+	using tag = _True;
+	constexpr static bool value = true;
+};
+template < typename _True, typename _False>
+struct choose_type < false, _True, _False >
+{
+	using tag = _False;
+	constexpr static bool value = false;
+};
+
+#pragma endregion
 
 #pragma region type_indicator
 
@@ -569,7 +572,7 @@ template<typename First, typename ...Args> struct type_list;
 template<typename T> constexpr bool is_type_indicator(typename T::type_indicator*);
 template<typename T> constexpr bool is_type_indicator(...);
 template<typename T> constexpr bool is_type_list_end();
-template<typename T> constexpr bool is_indicator_typen(typename T::tag* t, bool v);
+template<typename T> constexpr bool is_indicator_typen(typename T::tag * t, bool v);
 template<typename T> constexpr bool is_indicator_typen(...);
 template<typename L, int pos> struct type_decltype;
 
@@ -581,7 +584,7 @@ struct type_list<void>
 {
 	using tag = bad_indicator;
 	constexpr static bool value = false;
-	using type_indicator = void_indicator;
+	using type_indicator = tag;
 	template<typename T>
 	constexpr static int is_type_list_contains(size_t pos)
 	{
@@ -607,7 +610,7 @@ struct type_list<Last>
 	};
 
 	template<typename Default, typename T>
-	using decltype_type = typename choose_type<!is_type_list_contains_detect<is_type_list_contains<T>(0)>, Default, T>::type;
+	using decltype_type = typename choose_type<!is_type_list_contains_detect<is_type_list_contains<T>(0)>, Default, T>::tag;
 };
 template<typename First, typename ...Args>
 struct type_list
@@ -625,10 +628,8 @@ struct type_list
 	};
 
 	template<typename Default, typename T>
-	using decltype_type = typename choose_type<!is_type_list_contains_detect<is_type_list_contains<T>(0)>, Default, T>::type;
+	using decltype_type = typename choose_type<!is_type_list_contains_detect<is_type_list_contains<T>(0)>, Default, T>::tag;
 };
-template<typename First, typename ...Args>
-using args_list = type_list<First, Args...>;
 template<typename T>
 constexpr bool is_type_indicator(typename T::type_indicator*) { return true; }
 template<typename T>
@@ -636,7 +637,7 @@ constexpr bool is_type_indicator(...) { return false; }
 template<typename T>
 constexpr bool is_type_list_end() { return !std::is_same_v<typename T::type_indicator, VoidType>; }
 template<typename T>
-constexpr bool is_indicator_typen(typename T::tag* t, bool v = T::value) { return true; }
+constexpr bool is_indicator_typen(typename T::tag * t, bool v = T::value) { return true; }
 template<typename T>
 constexpr bool is_indicator_typen(...) { return false; }
 
@@ -667,6 +668,8 @@ struct type_decltype
 
 #pragma endregion
 
+#pragma region Traits (Static)
+
 template<typename _T> _LF_C_API(Struct)	check_type			:std::true_type{};
 template<> _LF_C_API(Struct)			check_type<void>	:std::false_type{};
 
@@ -679,7 +682,7 @@ template<typename _T> _LF_C_API(Struct) function_traits
 {
 	_LFramework_Kit_API_StaticOperatorBool(false);
 	using result = bad_indicator;
-	using parameters = args_list<bad_indicator>;
+	using parameters = type_list<bad_indicator>;
 	using belong = empty_indicator;
 };
 
@@ -690,7 +693,7 @@ template<typename Ret, typename... Args> _LF_C_API(Struct) function_traits<Ret(*
 {
 	_LFramework_Kit_API_StaticOperatorBool(true);
 	using result = Ret;
-	using parameters = args_list<Args...>;
+	using parameters = type_list<Args...>;
 	using belong = empty_indicator;
 };
 
@@ -701,7 +704,7 @@ template<typename Ret, typename C, typename... Args> _LF_C_API(Struct) function_
 {
 	_LFramework_Kit_API_StaticOperatorBool(true);
 	using result = Ret;
-	using parameters = args_list<Args...>;
+	using parameters = type_list<Args...>;
 	using belong = C;
 };
 
@@ -712,7 +715,7 @@ template<typename Ret, typename C, typename... Args> _LF_C_API(Struct) function_
 {
 	_LFramework_Kit_API_StaticOperatorBool(true);
 	using result = Ret;
-	using parameters = args_list<Args...>;
+	using parameters = type_list<Args...>;
 	using belong = C;
 };
 
@@ -733,103 +736,22 @@ template<typename func>
 _LF_C_API(Class) function_info
 {
 public:
-	function_info(const func& func_ptr) :invoker(func_ptr)
-	{
-
-	}
+	function_info(const func & func_ptr) :invoker(func_ptr) {}
 
 	using tag = func;
 	constexpr static bool value = true;
-
+	
 	using traits = function_traits_ex<func>;
 	using result = typename traits::result;
 	using parameters = typename traits::parameters;
 	using belong = typename traits::belong;
-	const func& invoker;
 
-	template<typename Arg, typename ...Args>
-	result	_LF_C_API(Call)	_LF_C_API(DLL)	Invoke(belong * trigger, Arg arg, Args... args)
-	{
-		if constexpr (!std::is_same_v<parameters, args_list<empty_indicator>>)
-		{
-			_LFramework_Report_Error(false, "Args which needed is empty");
-			LF_return(is_void_indicator_v(result))* make_temp_s<result>();
-		}
-		else if constexpr (!std::is_same_v<parameters, args_list<Arg, Args...>>)
-		{
-			Check<parameters, Arg, Args...>();
-			LF_return(is_void_indicator_v(result))* make_temp_s<result>();
-		}
-		else if constexpr (!_LFramework_Kit_API_Exist_Type(belong, ___type_void_tag))
-		{
-			if constexpr (is_void_indicator_v(result))
-			{
-				(*invoker)(arg, args...);
-			}
-			else
-			{
-				return (*invoker)(arg, args...);
-			}
-		}
-		else
-		{
-			return ((*trigger)(*invoker))(arg, args...);
-		}
-	}
-	result	_LF_C_API(Call)	_LF_C_API(DLL)	Invoke(belong* trigger)
-	{
-		if constexpr (!is_void_indicator_v(parameters::arg_type))
-		{
-			_LFramework_Report_Error(false, "Args which needed is not empty");
-			LF_return(!is_void_indicator_v(result))* make_temp_s<result>();
-		}
-		else if constexpr (!_LFramework_Kit_API_Exist_Type(belong, ___type_void_tag))
-		{
-			LF_return(!is_void_indicator_v(result)) (*invoker)();
-			(*invoker)();
-		}
-		else
-		{
-			LF_return(!is_void_indicator_v(result)) ((*trigger)(*invoker))();
-			return ((*trigger)(*invoker))();
-		}
-	}
+	const func& invoker;
 private:
 
 };
 
 #pragma endregion
-
-
-
-#pragma region Global
-
-// case1: T* can cast to C*
-template <template <typename...> class C, typename...Ts>
-std::true_type is_base_of_template_impl(const C<Ts...>*);
-// case2: T* cannot cast to C*
-template <template <typename...> class C>
-std::false_type is_base_of_template_impl(...);
-
-template <template <typename...> class C, typename T>
-using is_base_of_template = decltype(is_base_of_template_impl<C>(std::declval<T*>()));
-
-template < bool value, typename _True, typename _False> struct choose_type;
-template < typename _True, typename _False>
-struct choose_type<true, _True, _False>
-{
-	using tag = _True;
-	constexpr static bool value = true;
-};
-template < typename _True, typename _False> 
-struct choose_type < false, _True, _False >
-{
-	using tag = _False;
-	constexpr static bool value = false;
-};
-
-#pragma endregion
-
 
 class ld_test
 {

@@ -5,18 +5,7 @@
 
 using namespace std;
 
-template<int index, class FuntionType>
-struct ArgTypeAt;
-    template<class ResultType, class FirstArgType, class... ArgsType>                  
-	struct ArgTypeAt<0, ResultType _stdcall(FirstArgType, ArgsType...)>
-	{
-		using type = FirstArgType;
-	};
-    template<int index, class ResultType, class FirstArgType, class... ArgsType>       
-	struct ArgTypeAt<index, ResultType _stdcall(FirstArgType, ArgsType...)>
-	{
-		using type = typename ArgTypeAt<index - 1, ResultType _stdcall(ArgsType...)>::type;
-	};
+if_member_exist_def(tagx);
 
 class test
 {
@@ -36,7 +25,7 @@ int _stdcall sub(int a, double b)
 int main()
 {
 	ld_test();
-	cout << typeid(function_traits_ex<decltype(sub)>).name() << "\n";
+	cout << if_member_exist(add)<test> << "\n";
 	cout << "awake success\n";
 	for (int i = 0, e = 100; i <= e; i++)
 	{
