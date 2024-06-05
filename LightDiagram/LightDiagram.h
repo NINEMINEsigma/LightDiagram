@@ -404,9 +404,11 @@ public:
 #define __LFramework_T(name)					template<typename name>
 #define _LFramework_Config_API_Template(name)	__LFramework_T(_T) name
 
-#define _LF_C_(name)							_LFramework_Config_##name
+#define _LF_(name)								_LFramework_##name
+#define _LF_C_(name)							_LF_( Config_##name )
 #define _LF_C_API(name)							_LF_C_( API_##name )
 #define _LF_C_API_T_(name)						_LFramework_Config_API_Template(name)
+#define _LF_API(name)							_LF_( API_##name )
 
 #define _LF_T(name)								__LFramework_T(name)
 #define _LF__T(name)							__LFramework_T( _##name )
@@ -484,15 +486,14 @@ _LF_C_API(Struct) choose_type < false, _True, _False >
 	constexpr static bool value = false;
 };
 
+_LFramework_Interface(any_class);
+
 #pragma endregion
 
 #pragma region Kit
 
 #define _LFK_API(name)	_LFramework_Kit_API_##name
 #define _LFK_DEF(name)	_LFramework_Kit_API_##name##_Define
-
-template<typename Result,typename... Args>
-Result ToString(Args... args);
 
 #pragma endregion
 
@@ -574,10 +575,55 @@ _LFramework_Indicator_Def(unknown, void, false);
 _LFramework_Indicator_Def(_cdecl, void, true);
 _LFramework_Indicator_Def(_stdcall, void, false);
 _LFramework_Indicator_Def(_fastcall, void, false);
+_LFramework_Indicator_Def(__thiscall, void, false);
 _LFramework_Indicator_Def(global, void, false);
 _LFramework_Indicator_Def(const, void, true);
 _LFramework_Indicator_Def(unconst, void, false);
 _LFramework_Indicator_Def(template_fill, void, false);
+_LFramework_Indicator_Def(key, void, true);
+
+#pragma region LDType
+
+if_field_exist_def(value);
+if_type_exist_def(integral_indicator);
+if_type_exist_def(floating_point_indicator);
+if_type_exist_def(unsigned_indicator);
+
+#define _LFramework_IsType(name,T)\
+std::is_##name##_v<T> || if_type_exist( name##_indicator ) < T >
+
+template<typename T>
+_LF_C_API(Struct) LDType_Number
+{
+	//	is integral number
+	constexpr static bool is_int = _LF_(IsType)(integral, T);
+	//	is floating point number
+	constexpr static bool is_flp = _LF_(IsType)(floating_point, T);
+	//	is un-signed
+	constexpr static bool is_uns = _LF_(IsType)(unsigned, T);
+	//	is likely number
+	constexpr static bool is_ind = if_type_exist(integral_indicator) < T > || if_type_exist(floating_point_indicator) < T > ;
+	//	is number
+	constexpr static bool is_num = is_int || is_flp;
+
+	using tag = T;
+	constexpr static bool value = is_num;
+	using type_indicator = key_indicator;
+};
+
+template<typename T>
+_LF_C_API(Struct) LDType
+{
+	//	number type state
+	using tag_num = LDType_Number<T>;
+
+	using tag = T;
+	constexpr static bool value = true;
+	using type_indicator = key_indicator;
+};
+
+#pragma endregion
+
 
 #pragma endregion
 
@@ -711,18 +757,6 @@ template<typename _T> _LF_C_API(Struct) function_traits
 /*
 	get regular function information
 */
-template<typename Ret, typename... Args> _LF_C_API(Struct) function_traits<Ret(_stdcall*)(Args...)>
-{
-	_LFramework_Kit_API_StaticOperatorBool(true);
-	using tag = Ret(_stdcall*)(Args...);
-	constexpr static bool value = true;
-
-	using result = Ret;
-	using parameters = type_list<Args...>;
-	using belong = global_indicator;
-	using call = _stdcall_indicator;
-	using consting = unconst_indicator;
-};
 template<typename Ret, typename... Args> _LF_C_API(Struct) function_traits<Ret(_cdecl*)(Args...)>
 {
 	_LFramework_Kit_API_StaticOperatorBool(true);
@@ -733,6 +767,19 @@ template<typename Ret, typename... Args> _LF_C_API(Struct) function_traits<Ret(_
 	using parameters = type_list<Args...>;
 	using belong = global_indicator;
 	using call = _cdecl_indicator;
+	using consting = unconst_indicator;
+};
+#ifndef _WIN64
+template<typename Ret, typename... Args> _LF_C_API(Struct) function_traits<Ret(_stdcall*)(Args...)>
+{
+	_LFramework_Kit_API_StaticOperatorBool(true);
+	using tag = Ret(_stdcall*)(Args...);
+	constexpr static bool value = true;
+
+	using result = Ret;
+	using parameters = type_list<Args...>;
+	using belong = global_indicator;
+	using call = _stdcall_indicator;
 	using consting = unconst_indicator;
 };
 template<typename Ret, typename... Args> _LF_C_API(Struct) function_traits<Ret(_fastcall*)(Args...)>
@@ -747,22 +794,12 @@ template<typename Ret, typename... Args> _LF_C_API(Struct) function_traits<Ret(_
 	using call = _fastcall_indicator;
 	using consting = unconst_indicator;
 };
+#endif // !_WIN64
+
 
 /*
 	get const member function information
 */
-template<typename Ret, typename C, typename... Args> _LF_C_API(Struct) function_traits<Ret(_stdcall C::*)(Args...) const>
-{
-	_LFramework_Kit_API_StaticOperatorBool(true);
-	using tag = Ret(_stdcall C::*)(Args...) const;
-	constexpr static bool value = true;
-
-	using result = Ret;
-	using parameters = type_list<Args...>;
-	using belong = C;
-	using call = _stdcall_indicator;
-	using consting = const_indicator;
-};
 template<typename Ret, typename C, typename... Args> _LF_C_API(Struct) function_traits<Ret(_cdecl C::*)(Args...) const>
 {
 	_LFramework_Kit_API_StaticOperatorBool(true);
@@ -773,6 +810,19 @@ template<typename Ret, typename C, typename... Args> _LF_C_API(Struct) function_
 	using parameters = type_list<Args...>;
 	using belong = C;
 	using call = _cdecl_indicator;
+	using consting = const_indicator;
+};
+#ifndef _WIN64
+template<typename Ret, typename C, typename... Args> _LF_C_API(Struct) function_traits<Ret(_stdcall C::*)(Args...) const>
+{
+	_LFramework_Kit_API_StaticOperatorBool(true);
+	using tag = Ret(_stdcall C::*)(Args...) const;
+	constexpr static bool value = true;
+
+	using result = Ret;
+	using parameters = type_list<Args...>;
+	using belong = C;
+	using call = _stdcall_indicator;
 	using consting = const_indicator;
 };
 template<typename Ret, typename C, typename... Args> _LF_C_API(Struct) function_traits<Ret(_fastcall C::*)(Args...) const>
@@ -787,22 +837,24 @@ template<typename Ret, typename C, typename... Args> _LF_C_API(Struct) function_
 	using call = _fastcall_indicator;
 	using consting = const_indicator;
 };
-
-/*
-	get unconst member function information
-*/
-template<typename Ret, typename C, typename... Args> _LF_C_API(Struct) function_traits<Ret(_stdcall C::*)(Args...)>
+template<typename Ret, typename C, typename... Args> _LF_C_API(Struct) function_traits<Ret(__thiscall C::*)(Args...) const>
 {
 	_LFramework_Kit_API_StaticOperatorBool(true);
-	using tag = Ret(_stdcall C::*)(Args...);
+	using tag = Ret(__thiscall C::*)(Args...) const;
 	constexpr static bool value = true;
 
 	using result = Ret;
 	using parameters = type_list<Args...>;
 	using belong = C;
-	using call = _stdcall_indicator;
-	using consting = unconst_indicator;
+	using call = __thiscall_indicator;
+	using consting = const_indicator;
 };
+#endif // !_WIN64
+
+
+/*
+	get unconst member function information
+*/
 template<typename Ret, typename C, typename... Args> _LF_C_API(Struct) function_traits<Ret(_cdecl C::*)(Args...)>
 {
 	_LFramework_Kit_API_StaticOperatorBool(true);
@@ -813,6 +865,19 @@ template<typename Ret, typename C, typename... Args> _LF_C_API(Struct) function_
 	using parameters = type_list<Args...>;
 	using belong = C;
 	using call = _cdecl_indicator;
+	using consting = unconst_indicator;
+};
+#ifndef _WIN64
+template<typename Ret, typename C, typename... Args> _LF_C_API(Struct) function_traits<Ret(_stdcall C::*)(Args...)>
+{
+	_LFramework_Kit_API_StaticOperatorBool(true);
+	using tag = Ret(_stdcall C::*)(Args...);
+	constexpr static bool value = true;
+
+	using result = Ret;
+	using parameters = type_list<Args...>;
+	using belong = C;
+	using call = _stdcall_indicator;
 	using consting = unconst_indicator;
 };
 template<typename Ret, typename C, typename... Args> _LF_C_API(Struct) function_traits<Ret(_fastcall C::*)(Args...)>
@@ -827,30 +892,41 @@ template<typename Ret, typename C, typename... Args> _LF_C_API(Struct) function_
 	using call = _fastcall_indicator;
 	using consting = unconst_indicator;
 };
-
-template<typename traits>
-std::string ToString<std::string,typename traits::tag>()
-{
-	return typeid(typename traits::tag).name();
-}
+#endif // !_WIN64
 
 /*
 	get regular function information
 */
-template<typename T, typename = template_fill_indicator> _LF_C_API(Struct) function_traits_ex : public function_traits<T>{};
-
+template<typename T, typename = template_fill_indicator> _LF_C_API(Struct) function_traits_ex : public function_traits<T>
+{
+	using function_traits_indicator = void;
+};
 /*
 	get lambda or Functor information
 */
 template<typename Lambda>
-_LF_C_API(Struct) function_traits_ex<Lambda, std::void_t<decltype(&Lambda::operator())>> : public function_traits<decltype(&Lambda::operator())>{};
+_LF_C_API(Struct) function_traits_ex<Lambda, std::void_t<decltype(&Lambda::operator())>> : public function_traits<decltype(&Lambda::operator())>
+{
+	using function_traits_indicator = void;
+};
 
 #pragma endregion
 
 #define LF_not_void_return(cond)			LF_return(is_bad_indicator_v<cond>)
 
+#pragma region function_info
+
+_LF_C_API(Class)	function_base:	_LF_Inherited(any_class)
+{
+public:
+
+private:
+	const char* name;
+	const type_info& _type;
+};
+
 template<typename func>
-_LF_C_API(Class) function_info
+_LF_C_API(Class)	function_info:	_LF_Inherited(function_base), _LF_Inherited(any_class)
 {
 public:
 	function_info(const func & func_ptr) :invoker(func_ptr) {}
@@ -867,6 +943,8 @@ public:
 private:
 
 };
+
+#pragma endregion
 
 #pragma endregion
 
