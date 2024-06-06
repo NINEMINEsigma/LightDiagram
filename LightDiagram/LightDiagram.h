@@ -585,6 +585,7 @@ _LFramework_Indicator_Def(key, void, true);
 #pragma region LDType
 
 if_field_exist_def(value);
+if_type_exist_def(tag);
 if_type_exist_def(integral_indicator);
 if_type_exist_def(floating_point_indicator);
 if_type_exist_def(unsigned_indicator);
@@ -609,6 +610,13 @@ _LF_C_API(Struct) LDType_Number
 	using tag = T;
 	constexpr static bool value = is_num;
 	using type_indicator = key_indicator;
+};
+
+template<typename T>
+_LF_C_API(Struct) LDType_Indicator
+{
+	//	is indicator type
+	constexpr static bool is_idc = if_type_exist(tag) < T > && if_field_exist(value) < T > ;
 };
 
 template<typename T>
