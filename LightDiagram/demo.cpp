@@ -19,6 +19,7 @@ public:
 int main()
 {
 	ld_test();
-	cout << typeid(function_traits_ex<decltype(&test::add)>).name() << "\n";
-	cout << typeid(function_traits_ex<decltype(&test::add)>::call).name();
+	auto finfo = function_info(&test::add, "add");
+	cout << finfo.read_name() << "\n";
+	cout << finfo.read_type().name();
 }

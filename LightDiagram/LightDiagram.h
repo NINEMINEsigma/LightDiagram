@@ -486,7 +486,13 @@ _LF_C_API(Struct) choose_type < false, _True, _False >
 	constexpr static bool value = false;
 };
 
-_LFramework_Interface(any_class);
+_LF_C_API(Class)	function_base;
+_LF_C_API(Class)	any_class
+{
+public: 
+	virtual ~any_class() {}
+private:
+};
 
 #pragma endregion
 
@@ -924,20 +930,30 @@ _LF_C_API(Struct) function_traits_ex<Lambda, std::void_t<decltype(&Lambda::opera
 
 #pragma region function_info
 
-_LF_C_API(Class)	function_base:	_LF_Inherited(any_class)
+_LF_C_API(Class)	
+function_base:	_LF_Inherited(any_class)
 {
 public:
-
+	function_base(const char* symbol_name, const type_info & symbol_type) :name(symbol_name), _type(symbol_type) {}
+	const char* read_name() const
+	{
+		return name;
+	}
+	const type_info& read_type() const
+	{
+		return _type;
+	}
 private:
 	const char* name;
 	const type_info& _type;
 };
 
 template<typename func>
-_LF_C_API(Class)	function_info:	_LF_Inherited(function_base), _LF_Inherited(any_class)
+_LF_C_API(Class)	
+function_info:	_LF_Inherited(function_base), _LF_Inherited(any_class)
 {
 public:
-	function_info(const func & func_ptr) :invoker(func_ptr) {}
+	function_info(const func& func_ptr, const char* function_name) :invoker(func_ptr), function_base(function_name, typeid(func_ptr)) {}
 
 	using tag = func;
 	constexpr static bool value = true;
