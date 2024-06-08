@@ -489,7 +489,7 @@ _LF_C_API(Struct) choose_type < false, _True, _False >
 _LF_C_API(Class)	function_base;
 _LF_C_API(Class)	any_class
 {
-public: 
+public:
 	virtual ~any_class() {}
 private:
 };
@@ -587,6 +587,7 @@ _LFramework_Indicator_Def(const, void, true);
 _LFramework_Indicator_Def(unconst, void, false);
 _LFramework_Indicator_Def(template_fill, void, false);
 _LFramework_Indicator_Def(key, void, true);
+_LFramework_Indicator_Def(string, std::string, true);
 
 #pragma region LDType
 
@@ -644,18 +645,18 @@ _LF_C_API(Struct) LDType
 #pragma region type_indicator
 
 template<typename First, typename ...Args> struct type_list;
-template<typename T> constexpr bool is_type_indicator(typename T::type_indicator*);
-template<typename T> constexpr bool is_type_indicator(...);
-template<typename T> constexpr bool is_type_list_end();
-template<typename T> constexpr bool is_indicator_typen(typename T::tag * t, bool v);
-template<typename T> constexpr bool is_indicator_typen(...);
-template<typename L, int pos> struct type_decltype;
+template<typename T> constexpr bool _LF_C_API(DLL) is_type_indicator(typename T::type_indicator*);
+template<typename T> constexpr bool _LF_C_API(DLL) is_type_indicator(...);
+template<typename T> constexpr bool _LF_C_API(DLL) is_type_list_end();
+template<typename T> constexpr bool _LF_C_API(DLL) is_indicator_typen(typename T::tag* t, bool v);
+template<typename T> constexpr bool _LF_C_API(DLL) is_indicator_typen(...);
+template<typename L, int pos>  _LF_C_API(Struct)  type_decltype;
 
 template<int index> constexpr bool is_type_list_contains_detect = true;
-template<> constexpr bool is_type_list_contains_detect<-1> = false;
+template<> constexpr bool _LF_C_API(DLL) is_type_list_contains_detect<-1> = false;
 
 template<>
-struct type_list<void>
+_LF_C_API(Struct) type_list<void>
 {
 	using tag = bad_indicator;
 	constexpr static bool value = false;
@@ -670,7 +671,7 @@ struct type_list<void>
 	using decltype_type = Default;
 };
 template<typename Last>
-struct type_list<Last>
+_LF_C_API(Struct) type_list<Last>
 {
 	using tag = Last;
 	constexpr static bool value = true;
@@ -688,7 +689,7 @@ struct type_list<Last>
 	using decltype_type = typename choose_type<!is_type_list_contains_detect<is_type_list_contains<T>(0)>, Default, T>::tag;
 };
 template<typename First, typename ...Args>
-struct type_list
+_LF_C_API(Struct) type_list
 {
 	using tag = First;
 	constexpr static bool value = true;
@@ -706,40 +707,61 @@ struct type_list
 	using decltype_type = typename choose_type<!is_type_list_contains_detect<is_type_list_contains<T>(0)>, Default, T>::tag;
 };
 template<typename T>
-constexpr bool is_type_indicator(typename T::type_indicator*) { return true; }
+constexpr bool _LF_C_API(DLL) is_type_indicator(typename T::type_indicator*) { return true; }
 template<typename T>
-constexpr bool is_type_indicator(...) { return false; }
+constexpr bool _LF_C_API(DLL) is_type_indicator(...) { return false; }
 template<typename T>
-constexpr bool is_type_list_end() { return !std::is_same_v<typename T::type_indicator, VoidType>; }
+constexpr bool _LF_C_API(DLL) is_type_list_end() { return !std::is_same_v<typename T::type_indicator, VoidType>; }
 template<typename T>
-constexpr bool is_indicator_typen(typename T::tag * t, bool v = T::value) { return true; }
+constexpr bool _LF_C_API(DLL) is_indicator_typen(typename T::tag* t, bool v = T::value) { return true; }
 template<typename T>
-constexpr bool is_indicator_typen(...) { return false; }
+constexpr bool _LF_C_API(DLL) is_indicator_typen(...) { return false; }
 
 template<typename L>
-struct type_decltype<L, -2>
+_LF_C_API(Struct) type_decltype<L, -2>
 {
 	using tag = bad_indicator;
 	constexpr static bool value = false;
 };
 template<typename L>
-struct type_decltype<L, -1>
+_LF_C_API(Struct) type_decltype<L, -1>
 {
 	using tag = bad_indicator;
 	constexpr static bool value = false;
 };
 template<typename L>
-struct type_decltype<L, 0>
+_LF_C_API(Struct) type_decltype<L, 0>
 {
 	using tag = typename L::tag;
 	constexpr static bool value = true;
 };
 template<typename L, int pos>
-struct type_decltype
+_LF_C_API(Struct) type_decltype
 {
 	using tag = typename type_decltype<typename L::type_indicator, pos - 1>::tag;
 	constexpr static bool value = true;
 };
+
+template<typename type_list_type, bool _IsF = true> const string_indicator::tag& _LF_C_API(DLL) get_type_list_string()
+{
+	if constexpr (std::is_same_v<type_list_type, type_list<void>>)
+	{
+		return "";
+	}
+	else
+	{
+		if constexpr (_IsF)
+		{
+			static string_indicator::tag str(string_indicator::tag(typeid(typename type_list_type::tag).name()) + get_type_list_string<typename type_list_type::type_indicator, false>());
+			return str;
+		}
+		else
+		{
+			static string_indicator::tag str(string_indicator::tag(",") + typeid(typename type_list_type::tag).name() + get_type_list_string<typename type_list_type::type_indicator, false>());
+			return str;
+		}
+	}
+}
 
 #pragma endregion
 
@@ -747,6 +769,33 @@ struct type_decltype
 
 template<typename _T> _LF_C_API(Struct)	check_type			:std::true_type{};
 template<> _LF_C_API(Struct)			check_type<void>	:std::false_type{};
+//using type_info = std::type_info;
+
+_LF_C_API(Class)
+any_trait_base:	_LF_Inherited(any_class)
+{
+public:
+	using string = typename string_indicator::tag;
+
+	any_trait_base(const string& func_name, const type_info& symbol_type) :
+		name(func_name),
+		_type(symbol_type) {}
+	const string& read_name() const
+	{
+		return name;
+	}
+	const type_info& read_type() const
+	{
+		return _type;
+	}
+	auto read_hash() const
+	{
+		return _type.hash_code();
+	}
+private:
+	string name;
+	const type_info& _type;
+};
 
 #define _LFramework_Kit_API_StaticOperatorBool(boolen)	operator bool() { return boolen ; }
 
@@ -930,43 +979,98 @@ _LF_C_API(Struct) function_traits_ex<Lambda, std::void_t<decltype(&Lambda::opera
 
 #pragma region function_info
 
-_LF_C_API(Class)	
+_LF_C_API(Class) function_base;
+template<typename func> _LF_C_API(Class) function_info;
+
+_LF_C_API(Class)
 function_base:	_LF_Inherited(any_class)
 {
 public:
-	function_base(const char* symbol_name, const type_info & symbol_type) :name(symbol_name), _type(symbol_type) {}
-	const char* read_name() const
+	template<typename func>
+	friend const function_info<func>& create_or_get_function_info();
+
+	using string = typename string_indicator::tag;
+
+	function_base(const char* symbol_name, const string & func_name, const type_info & symbol_type) :
+		func_single_name(symbol_name),
+		name(func_name),
+		_type(symbol_type) {}
+	const string& read_name() const
 	{
 		return name;
+	}
+	const char* read_func_name() const
+	{
+		return func_single_name;
 	}
 	const type_info& read_type() const
 	{
 		return _type;
 	}
+	auto read_hash() const
+	{
+		return _type.hash_code();
+	}
+
+	using function_bases_type = std::map<decltype(std::declval<function_base>().read_hash()), function_base>;
 private:
-	const char* name;
+	const char* func_single_name;
+	string name;
 	const type_info& _type;
+	static function_bases_type function_bases;
 };
 
+function_base::function_bases_type function_base::function_bases;
+
 template<typename func>
-_LF_C_API(Class)	
+_LF_C_API(Class)
 function_info:	_LF_Inherited(function_base), _LF_Inherited(any_class)
 {
 public:
-	function_info(const func& func_ptr, const char* function_name) :invoker(func_ptr), function_base(function_name, typeid(func_ptr)) {}
+	using string = typename string_indicator::tag;
 
 	using tag = func;
 	constexpr static bool value = true;
-	
+
 	using traits = function_traits_ex<func>;
 	using result = typename traits::result;
 	using parameters = typename traits::parameters;
 	using belong = typename traits::belong;
 
+	function_info(const func& func_ptr, const char* function_name) :
+		function_base(function_name,
+			string(typeid(result).name()) + " [" + typeid(belong).name() + "]::" + function_name + "(" + get_type_list_string<parameters>() + ")",
+			typeid(func)),
+		invoker(func_ptr) {}
 	const func& invoker;
 private:
 
 };
+
+template<typename func>
+const function_info<func>& _LF_C_API(DLL) create_or_get_function_info(const func& func_ptr, const char* function_name)
+{
+	if (!function_base::function_bases.count(typeid(func).hash_code()))
+	{
+		function_base::function_bases[typeid(func).hash_code] = function_info(func_ptr, function_name);
+	}
+	return function_base::function_bases[typeid(func).hash_code];
+}
+
+namespace kit
+{
+	namespace traits
+	{
+		namespace function
+		{
+			template<typename func>
+			const function_info<func>& _LF_C_API(DLL) make_function_info(const func& func_ptr, const char* function_name)
+			{
+				return create_or_get_function_info(func_ptr, function_name);
+			}
+		}
+	}
+}
 
 #pragma endregion
 
