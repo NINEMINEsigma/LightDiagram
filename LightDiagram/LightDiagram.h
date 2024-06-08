@@ -486,6 +486,12 @@ _LF_C_API(Struct) choose_type < false, _True, _False >
 	constexpr static bool value = false;
 };
 
+namespace kit
+{
+	template < bool value, typename _True, typename _False> using choose_type = ::choose_type<value, _True, _False>;
+
+}
+
 _LF_C_API(Class)	function_base;
 _LF_C_API(Class)	any_class
 {
@@ -561,6 +567,22 @@ template< typename T, typename MType> _LF_C_API(DLL) constexpr bool __exist_fiel
 
 #pragma endregion
 
+#pragma region Class::Property
+
+#define _LFramework_Kit_API_Exist_Property_Define(name)																		\
+template< typename, typename, typename = void > _LF_C_API(Struct) __exist_property_##name : std::false_type { };			\
+template< typename T, typename MType> _LF_C_API(Struct) __exist_property_##name<											\
+	T,																														\
+	MType,																													\
+	typename std::enable_if<std::is_same_v<decltype(T:: name ), MType>>::type>												\
+	: std::true_type { };																									\
+template< typename T, typename MType> _LF_C_API(DLL) constexpr bool __exist_property_##name##_v = __exist_property_##name<T, MType>();
+#define _LFramework_Kit_API_Exist_Property(name)	__exist_property_##name##_v
+#define if_property_exist_def(name)	_LFKE_DEF(Property,name)
+#define if_property_exist(name)		_LFKE_API(Property,name)
+
+#pragma endregion
+
 #pragma endregion
 
 #pragma region Typen (Define)
@@ -583,25 +605,46 @@ _LFramework_Indicator_Def(_stdcall, void, false);
 _LFramework_Indicator_Def(_fastcall, void, false);
 _LFramework_Indicator_Def(__thiscall, void, false);
 _LFramework_Indicator_Def(global, void, false);
+_LFramework_Indicator_Def(namespace, void, false);
 _LFramework_Indicator_Def(const, void, true);
 _LFramework_Indicator_Def(unconst, void, false);
 _LFramework_Indicator_Def(template_fill, void, false);
 _LFramework_Indicator_Def(key, void, true);
 _LFramework_Indicator_Def(string, std::string, true);
 
+#define __Global_Space
+
 #pragma region LDType
 
-if_field_exist_def(value);
+if_property_exist_def(value);
 if_type_exist_def(tag);
 if_type_exist_def(integral_indicator);
 if_type_exist_def(floating_point_indicator);
 if_type_exist_def(unsigned_indicator);
+if_type_exist_def(type_indicator)
 
 #define _LFramework_IsType(name,T)\
 std::is_##name##_v<T> || if_type_exist( name##_indicator ) < T >
 
+template<typename T>	_LF_C_API(Struct)	LDType;
+template<typename T>	_LF_C_API(Struct)	LDType_Number;
+template<typename T>	_LF_C_API(Struct)	LDType_Indicator;
+
 template<typename T>
-_LF_C_API(Struct) LDType_Number
+_LF_C_API(Struct) LDType
+{
+	//	number type state
+	using tag_num = LDType_Number<T>;
+	//	indicator type state
+	using tag_idc = LDType_Indicator<T>;
+
+	using tag = T;
+	constexpr static bool value = true;
+	using type_indicator = key_indicator;
+};
+
+template<typename T>
+_LF_C_API(Struct)  LDType_Number
 {
 	//	is integral number
 	constexpr static bool is_int = _LF_(IsType)(integral, T);
@@ -623,14 +666,13 @@ template<typename T>
 _LF_C_API(Struct) LDType_Indicator
 {
 	//	is indicator type
-	constexpr static bool is_idc = if_type_exist(tag) < T > && if_field_exist(value) < T > ;
-};
-
-template<typename T>
-_LF_C_API(Struct) LDType
-{
-	//	number type state
-	using tag_num = LDType_Number<T>;
+	constexpr static bool is_idc = if_type_exist(tag) < T > && if_property_exist(value) < T > ;
+	//	is key indicator
+	constexpr static bool is_key = std::is_same_v<T, key_indicator>;
+	//	is type indicator
+	constexpr static bool is_tid = if_type_exist(type_indicator) < T > ;
+	//	is pseudo indicator(contain indicator element)
+	constexpr static bool is_pse = if_type_exist(tag) < T > != if_property_exist(value) < T > ;
 
 	using tag = T;
 	constexpr static bool value = true;
@@ -638,7 +680,6 @@ _LF_C_API(Struct) LDType
 };
 
 #pragma endregion
-
 
 #pragma endregion
 
@@ -746,7 +787,8 @@ template<typename type_list_type, bool _IsF = true> const string_indicator::tag&
 {
 	if constexpr (std::is_same_v<type_list_type, type_list<void>>)
 	{
-		return "";
+		static string_indicator::tag empty("");
+		return empty;
 	}
 	else
 	{
@@ -769,7 +811,7 @@ template<typename type_list_type, bool _IsF = true> const string_indicator::tag&
 
 template<typename _T> _LF_C_API(Struct)	check_type			:std::true_type{};
 template<> _LF_C_API(Struct)			check_type<void>	:std::false_type{};
-//using type_info = std::type_info;
+
 
 _LF_C_API(Class)
 any_trait_base:	_LF_Inherited(any_class)
@@ -828,7 +870,7 @@ template<typename Ret, typename... Args> _LF_C_API(Struct) function_traits<Ret(_
 
 	using result = Ret;
 	using parameters = type_list<Args...>;
-	using belong = global_indicator;
+	using belong = namespace_indicator;
 	using call = _cdecl_indicator;
 	using consting = unconst_indicator;
 };
@@ -987,7 +1029,7 @@ function_base:	_LF_Inherited(any_class)
 {
 public:
 	template<typename func>
-	friend const function_info<func>& create_or_get_function_info();
+	friend const function_info<func>& create_or_get_function_info(const func & func_ptr, const char* function_name);
 
 	using string = typename string_indicator::tag;
 
@@ -995,6 +1037,8 @@ public:
 		func_single_name(symbol_name),
 		name(func_name),
 		_type(symbol_type) {}
+	function_base(function_base&) = delete;
+	function_base(function_base&&) = delete;
 	const string& read_name() const
 	{
 		return name;
@@ -1007,20 +1051,18 @@ public:
 	{
 		return _type;
 	}
-	auto read_hash() const
+	size_t read_hash() const
 	{
 		return _type.hash_code();
 	}
 
-	using function_bases_type = std::map<decltype(std::declval<function_base>().read_hash()), function_base>;
+	using function_bases_type = std::map<size_t, function_base*>;
 private:
 	const char* func_single_name;
 	string name;
 	const type_info& _type;
 	static function_bases_type function_bases;
 };
-
-function_base::function_bases_type function_base::function_bases;
 
 template<typename func>
 _LF_C_API(Class)
@@ -1042,7 +1084,37 @@ public:
 			string(typeid(result).name()) + " [" + typeid(belong).name() + "]::" + function_name + "(" + get_type_list_string<parameters>() + ")",
 			typeid(func)),
 		invoker(func_ptr) {}
+	function_info(function_info&) = delete;
+	function_info(function_info&&) = delete;
 	const func& invoker;
+
+	template<typename... Args>
+	result invoke(belong* instance, Args... args) const
+	{
+		if constexpr (std::is_same_v<belong, namespace_indicator>)
+		{
+			if constexpr (std::is_same_v<result, void>)
+			{
+				invoker(args...);
+			}
+			else
+			{
+				return invoker(args...);
+			}
+		}
+		else
+		{
+			if constexpr (std::is_same_v<result, void>)
+			{
+				((*instance).*invoker)(args...);
+			}
+			else
+			{
+				return ((*instance).*invoker)(args...);
+			}
+		}
+	}
+
 private:
 
 };
@@ -1052,25 +1124,15 @@ const function_info<func>& _LF_C_API(DLL) create_or_get_function_info(const func
 {
 	if (!function_base::function_bases.count(typeid(func).hash_code()))
 	{
-		function_base::function_bases[typeid(func).hash_code] = function_info(func_ptr, function_name);
+		function_base::function_bases[typeid(func).hash_code()] = new function_info(func_ptr, function_name);
 	}
-	return function_base::function_bases[typeid(func).hash_code];
+	return *dynamic_cast<function_info<func>*>(function_base::function_bases[typeid(func).hash_code()]);
 }
 
-namespace kit
-{
-	namespace traits
-	{
-		namespace function
-		{
-			template<typename func>
-			const function_info<func>& _LF_C_API(DLL) make_function_info(const func& func_ptr, const char* function_name)
-			{
-				return create_or_get_function_info(func_ptr, function_name);
-			}
-		}
-	}
-}
+using func_base = const function_base&;
+
+#define make_function_info(belong,name)		create_or_get_function_info(& belong::name, #name )
+#define func_info 							const auto&
 
 #pragma endregion
 
