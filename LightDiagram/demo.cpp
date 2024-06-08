@@ -39,5 +39,5 @@ int main()
 	func_info add_info = make_function_info(test, add);
 	test test_instance;
 	test_instance.b = 5;
-	cout << add_info.invoke(nullptr, 2);
+	cout << add_info.invoke(&test_instance, 2);
 }

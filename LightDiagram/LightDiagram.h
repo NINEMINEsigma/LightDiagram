@@ -819,10 +819,15 @@ any_trait_base:	_LF_Inherited(any_class)
 public:
 	using string = typename string_indicator::tag;
 
-	any_trait_base(const string& func_name, const type_info& symbol_type) :
+	any_trait_base(const char* symbol_name,const string& func_name, const type_info& symbol_type) :
+		single_name(symbol_name),
 		name(func_name),
 		_type(symbol_type) {}
-	const string& read_name() const
+	const char* read_symbol_name() const
+	{
+		return single_name;
+	}
+	const string& read_any_name() const
 	{
 		return name;
 	}
@@ -830,11 +835,12 @@ public:
 	{
 		return _type;
 	}
-	auto read_hash() const
+	auto read_type_hash() const
 	{
 		return _type.hash_code();
 	}
 private:
+	const char* single_name;
 	string name;
 	const type_info& _type;
 };
@@ -1025,7 +1031,7 @@ _LF_C_API(Class) function_base;
 template<typename func> _LF_C_API(Class) function_info;
 
 _LF_C_API(Class)
-function_base:	_LF_Inherited(any_class)
+function_base:	_LF_Inherited(any_trait_base)
 {
 public:
 	template<typename func>
@@ -1034,33 +1040,16 @@ public:
 	using string = typename string_indicator::tag;
 
 	function_base(const char* symbol_name, const string & func_name, const type_info & symbol_type) :
-		func_single_name(symbol_name),
-		name(func_name),
-		_type(symbol_type) {}
+		any_trait_base(symbol_name,func_name, symbol_type) {}
 	function_base(function_base&) = delete;
 	function_base(function_base&&) = delete;
-	const string& read_name() const
-	{
-		return name;
-	}
 	const char* read_func_name() const
 	{
-		return func_single_name;
-	}
-	const type_info& read_type() const
-	{
-		return _type;
-	}
-	size_t read_hash() const
-	{
-		return _type.hash_code();
+		return this->read_symbol_name();
 	}
 
 	using function_bases_type = std::map<size_t, function_base*>;
 private:
-	const char* func_single_name;
-	string name;
-	const type_info& _type;
 	static function_bases_type function_bases;
 };
 
@@ -1081,6 +1070,9 @@ public:
 
 	function_info(const func& func_ptr, const char* function_name) :
 		function_base(function_name,
+			string(typeid(result).name()) + " [" + typeid(belong).name() + "]::" + function_name + "(" + get_type_list_string<parameters>() + ")",
+			typeid(func)),
+		any_trait_base(function_name,
 			string(typeid(result).name()) + " [" + typeid(belong).name() + "]::" + function_name + "(" + get_type_list_string<parameters>() + ")",
 			typeid(func)),
 		invoker(func_ptr) {}
