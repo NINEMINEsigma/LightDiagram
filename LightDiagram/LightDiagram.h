@@ -65,6 +65,8 @@
 #include <cwchar>
 #include <cwctype>
 
+#include <stdlib.h>
+
 // C++
 #include <algorithm>
 #include <bitset>
@@ -500,6 +502,8 @@ _LF_C_API(TStruct) choose_type < false, _True, _False >
 
 #pragma region decay and evolve
 
+#pragma region remove_full_ptr
+
 template<typename T>
 _LF_C_API(TStruct) remove_full_ptr
 {
@@ -511,39 +515,107 @@ _LF_C_API(TStruct) remove_full_ptr<T*>
 	using tag = typename remove_full_ptr<T>::tag;
 };
 
-template<typename T>
-_LF_C_API(TStruct)	generate_full_decay_typen
+#pragma endregion
+
+#pragma region count_full_ptr
+
+template<typename T, size_t counter = 0>
+_LF_C_API(TStruct) _count_full_ptr
 {
-	using tag = T;
-	using unconst = typename std::remove_const<tag>::type;
-	using unrefer = typename std::remove_reference<tag>::type;
-	using unptrto = typename remove_full_ptr<tag>::type;
-	using unvolat = typename std::remove_volatile<tag>::type;
+	constexpr static size_t value = counter;
 };
-
-template<typename T>
-_LF_C_API(TStruct)	generate_full_evolue_typen
+template<typename T, size_t counter>
+_LF_C_API(TStruct) _count_full_ptr<T*, counter>
 {
-	using tag = T;
-	using enconst = typename std::add_const<tag>::type;
-	using enlvref = typename std::add_lvalue_reference<tag>::type;
-	using enrvref = typename std::add_rvalue_reference<tag>::type;
-	using enptrto = typename std::add_pointer<tag>::type;
-	using envolat = typename std::add_volatile<tag>::type;
+	constexpr static size_t value = _count_full_ptr<T, counter + 1>::value;
 };
+template<typename T>
+_LF_C_API(TStruct) count_full_ptr
+{
+	constexpr static size_t value = _count_full_ptr<T, 0>::value;
+};
+template<typename T> constexpr size_t count_full_ptr_v = count_full_ptr<T>::value;
 
+#pragma endregion
+
+#pragma region remove_atomic
 
 template<typename T>
-_LF_C_API(TStruct)	generate_full_typen
+_LF_C_API(Struct) remove_atomic
 {
 	using tag = T;
-	using decay_once = generate_full_decay_typen<T>;
-	using evolue_once = generate_full_evolue_typen<T>;
+};
+template<typename T>
+_LF_C_API(Struct) remove_atomic<std::atomic<T>>
+{
+	using tag = T;
 };
 
 #pragma endregion
 
-_LF_C_API(Class)	function_base;
+#pragma region remove_array
+
+template<typename T>
+_LF_C_API(Struct) remove_array
+{
+	using tag = T;
+};
+template<typename T, size_t size>
+_LF_C_API(Struct) remove_array<std::array<T, size>>
+{
+	using tag = T;
+};
+template<typename T>
+_LF_C_API(Struct) remove_array<T[]>
+{
+	using tag = T;
+};
+
+#pragma endregion
+
+template<typename T>
+_LF_C_API(TStruct)	generate_full_decay_typen
+{
+	//	template arg[T]
+	using tag = T;
+	//	remove const
+	using unconst = typename std::remove_const<tag>::type;
+	//	remove reference
+	using unrefer = typename std::remove_reference<tag>::type;
+	//	remove pointer
+	using unptrto = typename remove_full_ptr<tag>::tag;
+	//	remove volatile
+	using unvolat = typename std::remove_volatile<tag>::type;
+	//	remove array
+	using unarray = typename remove_array<tag>::tag;
+	//	remove atomic
+	using unatcto = T;
+
+	using origin =
+		typename remove_array<
+		typename remove_full_ptr<
+		typename std::decay<
+		typename remove_atomic<tag>
+		::tag>::type>::tag>::tag;
+};
+
+#pragma endregion
+
+#pragma region void_ptr_t
+
+_LF_C_API(Struct) void_ptr_t
+{
+	template<typename T> operator T&()
+	{
+		return *static_cast<T*>(ptr);
+	}
+
+	void* ptr;
+};
+
+#pragma endregion
+
+
 _LF_C_API(Class)	any_class
 {
 public:
@@ -682,6 +754,8 @@ std::is_##name##_v<T> || if_type_exist( name##_indicator ) < T >
 template<typename T>	_LF_C_API(TStruct)	LDType;
 template<typename T>	_LF_C_API(TStruct)	LDType_Number;
 template<typename T>	_LF_C_API(TStruct)	LDType_Indicator;
+template<typename T>	_LF_C_API(TStruct)	LDType_Bad_Indicator;
+template<typename T>	_LF_C_API(TStruct)	LDType_Traits;
 
 template<typename T>
 _LF_C_API(TStruct) LDType
@@ -690,6 +764,15 @@ _LF_C_API(TStruct) LDType
 	using tag_num = LDType_Number<T>;
 	//	indicator type state
 	using tag_idc = LDType_Indicator<T>;
+	//	traits type state
+	using tag_tra = LDType_Traits<T>;
+
+	//	is class or struct
+	constexpr static bool is_class = std::is_class_v<T>;
+	//	is abstract
+	constexpr static bool is_abstract = std::is_abstract_v<T>;
+	//	is union
+	constexpr static bool is_union = std::is_union_v<T>;
 
 	using tag = T;
 	constexpr static bool value = true;
@@ -729,6 +812,14 @@ _LF_C_API(TStruct) LDType_Indicator
 
 	using tag = T;
 	constexpr static bool value = true;
+	using type_indicator = key_indicator;
+};
+
+template<typename T>
+_LF_C_API(TStruct) LDType_Bad_Indicator
+{
+	using tag = bad_indicator;
+	constexpr static bool value = false;
 	using type_indicator = key_indicator;
 };
 
@@ -872,10 +963,6 @@ any_trait_base:	_LF_Inherited(any_class)
 public:
 	using string = typename string_indicator::tag;
 
-	any_trait_base(const char* symbol_name,const string& func_name, const type_info& symbol_type) :
-		single_name(symbol_name),
-		name(func_name),
-		_type(symbol_type) {}
 	const char* read_symbol_name() const
 	{
 		return single_name;
@@ -892,6 +979,11 @@ public:
 	{
 		return _type.hash_code();
 	}
+protected:
+	any_trait_base(const char* symbol_name,const string& func_name, const type_info& symbol_type) :
+		single_name(symbol_name),
+		name(func_name),
+		_type(symbol_type) {}
 private:
 	const char* single_name;
 	string name;
@@ -916,6 +1008,7 @@ template<typename _T> _LF_C_API(TStruct) function_traits
 	using belong = unknown_indicator;
 	using call = unknown_indicator;
 	using consting = unconst_indicator;
+	using typen = LDType_Bad_Indicator;
 };
 
 /*
@@ -932,6 +1025,7 @@ template<typename Ret, typename... Args> _LF_C_API(TStruct) function_traits<Ret(
 	using belong = namespace_indicator;
 	using call = _cdecl_indicator;
 	using consting = unconst_indicator;
+	using typen = LDType<tag>;
 };
 #ifndef _WIN64
 template<typename Ret, typename... Args> _LF_C_API(TStruct) function_traits<Ret(_stdcall*)(Args...)>
@@ -945,6 +1039,7 @@ template<typename Ret, typename... Args> _LF_C_API(TStruct) function_traits<Ret(
 	using belong = namespace_indicator;
 	using call = _stdcall_indicator;
 	using consting = unconst_indicator;
+	using typen = LDType<tag>;
 };
 template<typename Ret, typename... Args> _LF_C_API(TStruct) function_traits<Ret(_fastcall*)(Args...)>
 {
@@ -957,6 +1052,7 @@ template<typename Ret, typename... Args> _LF_C_API(TStruct) function_traits<Ret(
 	using belong = namespace_indicator;
 	using call = _fastcall_indicator;
 	using consting = unconst_indicator;
+	using typen = LDType<tag>;
 };
 #endif // !_WIN64
 
@@ -975,6 +1071,7 @@ template<typename Ret, typename C, typename... Args> _LF_C_API(TStruct) function
 	using belong = C;
 	using call = _cdecl_indicator;
 	using consting = const_indicator;
+	using typen = LDType<tag>;
 };
 #ifndef _WIN64
 template<typename Ret, typename C, typename... Args> _LF_C_API(TStruct) function_traits<Ret(_stdcall C::*)(Args...) const>
@@ -988,6 +1085,7 @@ template<typename Ret, typename C, typename... Args> _LF_C_API(TStruct) function
 	using belong = C;
 	using call = _stdcall_indicator;
 	using consting = const_indicator;
+	using typen = LDType<tag>;
 };
 template<typename Ret, typename C, typename... Args> _LF_C_API(TStruct) function_traits<Ret(_fastcall C::*)(Args...) const>
 {
@@ -1000,6 +1098,7 @@ template<typename Ret, typename C, typename... Args> _LF_C_API(TStruct) function
 	using belong = C;
 	using call = _fastcall_indicator;
 	using consting = const_indicator;
+	using typen = LDType<tag>;
 };
 template<typename Ret, typename C, typename... Args> _LF_C_API(TStruct) function_traits<Ret(__thiscall C::*)(Args...) const>
 {
@@ -1012,6 +1111,7 @@ template<typename Ret, typename C, typename... Args> _LF_C_API(TStruct) function
 	using belong = C;
 	using call = __thiscall_indicator;
 	using consting = const_indicator;
+	using typen = LDType<tag>;
 };
 #endif // !_WIN64
 
@@ -1030,6 +1130,7 @@ template<typename Ret, typename C, typename... Args> _LF_C_API(TStruct) function
 	using belong = C;
 	using call = _cdecl_indicator;
 	using consting = unconst_indicator;
+	using typen = LDType<tag>;
 };
 #ifndef _WIN64
 template<typename Ret, typename C, typename... Args> _LF_C_API(TStruct) function_traits<Ret(_stdcall C::*)(Args...)>
@@ -1043,6 +1144,7 @@ template<typename Ret, typename C, typename... Args> _LF_C_API(TStruct) function
 	using belong = C;
 	using call = _stdcall_indicator;
 	using consting = unconst_indicator;
+	using typen = LDType<tag>;
 };
 template<typename Ret, typename C, typename... Args> _LF_C_API(TStruct) function_traits<Ret(_fastcall C::*)(Args...)>
 {
@@ -1055,6 +1157,7 @@ template<typename Ret, typename C, typename... Args> _LF_C_API(TStruct) function
 	using belong = C;
 	using call = _fastcall_indicator;
 	using consting = unconst_indicator;
+	using typen = LDType<tag>;
 };
 #endif // !_WIN64
 
@@ -1079,26 +1182,27 @@ _LF_C_API(TStruct) function_traits_ex<Lambda, std::void_t<decltype(&Lambda::oper
 #pragma region field_traits
 
 /*
-	fail to get function information
+	get regular field information
 */
 template<typename _T> _LF_C_API(TStruct) field_traits
 {
-	_LFramework_Kit_API_StaticOperatorBool(false);
-	using tag = void;
-	constexpr static bool value = false;
+	_LFramework_Kit_API_StaticOperatorBool(true);
+	using tag = _T;
+	constexpr static bool value = true;
 
 	using origin = _T;
-	//using 
-	using belong = unknown_indicator;
-	using consting = unconst_indicator;
+	using typen = LDType<tag>;
 };
 
 /*
 	get regular field information
 */
-template<typename T, typename = template_fill_indicator> _LF_C_API(TStruct) field_traits_ex : public function_traits<T>
+template<typename T>
+_LF_C_API(TStruct)
+field_traits_ex : public function_traits<T>
 {
 	using field_traits_indicator = void;
+	using decay = generate_full_decay_typen<T>;
 };
 
 #pragma endregion
@@ -1119,12 +1223,13 @@ public:
 
 	using string = typename string_indicator::tag;
 
-	function_base(const char* symbol_name, const string & func_name, const type_info & symbol_type) :
-		any_trait_base(symbol_name,func_name, symbol_type) {}
 	function_base(function_base&) = delete;
 	function_base(function_base&&) = delete;
 
 	using function_bases_type = std::map<size_t, function_base*>;
+protected:
+	function_base(const char* symbol_name, const string & func_name, const type_info & symbol_type) :
+		any_trait_base(symbol_name, func_name, symbol_type) {}
 private:
 	static function_bases_type function_bases;
 };
@@ -1133,32 +1238,71 @@ template<typename func>
 _LF_C_API(TClass)
 function_info:	_LF_Inherited(function_base)
 {
+public:
+	using string = typename string_indicator::tag;
 private:
 	function_info(const func& func_ptr,const char* symbol_name, const string& func_name, const type_info& symbol_type) :
 		function_base(symbol_name, func_name, symbol_type),
 		any_trait_base(symbol_name, func_name, symbol_type),
 		invoker(func_ptr) {}
 public:
-	using string = typename string_indicator::tag;
+	template<typename func>
+	friend const function_info<func>& create_or_get_function_info(const func& func_ptr, const char* function_name);
 
 	using tag = func;
 	constexpr static bool value = true;
 
-	using traits = function_traits_ex<func>;
-	using result = typename traits::result;
-	using parameters = typename traits::parameters;
-	using belong = typename traits::belong;
+	using trait = function_traits_ex<func>;
+	using result = typename trait::result;
+	using parameters = typename trait::parameters;
+	using belong = typename trait::belong;
 
+private:
 	function_info(const func& func_ptr, const char* function_name) :
 		function_info(func_ptr, function_name,
 			string(typeid(result).name()) + " [" + typeid(belong).name() + "]::" + function_name + "(" + get_type_list_string<parameters>() + ")",
 			typeid(func)) {}
+public:
 	function_info(function_info&) = delete;
 	function_info(function_info&&) = delete;
-	const func& invoker;
+	const func invoker;
 
 	template<typename... Args>
 	result invoke(belong* instance, Args... args) const
+	{
+		if constexpr (std::is_same_v<parameters, type_list<Args...>>)
+		{
+			if constexpr (std::is_same_v<belong, namespace_indicator>)
+			{
+				if constexpr (std::is_same_v<result, void>)
+				{
+					invoker(args...);
+				}
+				else
+				{
+					return invoker(args...);
+				}
+			}
+			else
+			{
+				if constexpr (std::is_same_v<result, void>)
+				{
+					((*instance).*invoker)(args...);
+				}
+				else
+				{
+					return ((*instance).*invoker)(args...);
+				}
+			}
+		}
+		else
+		{
+			static_assert(false, "invoke args check type: failed");
+		}
+	}
+
+	template<typename... Args>
+	result invoke_uncheck(belong* instance, Args... args) const
 	{
 		if constexpr (std::is_same_v<belong, namespace_indicator>)
 		{
@@ -1201,9 +1345,175 @@ const function_info<func>& _LF_C_API(TDLL) create_or_get_function_info(const fun
 using func_base = const function_base&;
 
 #define make_function_info(belong,name)		create_or_get_function_info(& belong::name, #name )
+#define func_base							const function_base&
 #define func_info 							const auto&
 
 #pragma endregion
+
+#pragma region field_info
+
+_LF_C_API(Class) field_base;
+template<typename field, typename C> _LF_C_API(TClass) field_info;
+
+_LF_C_API(Class)
+field_base:	_LF_Inherited(any_trait_base)
+{
+private:
+	struct maper_sorter
+	{
+		bool operator() (const char* lhs, const char* rhs) const
+		{
+			return strcmp(lhs, rhs) < 0;
+		}
+	};
+public:
+	template<typename field,typename C>
+	friend const field_info<field, C>& create_or_get_field_info(field C::* _right_ptr, const char* field_name);
+	template<typename field, typename C>
+	friend const field_info<field, C>& create_or_get_field_info(size_t _offset, const char* field_name);
+
+	using string = typename string_indicator::tag;
+
+	field_base(function_base&) = delete;
+	field_base(function_base&&) = delete;
+
+	using map_container = std::map<const char*, field_base*, maper_sorter>;
+	using field_bases_type = std::map<size_t, map_container>;
+
+	virtual void* get(void* instance) const abstract;
+	virtual void set(void* instance, void* value) const abstract;
+	template<typename T>
+	void set_rv(void* instance, T&& value) const
+	{
+		set(instance, &value);
+	}
+
+protected:
+	field_base(const char* symbol_name, const string & field_name, const type_info & symbol_type) :
+		any_trait_base(symbol_name, field_name, symbol_type) {}
+private:
+	static field_bases_type field_bases;
+};
+
+template<typename field,typename C = namespace_indicator>
+_LF_C_API(TClass) 
+field_info: _LF_Inherited(field_base)
+{
+public:
+	using string = typename string_indicator::tag;
+private:
+	field_info(size_t _offset, const char* symbol_name, const string & field_name, const type_info & symbol_type) :
+		field_base(symbol_name, field_name, symbol_type),
+		any_trait_base(symbol_name, field_name, symbol_type),
+		offset(_offset) {}
+public:
+	template<typename field, typename C>
+	friend const field_info<field, C>& create_or_get_field_info(field C::* _right_ptr, const char* field_name);
+	template<typename field, typename C>
+	friend const field_info<field, C>& create_or_get_field_info(size_t _offset, const char* field_name);
+
+	using tag = field;
+	constexpr static bool value = true;
+	using belong = C;
+
+	using trait = field_traits_ex<field>;
+private:
+	field_info(field C::* _right_ptr, const char* field_name) :
+		field_info(
+			static_cast<size_t>(reinterpret_cast<int>(*(void**)(&_right_ptr))),
+			field_name,
+			string(typeid(C).name()) + "::" + field_name,
+			typeid(field)) {}
+	field_info(const size_t& _offset, const char* field_name) :
+		field_info(
+			_offset,
+			field_name,
+			string(typeid(C).name()) + "::" + field_name,
+			typeid(field)) {}
+public:
+	field_info(field_info&) = delete;
+	field_info(field_info&&) = delete;
+	const size_t offset;
+
+	void set(C* instance, field& arg) const
+	{
+		if constexpr (std::is_same_v<C, namespace_indicator>)
+		{
+			*static_cast<field*>(reinterpret_cast<void*>(offset)) = arg;
+		}
+		else
+		{
+			*((field*)((size_t)instance + offset)) = arg;
+		}
+	}
+	void set(C* instance, field&& arg) const
+	{
+		if constexpr (std::is_same_v<C, namespace_indicator>)
+		{
+			*static_cast<field*>(reinterpret_cast<void*>(offset)) = std::move(arg);
+		}
+		else
+		{
+			*((field*)((size_t)instance + offset)) = std::move(arg);
+		}
+	}
+	virtual void set(void* instance, void* value) const override
+	{
+		set(static_cast<C*>(instance), *static_cast<field*>(value));
+	}
+
+	field& get(C* instance) const
+	{
+		if constexpr (std::is_same_v<C, namespace_indicator>)
+		{
+			return *static_cast<field*>(reinterpret_cast<void*>(offset));
+		}
+		else
+		{
+			return *((field*)((size_t)instance + offset));
+		}
+	}
+	virtual void* get(void* instance) const override
+	{
+		return &get(static_cast<C*>(instance));
+	}
+};
+
+template<typename field, typename C>
+const field_info<field, C>& create_or_get_field_info(field C::* _right_ptr, const char* field_name)
+{
+	if (!field_base::field_bases[typeid(C).hash_code()].count(field_name))
+	{
+		field_base::field_bases[typeid(C).hash_code()][field_name] = new field_info<field, C>(_right_ptr, field_name);
+	}
+	return *dynamic_cast<field_info<field, C>*>(field_base::field_bases[typeid(C).hash_code()][field_name]);
+}
+template<typename field, typename C>
+const field_info<field, C>& create_or_get_field_info(size_t _offset, const char* field_name)
+{
+	if (!field_base::field_bases[typeid(C).hash_code()].count(field_name))
+	{
+		field_base::field_bases[typeid(C).hash_code()][field_name] = new field_info<field, C>(_offset, field_name);
+	}
+	return *dynamic_cast<field_info<field, C>*>(field_base::field_bases[typeid(C).hash_code()][field_name]);
+}
+
+#define make_field_info(belong,name)		create_or_get_field_info( &belong::name, #name )
+#define fvar_base							const field_base&
+#define fvar_info							const auto&
+
+#pragma endregion
+
+template<typename T>
+_LF_C_API(TStruct) LDType_Traits
+{
+	using tag_function = function_traits_ex<T>;
+	using tag_field = field_traits_ex<T>;
+
+	using tag = T;
+	constexpr static bool value = tag_field::value != tag_function::value;
+	using type_indicator = key_indicator;
+};
 
 #pragma endregion
 

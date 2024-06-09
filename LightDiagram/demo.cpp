@@ -10,10 +10,10 @@ class test
 public:
 	using integral_indicator = void;
 
-	int b;
+	int b = 0;
 	int add(int a)
 	{
-		return a + b;
+		return b = a + b;
 	}
 };
 
@@ -22,11 +22,10 @@ using test_type = int******;
 int main()
 {
 	ld_test();
-	func_info add_info = make_function_info(test, add);
-	test test_instance;
-	test_instance.b = 5;
-	cout << add_info.invoke(&test_instance, 2) << "\n\n";
-	cout << typeid(test_type).name() << "\n";
-	cout << typeid(std::remove_pointer<test_type>::type).name() << "\n";
-	cout << typeid(remove_full_ptr<test_type>::tag).name();
+	fvar_info field = make_field_info(test, b);
+	fvar_base fiebase = make_field_info(test, b);
+	func_info func = make_function_info(test, add);
+	test a;
+	func.invoke(&a, 500);
+	cout << *((int*)fiebase.get(&a)) << "\n";
 }
