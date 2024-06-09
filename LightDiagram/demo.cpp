@@ -17,21 +17,7 @@ public:
 	}
 };
 
-int add(int a, int b)
-{
-	return a + b;
-}
-
-namespace kkk
-{
-	int add(int a, int b)
-	{
-		return a + b;
-	}
-}
-
-template<typename T>
-using catr = const function_info<T>&;
+using test_type = int******;
 
 int main()
 {
@@ -39,5 +25,8 @@ int main()
 	func_info add_info = make_function_info(test, add);
 	test test_instance;
 	test_instance.b = 5;
-	cout << add_info.invoke(&test_instance, 2);
+	cout << add_info.invoke(&test_instance, 2) << "\n\n";
+	cout << typeid(test_type).name() << "\n";
+	cout << typeid(std::remove_pointer<test_type>::type).name() << "\n";
+	cout << typeid(remove_full_ptr<test_type>::tag).name();
 }

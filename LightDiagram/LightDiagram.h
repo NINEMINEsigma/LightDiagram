@@ -378,14 +378,18 @@ public:
 
 #ifdef _Source_Development
 #define _LFramework_Config_API_DLL _declspec(dllexport)
+#define _LFramework_Config_API_TDLL _LFramework_Config_API_DLL
 #endif // _Source_Development
 
 #ifndef _LFramework_Config_API_DLL
 #define _LFramework_Config_API_DLL _declspec(dllimport)
 #endif // _LFramework_Config_API_DLL
-
+#ifndef _LFramework_Config_API_TDLL
+#define _LFramework_Config_API_TDLL
+#endif // !_LFramework_Config_API_TDLL
 #else
 
+#define _LFramework_Config_API_TDLL
 #define _LFramework_Config_API_DLL
 
 #endif // !_DEBUG
@@ -394,6 +398,8 @@ public:
 
 #define _LFramework_Config_API_Class			class _LFramework_Config_API_DLL
 #define _LFramework_Config_API_Struct			struct _LFramework_Config_API_DLL
+#define _LFramework_Config_API_TClass			class _LFramework_Config_API_TDLL
+#define _LFramework_Config_API_TStruct			struct _LFramework_Config_API_TDLL
 #define _LFramework_Config_API_Func				_LFramework_Config_API_DLL _LFramework_Config_API_Call
 #define _LFramework_Config_API_Func_VarParas	_LFramework_Config_API_DLL __cdecl
 #define _LFramework_Config_API_Func_Fast		_LFramework_Config_API_DLL __fastcall
@@ -462,6 +468,8 @@ _LFramework_Config_API_Struct ___utype{ size_t ignore; __LFramework_T(Type) cons
 
 #pragma region Global
 
+#pragma region is_base_of_template
+
 // case1: T* can cast to C*
 template <template <typename...> class C, typename...Ts>
 std::true_type is_base_of_template_impl(const C<Ts...>*);
@@ -472,25 +480,68 @@ std::false_type is_base_of_template_impl(...);
 template <template <typename...> class C, typename T>
 using is_base_of_template = decltype(is_base_of_template_impl<C>(std::declval<T*>()));
 
-template < bool value, typename _True, typename _False> _LF_C_API(Struct) choose_type;
+#pragma endregion
+
+#pragma region choose_type
+
+template < bool value, typename _True, typename _False> _LF_C_API(TStruct) choose_type;
 template < typename _True, typename _False>
-_LF_C_API(Struct) choose_type < true, _True, _False>
+_LF_C_API(TStruct) choose_type < true, _True, _False>
 {
 	using tag = _True;
-	constexpr static bool value = true;
 };
 template < typename _True, typename _False>
-_LF_C_API(Struct) choose_type < false, _True, _False >
+_LF_C_API(TStruct) choose_type < false, _True, _False >
 {
 	using tag = _False;
-	constexpr static bool value = false;
 };
 
-namespace kit
-{
-	template < bool value, typename _True, typename _False> using choose_type = ::choose_type<value, _True, _False>;
+#pragma endregion
 
-}
+#pragma region decay and evolve
+
+template<typename T>
+_LF_C_API(TStruct) remove_full_ptr
+{
+	using tag = T;
+};
+template<typename T>
+_LF_C_API(TStruct) remove_full_ptr<T*>
+{
+	using tag = typename remove_full_ptr<T>::tag;
+};
+
+template<typename T>
+_LF_C_API(TStruct)	generate_full_decay_typen
+{
+	using tag = T;
+	using unconst = typename std::remove_const<tag>::type;
+	using unrefer = typename std::remove_reference<tag>::type;
+	using unptrto = typename remove_full_ptr<tag>::type;
+	using unvolat = typename std::remove_volatile<tag>::type;
+};
+
+template<typename T>
+_LF_C_API(TStruct)	generate_full_evolue_typen
+{
+	using tag = T;
+	using enconst = typename std::add_const<tag>::type;
+	using enlvref = typename std::add_lvalue_reference<tag>::type;
+	using enrvref = typename std::add_rvalue_reference<tag>::type;
+	using enptrto = typename std::add_pointer<tag>::type;
+	using envolat = typename std::add_volatile<tag>::type;
+};
+
+
+template<typename T>
+_LF_C_API(TStruct)	generate_full_typen
+{
+	using tag = T;
+	using decay_once = generate_full_decay_typen<T>;
+	using evolue_once = generate_full_evolue_typen<T>;
+};
+
+#pragma endregion
 
 _LF_C_API(Class)	function_base;
 _LF_C_API(Class)	any_class
@@ -520,10 +571,10 @@ private:
 
 #define _LFramework_Kit_API_Exist_Type_Define(name)														\
 template< typename , typename = void>																	\
-_LF_C_API(Struct) __exist_type_##name									: std::false_type	{ };		\
+_LF_C_API(TStruct) __exist_type_##name									: std::false_type	{ };		\
 template< typename T >																					\
-_LF_C_API(Struct) __exist_type_##name <T,std::void_t<typename T::name>>	: std::true_type	{ };	\
-template< typename T > _LF_C_API(DLL) constexpr bool __exist_type_##name##_v = __exist_type_##name<T>();
+_LF_C_API(TStruct) __exist_type_##name <T,std::void_t<typename T::name>>	: std::true_type	{ };	\
+template< typename T > _LF_C_API(TDLL) constexpr bool __exist_type_##name##_v = __exist_type_##name<T>();
 #define _LFramework_Kit_API_Exist_Type(name) __exist_type_##name##_v
 #define if_type_exist_def(name)	_LFKE_DEF(Type,name)
 #define if_type_exist(name)		_LFKE_API(Type,name)
@@ -534,14 +585,14 @@ template< typename T > _LF_C_API(DLL) constexpr bool __exist_type_##name##_v = _
 #pragma region Class::Func
 
 #define _LFramework_Kit_API_Exist_Func_Define(name)																			\
-template< typename, typename, typename = void > _LF_C_API(Struct) __exist_function_##name : std::false_type { };			\
+template< typename, typename, typename = void > _LF_C_API(TStruct) __exist_function_##name : std::false_type { };			\
 template< typename T, typename Ret, typename... Args>																		\
-_LF_C_API(Struct) __exist_function_##name<																					\
+_LF_C_API(TStruct) __exist_function_##name<																					\
 	T,																														\
 	Ret(Args...),																											\
 	typename std::enable_if<std::is_same_v<decltype(std::declval<T>().##name##(std::declval<Args>()...)), Ret>>::type>		\
 	: std::true_type { };																									\
-template< typename T, typename Ret > _LF_C_API(DLL) constexpr bool __exist_function_##name##_v = __exist_function_##name<T,Ret>();
+template< typename T, typename Ret > _LF_C_API(TDLL) constexpr bool __exist_function_##name##_v = __exist_function_##name<T,Ret>();
 #define _LFramework_Kit_API_Exist_Func(name)	__exist_function_##name##_v
 #define if_func_exist_def(name)	_LFKE_DEF(Func,name)
 #define if_func_exist(name)		_LFKE_API(Func,name)
@@ -554,13 +605,13 @@ template< typename T, typename Ret > _LF_C_API(DLL) constexpr bool __exist_funct
 #pragma region Class::Field
 
 #define _LFramework_Kit_API_Exist_Field_Define(name)																		\
-template< typename, typename, typename = void > _LF_C_API(Struct) __exist_field_##name : std::false_type { };				\
-template< typename T, typename MType> _LF_C_API(Struct) __exist_field_##name<												\
+template< typename, typename, typename = void > _LF_C_API(TStruct) __exist_field_##name : std::false_type { };				\
+template< typename T, typename MType> _LF_C_API(TStruct) __exist_field_##name<												\
 	T,																														\
 	MType,																													\
 	typename std::enable_if<std::is_same_v<decltype(std::declval<T>().##name), MType>>::type>								\
 	: std::true_type { };																									\
-template< typename T, typename MType> _LF_C_API(DLL) constexpr bool __exist_field_##name##_v = __exist_field_##name<T, MType>();
+template< typename T, typename MType> _LF_C_API(TDLL) constexpr bool __exist_field_##name##_v = __exist_field_##name<T, MType>();
 #define _LFramework_Kit_API_Exist_Field(name)	__exist_field_##name##_v
 #define if_field_exist_def(name)	_LFKE_DEF(Field,name)
 #define if_field_exist(name)		_LFKE_API(Field,name)
@@ -570,13 +621,13 @@ template< typename T, typename MType> _LF_C_API(DLL) constexpr bool __exist_fiel
 #pragma region Class::Property
 
 #define _LFramework_Kit_API_Exist_Property_Define(name)																		\
-template< typename, typename, typename = void > _LF_C_API(Struct) __exist_property_##name : std::false_type { };			\
-template< typename T, typename MType> _LF_C_API(Struct) __exist_property_##name<											\
+template< typename, typename, typename = void > _LF_C_API(TStruct) __exist_property_##name : std::false_type { };			\
+template< typename T, typename MType> _LF_C_API(TStruct) __exist_property_##name<											\
 	T,																														\
 	MType,																													\
 	typename std::enable_if<std::is_same_v<decltype(T:: name ), MType>>::type>												\
 	: std::true_type { };																									\
-template< typename T, typename MType> _LF_C_API(DLL) constexpr bool __exist_property_##name##_v = __exist_property_##name<T, MType>();
+template< typename T, typename MType> _LF_C_API(TDLL) constexpr bool __exist_property_##name##_v = __exist_property_##name<T, MType>();
 #define _LFramework_Kit_API_Exist_Property(name)	__exist_property_##name##_v
 #define if_property_exist_def(name)	_LFKE_DEF(Property,name)
 #define if_property_exist(name)		_LFKE_API(Property,name)
@@ -594,7 +645,7 @@ _LF_C_API(Struct) name##_indicator					\
 	constexpr static bool value = _value;			\
 };													\
 template< typename indicator>						\
-_LF_C_API(DLL) constexpr bool is_##name##_indicator_v = std::is_same_v<indicator, name##_indicator>
+_LF_C_API(TDLL) constexpr bool is_##name##_indicator_v = std::is_same_v<indicator, name##_indicator>
 
 _LFramework_Indicator_Def(bad, void, false);
 _LFramework_Indicator_Def(empty, void, false);
@@ -611,6 +662,8 @@ _LFramework_Indicator_Def(unconst, void, false);
 _LFramework_Indicator_Def(template_fill, void, false);
 _LFramework_Indicator_Def(key, void, true);
 _LFramework_Indicator_Def(string, std::string, true);
+_LFramework_Indicator_Def(class, void, true);
+_LFramework_Indicator_Def(struct, void, true);
 
 #define __Global_Space
 
@@ -626,12 +679,12 @@ if_type_exist_def(type_indicator)
 #define _LFramework_IsType(name,T)\
 std::is_##name##_v<T> || if_type_exist( name##_indicator ) < T >
 
-template<typename T>	_LF_C_API(Struct)	LDType;
-template<typename T>	_LF_C_API(Struct)	LDType_Number;
-template<typename T>	_LF_C_API(Struct)	LDType_Indicator;
+template<typename T>	_LF_C_API(TStruct)	LDType;
+template<typename T>	_LF_C_API(TStruct)	LDType_Number;
+template<typename T>	_LF_C_API(TStruct)	LDType_Indicator;
 
 template<typename T>
-_LF_C_API(Struct) LDType
+_LF_C_API(TStruct) LDType
 {
 	//	number type state
 	using tag_num = LDType_Number<T>;
@@ -644,7 +697,7 @@ _LF_C_API(Struct) LDType
 };
 
 template<typename T>
-_LF_C_API(Struct)  LDType_Number
+_LF_C_API(TStruct)  LDType_Number
 {
 	//	is integral number
 	constexpr static bool is_int = _LF_(IsType)(integral, T);
@@ -663,7 +716,7 @@ _LF_C_API(Struct)  LDType_Number
 };
 
 template<typename T>
-_LF_C_API(Struct) LDType_Indicator
+_LF_C_API(TStruct) LDType_Indicator
 {
 	//	is indicator type
 	constexpr static bool is_idc = if_type_exist(tag) < T > && if_property_exist(value) < T > ;
@@ -686,18 +739,18 @@ _LF_C_API(Struct) LDType_Indicator
 #pragma region type_indicator
 
 template<typename First, typename ...Args> struct type_list;
-template<typename T> constexpr bool _LF_C_API(DLL) is_type_indicator(typename T::type_indicator*);
-template<typename T> constexpr bool _LF_C_API(DLL) is_type_indicator(...);
-template<typename T> constexpr bool _LF_C_API(DLL) is_type_list_end();
-template<typename T> constexpr bool _LF_C_API(DLL) is_indicator_typen(typename T::tag* t, bool v);
-template<typename T> constexpr bool _LF_C_API(DLL) is_indicator_typen(...);
-template<typename L, int pos>  _LF_C_API(Struct)  type_decltype;
+template<typename T> constexpr bool _LF_C_API(TDLL) is_type_indicator(typename T::type_indicator*);
+template<typename T> constexpr bool _LF_C_API(TDLL) is_type_indicator(...);
+template<typename T> constexpr bool _LF_C_API(TDLL) is_type_list_end();
+template<typename T> constexpr bool _LF_C_API(TDLL) is_indicator_typen(typename T::tag* t, bool v);
+template<typename T> constexpr bool _LF_C_API(TDLL) is_indicator_typen(...);
+template<typename L, int pos>  _LF_C_API(TStruct)  type_decltype;
 
 template<int index> constexpr bool is_type_list_contains_detect = true;
-template<> constexpr bool _LF_C_API(DLL) is_type_list_contains_detect<-1> = false;
+template<> constexpr bool _LF_C_API(TDLL) is_type_list_contains_detect<-1> = false;
 
 template<>
-_LF_C_API(Struct) type_list<void>
+_LF_C_API(TStruct) type_list<void>
 {
 	using tag = bad_indicator;
 	constexpr static bool value = false;
@@ -712,7 +765,7 @@ _LF_C_API(Struct) type_list<void>
 	using decltype_type = Default;
 };
 template<typename Last>
-_LF_C_API(Struct) type_list<Last>
+_LF_C_API(TStruct) type_list<Last>
 {
 	using tag = Last;
 	constexpr static bool value = true;
@@ -730,7 +783,7 @@ _LF_C_API(Struct) type_list<Last>
 	using decltype_type = typename choose_type<!is_type_list_contains_detect<is_type_list_contains<T>(0)>, Default, T>::tag;
 };
 template<typename First, typename ...Args>
-_LF_C_API(Struct) type_list
+_LF_C_API(TStruct) type_list
 {
 	using tag = First;
 	constexpr static bool value = true;
@@ -748,42 +801,42 @@ _LF_C_API(Struct) type_list
 	using decltype_type = typename choose_type<!is_type_list_contains_detect<is_type_list_contains<T>(0)>, Default, T>::tag;
 };
 template<typename T>
-constexpr bool _LF_C_API(DLL) is_type_indicator(typename T::type_indicator*) { return true; }
+constexpr bool _LF_C_API(TDLL) is_type_indicator(typename T::type_indicator*) { return true; }
 template<typename T>
-constexpr bool _LF_C_API(DLL) is_type_indicator(...) { return false; }
+constexpr bool _LF_C_API(TDLL) is_type_indicator(...) { return false; }
 template<typename T>
-constexpr bool _LF_C_API(DLL) is_type_list_end() { return !std::is_same_v<typename T::type_indicator, VoidType>; }
+constexpr bool _LF_C_API(TDLL) is_type_list_end() { return !std::is_same_v<typename T::type_indicator, VoidType>; }
 template<typename T>
-constexpr bool _LF_C_API(DLL) is_indicator_typen(typename T::tag* t, bool v = T::value) { return true; }
+constexpr bool _LF_C_API(TDLL) is_indicator_typen(typename T::tag* t, bool v = T::value) { return true; }
 template<typename T>
-constexpr bool _LF_C_API(DLL) is_indicator_typen(...) { return false; }
+constexpr bool _LF_C_API(TDLL) is_indicator_typen(...) { return false; }
 
 template<typename L>
-_LF_C_API(Struct) type_decltype<L, -2>
+_LF_C_API(TStruct) type_decltype<L, -2>
 {
 	using tag = bad_indicator;
 	constexpr static bool value = false;
 };
 template<typename L>
-_LF_C_API(Struct) type_decltype<L, -1>
+_LF_C_API(TStruct) type_decltype<L, -1>
 {
 	using tag = bad_indicator;
 	constexpr static bool value = false;
 };
 template<typename L>
-_LF_C_API(Struct) type_decltype<L, 0>
+_LF_C_API(TStruct) type_decltype<L, 0>
 {
 	using tag = typename L::tag;
 	constexpr static bool value = true;
 };
 template<typename L, int pos>
-_LF_C_API(Struct) type_decltype
+_LF_C_API(TStruct) type_decltype
 {
 	using tag = typename type_decltype<typename L::type_indicator, pos - 1>::tag;
 	constexpr static bool value = true;
 };
 
-template<typename type_list_type, bool _IsF = true> const string_indicator::tag& _LF_C_API(DLL) get_type_list_string()
+template<typename type_list_type, bool _IsF = true> const string_indicator::tag& _LF_C_API(TDLL) get_type_list_string()
 {
 	if constexpr (std::is_same_v<type_list_type, type_list<void>>)
 	{
@@ -809,8 +862,8 @@ template<typename type_list_type, bool _IsF = true> const string_indicator::tag&
 
 #pragma region Traits (Static)
 
-template<typename _T> _LF_C_API(Struct)	check_type			:std::true_type{};
-template<> _LF_C_API(Struct)			check_type<void>	:std::false_type{};
+template<typename _T> _LF_C_API(TStruct)	check_type			:std::true_type{};
+template<> _LF_C_API(TStruct)			check_type<void>	:std::false_type{};
 
 
 _LF_C_API(Class)
@@ -852,7 +905,7 @@ private:
 /*
 	fail to get function information
 */
-template<typename _T> _LF_C_API(Struct) function_traits
+template<typename _T> _LF_C_API(TStruct) function_traits
 {
 	_LFramework_Kit_API_StaticOperatorBool(false);
 	using tag = void;
@@ -868,7 +921,7 @@ template<typename _T> _LF_C_API(Struct) function_traits
 /*
 	get regular function information
 */
-template<typename Ret, typename... Args> _LF_C_API(Struct) function_traits<Ret(_cdecl*)(Args...)>
+template<typename Ret, typename... Args> _LF_C_API(TStruct) function_traits<Ret(_cdecl*)(Args...)>
 {
 	_LFramework_Kit_API_StaticOperatorBool(true);
 	using tag = Ret(_cdecl*)(Args...);
@@ -881,7 +934,7 @@ template<typename Ret, typename... Args> _LF_C_API(Struct) function_traits<Ret(_
 	using consting = unconst_indicator;
 };
 #ifndef _WIN64
-template<typename Ret, typename... Args> _LF_C_API(Struct) function_traits<Ret(_stdcall*)(Args...)>
+template<typename Ret, typename... Args> _LF_C_API(TStruct) function_traits<Ret(_stdcall*)(Args...)>
 {
 	_LFramework_Kit_API_StaticOperatorBool(true);
 	using tag = Ret(_stdcall*)(Args...);
@@ -889,11 +942,11 @@ template<typename Ret, typename... Args> _LF_C_API(Struct) function_traits<Ret(_
 
 	using result = Ret;
 	using parameters = type_list<Args...>;
-	using belong = global_indicator;
+	using belong = namespace_indicator;
 	using call = _stdcall_indicator;
 	using consting = unconst_indicator;
 };
-template<typename Ret, typename... Args> _LF_C_API(Struct) function_traits<Ret(_fastcall*)(Args...)>
+template<typename Ret, typename... Args> _LF_C_API(TStruct) function_traits<Ret(_fastcall*)(Args...)>
 {
 	_LFramework_Kit_API_StaticOperatorBool(true);
 	using tag = Ret(_fastcall*)(Args...);
@@ -901,7 +954,7 @@ template<typename Ret, typename... Args> _LF_C_API(Struct) function_traits<Ret(_
 
 	using result = Ret;
 	using parameters = type_list<Args...>;
-	using belong = global_indicator;
+	using belong = namespace_indicator;
 	using call = _fastcall_indicator;
 	using consting = unconst_indicator;
 };
@@ -911,7 +964,7 @@ template<typename Ret, typename... Args> _LF_C_API(Struct) function_traits<Ret(_
 /*
 	get const member function information
 */
-template<typename Ret, typename C, typename... Args> _LF_C_API(Struct) function_traits<Ret(_cdecl C::*)(Args...) const>
+template<typename Ret, typename C, typename... Args> _LF_C_API(TStruct) function_traits<Ret(_cdecl C::*)(Args...) const>
 {
 	_LFramework_Kit_API_StaticOperatorBool(true);
 	using tag = Ret(_cdecl C::*)(Args...) const;
@@ -924,7 +977,7 @@ template<typename Ret, typename C, typename... Args> _LF_C_API(Struct) function_
 	using consting = const_indicator;
 };
 #ifndef _WIN64
-template<typename Ret, typename C, typename... Args> _LF_C_API(Struct) function_traits<Ret(_stdcall C::*)(Args...) const>
+template<typename Ret, typename C, typename... Args> _LF_C_API(TStruct) function_traits<Ret(_stdcall C::*)(Args...) const>
 {
 	_LFramework_Kit_API_StaticOperatorBool(true);
 	using tag = Ret(_stdcall C::*)(Args...) const;
@@ -936,7 +989,7 @@ template<typename Ret, typename C, typename... Args> _LF_C_API(Struct) function_
 	using call = _stdcall_indicator;
 	using consting = const_indicator;
 };
-template<typename Ret, typename C, typename... Args> _LF_C_API(Struct) function_traits<Ret(_fastcall C::*)(Args...) const>
+template<typename Ret, typename C, typename... Args> _LF_C_API(TStruct) function_traits<Ret(_fastcall C::*)(Args...) const>
 {
 	_LFramework_Kit_API_StaticOperatorBool(true);
 	using tag = Ret(_fastcall C::*)(Args...) const;
@@ -948,7 +1001,7 @@ template<typename Ret, typename C, typename... Args> _LF_C_API(Struct) function_
 	using call = _fastcall_indicator;
 	using consting = const_indicator;
 };
-template<typename Ret, typename C, typename... Args> _LF_C_API(Struct) function_traits<Ret(__thiscall C::*)(Args...) const>
+template<typename Ret, typename C, typename... Args> _LF_C_API(TStruct) function_traits<Ret(__thiscall C::*)(Args...) const>
 {
 	_LFramework_Kit_API_StaticOperatorBool(true);
 	using tag = Ret(__thiscall C::*)(Args...) const;
@@ -966,7 +1019,7 @@ template<typename Ret, typename C, typename... Args> _LF_C_API(Struct) function_
 /*
 	get unconst member function information
 */
-template<typename Ret, typename C, typename... Args> _LF_C_API(Struct) function_traits<Ret(_cdecl C::*)(Args...)>
+template<typename Ret, typename C, typename... Args> _LF_C_API(TStruct) function_traits<Ret(_cdecl C::*)(Args...)>
 {
 	_LFramework_Kit_API_StaticOperatorBool(true);
 	using tag = Ret(_cdecl C::*)(Args...);
@@ -979,7 +1032,7 @@ template<typename Ret, typename C, typename... Args> _LF_C_API(Struct) function_
 	using consting = unconst_indicator;
 };
 #ifndef _WIN64
-template<typename Ret, typename C, typename... Args> _LF_C_API(Struct) function_traits<Ret(_stdcall C::*)(Args...)>
+template<typename Ret, typename C, typename... Args> _LF_C_API(TStruct) function_traits<Ret(_stdcall C::*)(Args...)>
 {
 	_LFramework_Kit_API_StaticOperatorBool(true);
 	using tag = Ret(_stdcall C::*)(Args...);
@@ -991,7 +1044,7 @@ template<typename Ret, typename C, typename... Args> _LF_C_API(Struct) function_
 	using call = _stdcall_indicator;
 	using consting = unconst_indicator;
 };
-template<typename Ret, typename C, typename... Args> _LF_C_API(Struct) function_traits<Ret(_fastcall C::*)(Args...)>
+template<typename Ret, typename C, typename... Args> _LF_C_API(TStruct) function_traits<Ret(_fastcall C::*)(Args...)>
 {
 	_LFramework_Kit_API_StaticOperatorBool(true);
 	using tag = Ret(_fastcall C::*)(Args...);
@@ -1008,7 +1061,7 @@ template<typename Ret, typename C, typename... Args> _LF_C_API(Struct) function_
 /*
 	get regular function information
 */
-template<typename T, typename = template_fill_indicator> _LF_C_API(Struct) function_traits_ex : public function_traits<T>
+template<typename T, typename = template_fill_indicator> _LF_C_API(TStruct) function_traits_ex : public function_traits<T>
 {
 	using function_traits_indicator = void;
 };
@@ -1016,9 +1069,36 @@ template<typename T, typename = template_fill_indicator> _LF_C_API(Struct) funct
 	get lambda or Functor information
 */
 template<typename Lambda>
-_LF_C_API(Struct) function_traits_ex<Lambda, std::void_t<decltype(&Lambda::operator())>> : public function_traits<decltype(&Lambda::operator())>
+_LF_C_API(TStruct) function_traits_ex<Lambda, std::void_t<decltype(&Lambda::operator())>> : public function_traits<decltype(&Lambda::operator())>
 {
 	using function_traits_indicator = void;
+};
+
+#pragma endregion
+
+#pragma region field_traits
+
+/*
+	fail to get function information
+*/
+template<typename _T> _LF_C_API(TStruct) field_traits
+{
+	_LFramework_Kit_API_StaticOperatorBool(false);
+	using tag = void;
+	constexpr static bool value = false;
+
+	using origin = _T;
+	//using 
+	using belong = unknown_indicator;
+	using consting = unconst_indicator;
+};
+
+/*
+	get regular field information
+*/
+template<typename T, typename = template_fill_indicator> _LF_C_API(TStruct) field_traits_ex : public function_traits<T>
+{
+	using field_traits_indicator = void;
 };
 
 #pragma endregion
@@ -1028,7 +1108,7 @@ _LF_C_API(Struct) function_traits_ex<Lambda, std::void_t<decltype(&Lambda::opera
 #pragma region function_info
 
 _LF_C_API(Class) function_base;
-template<typename func> _LF_C_API(Class) function_info;
+template<typename func> _LF_C_API(TClass) function_info;
 
 _LF_C_API(Class)
 function_base:	_LF_Inherited(any_trait_base)
@@ -1043,10 +1123,6 @@ public:
 		any_trait_base(symbol_name,func_name, symbol_type) {}
 	function_base(function_base&) = delete;
 	function_base(function_base&&) = delete;
-	const char* read_func_name() const
-	{
-		return this->read_symbol_name();
-	}
 
 	using function_bases_type = std::map<size_t, function_base*>;
 private:
@@ -1054,9 +1130,14 @@ private:
 };
 
 template<typename func>
-_LF_C_API(Class)
-function_info:	_LF_Inherited(function_base), _LF_Inherited(any_class)
+_LF_C_API(TClass)
+function_info:	_LF_Inherited(function_base)
 {
+private:
+	function_info(const func& func_ptr,const char* symbol_name, const string& func_name, const type_info& symbol_type) :
+		function_base(symbol_name, func_name, symbol_type),
+		any_trait_base(symbol_name, func_name, symbol_type),
+		invoker(func_ptr) {}
 public:
 	using string = typename string_indicator::tag;
 
@@ -1069,13 +1150,9 @@ public:
 	using belong = typename traits::belong;
 
 	function_info(const func& func_ptr, const char* function_name) :
-		function_base(function_name,
+		function_info(func_ptr, function_name,
 			string(typeid(result).name()) + " [" + typeid(belong).name() + "]::" + function_name + "(" + get_type_list_string<parameters>() + ")",
-			typeid(func)),
-		any_trait_base(function_name,
-			string(typeid(result).name()) + " [" + typeid(belong).name() + "]::" + function_name + "(" + get_type_list_string<parameters>() + ")",
-			typeid(func)),
-		invoker(func_ptr) {}
+			typeid(func)) {}
 	function_info(function_info&) = delete;
 	function_info(function_info&&) = delete;
 	const func& invoker;
@@ -1112,7 +1189,7 @@ private:
 };
 
 template<typename func>
-const function_info<func>& _LF_C_API(DLL) create_or_get_function_info(const func& func_ptr, const char* function_name)
+const function_info<func>& _LF_C_API(TDLL) create_or_get_function_info(const func& func_ptr, const char* function_name)
 {
 	if (!function_base::function_bases.count(typeid(func).hash_code()))
 	{
