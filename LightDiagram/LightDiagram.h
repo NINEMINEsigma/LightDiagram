@@ -131,8 +131,11 @@
 
 //Depends on the Microsoft C++ implementation
 
+#ifdef _MSC_VER
+
 #include <sal.h>
 
+#endif // _MSC_VER
 
 #pragma region __TEST_MICROSOFT_IMPLEMENTATION
 
@@ -373,7 +376,11 @@ public:
 
 #define _LFramework_Config_
 
+#ifdef _MSC_VER
+
 #include<yvals.h>
+
+#endif // _MSC_VER
 
 //If you enable debug mode, you can only compile directly with the code of this project
 #ifndef _DEBUG
