@@ -1,3 +1,4 @@
+#define _Source_Development
 #include"LightDiagram.h"
 
 #include<Windows.h>
@@ -10,6 +11,15 @@ class test
 public:
 	using integral_indicator = void;
 
+	class test_inside
+	{
+	public:
+		void push()
+		{
+			cout << "ok";
+		}
+	};
+
 	int b = 0;
 	int add(int a)
 	{
@@ -17,15 +27,16 @@ public:
 	}
 };
 
+int add(int b)
+{
+	return b;
+}
+
 using test_type = int******;
 
 int main()
 {
 	ld_test();
-	fvar_info field = make_field_info(test, b);
-	fvar_base fiebase = make_field_info(test, b);
-	func_info func = make_function_info(test, add);
-	test a;
-	func.invoke(&a, 500);
-	cout << *((int*)fiebase.get(&a)) << "\n";
+	func_info a = make_function_info(test::test_inside, push);
+	cout << a.invoke(nullptr);
 }

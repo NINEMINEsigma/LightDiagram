@@ -1,4 +1,4 @@
-﻿# Make Setting
+# Make Setting
 cmake_minimum_required (VERSION 3.8)
 
 # 如果支持，请为 MSVC 编译器启用热重载。
@@ -20,4 +20,8 @@ set (LightDiagram_VERSION_MINOR 0)
 
 # Sub Project
 include_directories ("${PROJECT_SOURCE_DIR}/LightDiagram")
+#include_directories ("${PROJECT_SOURCE_DIR}/helio")
+#add_subdirectory ("helio")
 add_subdirectory ("LightDiagram")
+
+set(CMAKE_INSTALL_PREFIX "${PROJECT_SOURCE_DIR}/out/")
