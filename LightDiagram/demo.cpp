@@ -1,7 +1,7 @@
-#define _Source_Development
+
+
 #include"LightDiagram.h"
 
-#include<Windows.h>
 #include<iostream>
 
 using namespace std;
@@ -37,6 +37,9 @@ using test_type = int******;
 int main()
 {
 	ld_test();
-	func_info a = make_function_info(test::test_inside, push);
-	cout << a.invoke(nullptr);
+	test a;
+	func_info t = make_function_info(test, add);
+	t.invoke(&a, 50);
+	fvar_info f = make_field_info(test, b);
+	cout << f.get(&a);
 }

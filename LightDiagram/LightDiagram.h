@@ -382,7 +382,9 @@ public:
 
 #include<yvals.h>
 
-#else
+#endif
+
+#if defined(_LINUX_)&&!defined(_MSC_VER)
 
 #define __stdcall
 #define _stdcall
@@ -391,6 +393,7 @@ public:
 #define __fastcall
 #define _fastcall
 #define __thiscall
+#define abstract =0
 
 #endif // _MSC_VER
 
@@ -1015,6 +1018,7 @@ public:
 	fail to get function information
 */
 template<typename _T> _LF_C_API(TStruct) function_traits
+
 {
 	_LFramework_Kit_API_StaticOperatorBool(false);
 	using tag = void;
@@ -1032,10 +1036,10 @@ template<typename _T> _LF_C_API(TStruct) function_traits
 /*
 	get regular function information
 */
-template<typename Ret, typename... Args> _LF_C_API(TStruct) function_traits<Ret(__cdecl*)(Args...)>
+template<typename Ret, typename... Args> _LF_C_API(TStruct) function_traits<Ret(*)(Args...)>
 {
 	_LFramework_Kit_API_StaticOperatorBool(true);
-	using tag = Ret(__cdecl*)(Args...);
+	using tag = Ret(*)(Args...);
 	constexpr static bool value = true;
 
 	using result = Ret;
@@ -1045,42 +1049,14 @@ template<typename Ret, typename... Args> _LF_C_API(TStruct) function_traits<Ret(
 	using consting = unconst_indicator;
 	using typen = LDType<tag>;
 };
-#if !defined(_WIN64)&&defined(_MSC_VER)
-template<typename Ret, typename... Args> _LF_C_API(TStruct) function_traits<Ret(__stdcall*)(Args...)>
-{
-	_LFramework_Kit_API_StaticOperatorBool(true);
-	using tag = Ret(__stdcall*)(Args...);
-	constexpr static bool value = true;
-
-	using result = Ret;
-	using parameters = type_list<Args...>;
-	using belong = namespace_indicator;
-	using call = _stdcall_indicator;
-	using consting = unconst_indicator;
-	using typen = LDType<tag>;
-};
-template<typename Ret, typename... Args> _LF_C_API(TStruct) function_traits<Ret(__fastcall*)(Args...)>
-{
-	_LFramework_Kit_API_StaticOperatorBool(true);
-	using tag = Ret(__fastcall*)(Args...);
-	constexpr static bool value = true;
-
-	using result = Ret;
-	using parameters = type_list<Args...>;
-	using belong = namespace_indicator;
-	using call = _fastcall_indicator;
-	using consting = unconst_indicator;
-	using typen = LDType<tag>;
-};
-#endif // !_WIN64
 
 /*
 	get regular function information
 */
-template<typename Ret> _LF_C_API(TStruct) function_traits<Ret(__cdecl*)()>
+template<typename Ret> _LF_C_API(TStruct) function_traits<Ret(*)()>
 {
 	_LFramework_Kit_API_StaticOperatorBool(true);
-	using tag = Ret(__cdecl*)();
+	using tag = Ret(*)();
 	constexpr static bool value = true;
 
 	using result = Ret;
@@ -1090,43 +1066,15 @@ template<typename Ret> _LF_C_API(TStruct) function_traits<Ret(__cdecl*)()>
 	using consting = unconst_indicator;
 	using typen = LDType<tag>;
 };
-#if !defined(_WIN64)&&defined(_MSC_VER)
-template<typename Ret, typename> _LF_C_API(TStruct) function_traits<Ret(__stdcall*)()>
-{
-	_LFramework_Kit_API_StaticOperatorBool(true);
-	using tag = Ret(__stdcall*)();
-	constexpr static bool value = true;
-
-	using result = Ret;
-	using parameters = type_list<void>;
-	using belong = namespace_indicator;
-	using call = _stdcall_indicator;
-	using consting = unconst_indicator;
-	using typen = LDType<tag>;
-};
-template<typename Ret > _LF_C_API(TStruct) function_traits<Ret(__fastcall*)()>
-{
-	_LFramework_Kit_API_StaticOperatorBool(true);
-	using tag = Ret(__fastcall*)();
-	constexpr static bool value = true;
-
-	using result = Ret;
-	using parameters = type_list<void>;
-	using belong = namespace_indicator;
-	using call = _fastcall_indicator;
-	using consting = unconst_indicator;
-	using typen = LDType<tag>;
-};
-#endif // !_WIN64
 
 
 /*
 	get const member function information
 */
-template<typename Ret, typename C, typename... Args> _LF_C_API(TStruct) function_traits<Ret(__cdecl C::*)(Args...) const>
+template<typename Ret, typename C, typename... Args> _LF_C_API(TStruct) function_traits<Ret( C::*)(Args...) const>
 {
 	_LFramework_Kit_API_StaticOperatorBool(true);
-	using tag = Ret(__cdecl C::*)(Args...) const;
+	using tag = Ret( C::*)(Args...) const;
 	constexpr static bool value = true;
 
 	using result = Ret;
@@ -1136,56 +1084,14 @@ template<typename Ret, typename C, typename... Args> _LF_C_API(TStruct) function
 	using consting = const_indicator;
 	using typen = LDType<tag>;
 };
-#if !defined(_WIN64)&&defined(_MSC_VER)
-template<typename Ret, typename C, typename... Args> _LF_C_API(TStruct) function_traits<Ret(__stdcall C::*)(Args...) const>
-{
-	_LFramework_Kit_API_StaticOperatorBool(true);
-	using tag = Ret(__stdcall C::*)(Args...) const;
-	constexpr static bool value = true;
-
-	using result = Ret;
-	using parameters = type_list<Args...>;
-	using belong = C;
-	using call = _stdcall_indicator;
-	using consting = const_indicator;
-	using typen = LDType<tag>;
-};
-template<typename Ret, typename C, typename... Args> _LF_C_API(TStruct) function_traits<Ret(__fastcall C::*)(Args...) const>
-{
-	_LFramework_Kit_API_StaticOperatorBool(true);
-	using tag = Ret(__fastcall C::*)(Args...) const;
-	constexpr static bool value = true;
-
-	using result = Ret;
-	using parameters = type_list<Args...>;
-	using belong = C;
-	using call = _fastcall_indicator;
-	using consting = const_indicator;
-	using typen = LDType<tag>;
-};
-template<typename Ret, typename C, typename... Args> _LF_C_API(TStruct) function_traits<Ret(__thiscall C::*)(Args...) const>
-{
-	_LFramework_Kit_API_StaticOperatorBool(true);
-	using tag = Ret(__thiscall C::*)(Args...) const;
-	constexpr static bool value = true;
-
-	using result = Ret;
-	using parameters = type_list<Args...>;
-	using belong = C;
-	using call = __thiscall_indicator;
-	using consting = const_indicator;
-	using typen = LDType<tag>;
-};
-
-#endif // !_WIN64
 
 /*
 	get const member function information
 */
-template<typename Ret, typename C > _LF_C_API(TStruct) function_traits<Ret(__cdecl C::*)() const>
+template<typename Ret, typename C > _LF_C_API(TStruct) function_traits<Ret( C::*)() const>
 {
 	_LFramework_Kit_API_StaticOperatorBool(true);
-	using tag = Ret(__cdecl C::*)() const;
+	using tag = Ret( C::*)() const;
 	constexpr static bool value = true;
 
 	using result = Ret;
@@ -1195,55 +1101,14 @@ template<typename Ret, typename C > _LF_C_API(TStruct) function_traits<Ret(__cde
 	using consting = const_indicator;
 	using typen = LDType<tag>;
 };
-#if !defined(_WIN64)&&defined(_MSC_VER)
-template<typename Ret, typename C, typename... Args> _LF_C_API(TStruct) function_traits<Ret(__stdcall C::*)(Args...) const>
-{
-	_LFramework_Kit_API_StaticOperatorBool(true);
-	using tag = Ret(__stdcall C::*)(Args...) const;
-	constexpr static bool value = true;
-
-	using result = Ret;
-	using parameters = type_list<Args...>;
-	using belong = C;
-	using call = _stdcall_indicator;
-	using consting = const_indicator;
-	using typen = LDType<tag>;
-};
-template<typename Ret, typename C, typename... Args> _LF_C_API(TStruct) function_traits<Ret(__fastcall C::*)(Args...) const>
-{
-	_LFramework_Kit_API_StaticOperatorBool(true);
-	using tag = Ret(__fastcall C::*)(Args...) const;
-	constexpr static bool value = true;
-
-	using result = Ret;
-	using parameters = type_list<Args...>;
-	using belong = C;
-	using call = _fastcall_indicator;
-	using consting = const_indicator;
-	using typen = LDType<tag>;
-};
-template<typename Ret, typename C, typename... Args> _LF_C_API(TStruct) function_traits<Ret(__thiscall C::*)(Args...) const>
-{
-	_LFramework_Kit_API_StaticOperatorBool(true);
-	using tag = Ret(__thiscall C::*)(Args...) const;
-	constexpr static bool value = true;
-
-	using result = Ret;
-	using parameters = type_list<Args...>;
-	using belong = C;
-	using call = __thiscall_indicator;
-	using consting = const_indicator;
-	using typen = LDType<tag>;
-};
-#endif // !_WIN64
 
 /*
 	get unconst member function information
 */
-template<typename Ret, typename C, typename... Args> _LF_C_API(TStruct) function_traits<Ret(__cdecl C::*)(Args...)>
+template<typename Ret, typename C, typename... Args> _LF_C_API(TStruct) function_traits<Ret( C::*)(Args...)>
 {
 	_LFramework_Kit_API_StaticOperatorBool(true);
-	using tag = Ret(__cdecl C::*)(Args...);
+	using tag = Ret( C::*)(Args...);
 	constexpr static bool value = true;
 
 	using result = Ret;
@@ -1253,42 +1118,14 @@ template<typename Ret, typename C, typename... Args> _LF_C_API(TStruct) function
 	using consting = unconst_indicator;
 	using typen = LDType<tag>;
 };
-#if !defined(_WIN64)&&defined(_MSC_VER)
-template<typename Ret, typename C, typename... Args> _LF_C_API(TStruct) function_traits<Ret(__stdcall C::*)(Args...)>
-{
-	_LFramework_Kit_API_StaticOperatorBool(true);
-	using tag = Ret(__stdcall C::*)(Args...);
-	constexpr static bool value = true;
-
-	using result = Ret;
-	using parameters = type_list<Args...>;
-	using belong = C;
-	using call = _stdcall_indicator;
-	using consting = unconst_indicator;
-	using typen = LDType<tag>;
-};
-template<typename Ret, typename C, typename... Args> _LF_C_API(TStruct) function_traits<Ret(__fastcall C::*)(Args...)>
-{
-	_LFramework_Kit_API_StaticOperatorBool(true);
-	using tag = Ret(__fastcall C::*)(Args...);
-	constexpr static bool value = true;
-
-	using result = Ret;
-	using parameters = type_list<Args...>;
-	using belong = C;
-	using call = _fastcall_indicator;
-	using consting = unconst_indicator;
-	using typen = LDType<tag>;
-};
-#endif // !_WIN64
 
 /*
 	get unconst member function information
 */
-template<typename Ret, typename C> _LF_C_API(TStruct) function_traits<Ret(__cdecl C::*)()>
+template<typename Ret, typename C> _LF_C_API(TStruct) function_traits<Ret( C::*)()>
 {
 	_LFramework_Kit_API_StaticOperatorBool(true);
-	using tag = Ret(__cdecl C::*)();
+	using tag = Ret( C::*)();
 	constexpr static bool value = true;
 
 	using result = Ret;
@@ -1298,34 +1135,6 @@ template<typename Ret, typename C> _LF_C_API(TStruct) function_traits<Ret(__cdec
 	using consting = unconst_indicator;
 	using typen = LDType<tag>;
 };
-#if !defined(_WIN64)&&defined(_MSC_VER)
-template<typename Ret, typename C> _LF_C_API(TStruct) function_traits<Ret(__stdcall C::*)()>
-{
-	_LFramework_Kit_API_StaticOperatorBool(true);
-	using tag = Ret(__stdcall C::*)();
-	constexpr static bool value = true;
-
-	using result = Ret;
-	using parameters = type_list<void>;
-	using belong = C;
-	using call = _stdcall_indicator;
-	using consting = unconst_indicator;
-	using typen = LDType<tag>;
-};
-template<typename Ret, typename C > _LF_C_API(TStruct) function_traits<Ret(__fastcall C::*)()>
-{
-	_LFramework_Kit_API_StaticOperatorBool(true);
-	using tag = Ret(__fastcall C::*)();
-	constexpr static bool value = true;
-
-	using result = Ret;
-	using parameters = type_list<void>;
-	using belong = C;
-	using call = _fastcall_indicator;
-	using consting = unconst_indicator;
-	using typen = LDType<tag>;
-};
-#endif // !_WIN64
 
 /*
 	get regular function information
