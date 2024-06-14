@@ -1,6 +1,7 @@
 #Project Setting
 
 include_directories		("${PROJECT_BINARY_DIR}" "${PROJECT_BINARY_DIR}/Core/Header")
+include_directories		("${PROJECT_BINARY_DIR}/Core")
 aux_source_directory	(. Main_Cpp_List)
 aux_source_directory	(./Core Core_Cpp_List)
 add_executable (LightDiagram ${Main_Cpp_List} ${Core_Cpp_List})

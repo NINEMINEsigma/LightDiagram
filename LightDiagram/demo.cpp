@@ -12,5 +12,6 @@ using namespace std;
 int main()
 {
 	ld_test();
+	cout << std::is_base_of_v<any_class, ld::IBase>;
 	getchar();
 }

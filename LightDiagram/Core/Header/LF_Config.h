@@ -1101,3 +1101,14 @@ _LF_C_API(TStruct) choose_type < false, _True, _False >
 #pragma endregion
 
 #pragma endregion
+
+#pragma region SAL
+
+#ifndef _In_
+#define _In_
+#endif // !_In_
+#ifndef _Out_
+#define _Out_
+#endif // !_Out_
+
+#pragma endregion
