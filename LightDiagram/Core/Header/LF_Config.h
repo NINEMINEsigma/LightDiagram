@@ -1,4 +1,6 @@
-#pragma once
+#ifndef __FILE_LF_CONFIG
+
+#define __FILE_LF_CONFIG
 
 //release:	std::type_info to global namespace
 
@@ -1112,3 +1114,5 @@ _LF_C_API(TStruct) choose_type < false, _True, _False >
 #endif // !_Out_
 
 #pragma endregion
+
+#endif // !__FILE_LF_CONFIG

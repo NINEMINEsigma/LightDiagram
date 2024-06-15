@@ -1,4 +1,6 @@
-#pragma once
+#ifndef __FILE_STATIC_EXIST
+
+#define __FILE_STATIC_EXIST
 
 #ifndef _LFramework_Config_
 #include<Core/Header/LF_Config.h>
@@ -79,3 +81,5 @@ template< typename T, typename MType> _LF_C_API(TDLL) constexpr bool __exist_pro
 #pragma endregion
 
 #pragma endregion
+
+#endif // !__FILE_STATIC_EXIST

@@ -1,4 +1,6 @@
-#pragma once
+#ifndef __FILE_STATIC_INDICATOR
+
+#define __FILE_STATIC_INDICATOR
 
 #include<Core/Header/static_exist.h>
 
@@ -173,3 +175,5 @@ template<typename type_list_type, bool _IsF = true> const string_indicator::tag&
 }
 
 #pragma endregion
+
+#endif // !__FILE_STATIC_INDICATOR

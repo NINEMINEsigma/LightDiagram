@@ -1,4 +1,6 @@
-#pragma once
+#ifndef __FILE_STATIC_TRAITS
+
+#define __FILE_STATIC_TRAITS
 
 #include<Core/Header/anyclass.h>
 #include<Core/Header/static_indicator.h>
@@ -590,3 +592,5 @@ _LF_C_API(OStruct) LDType_Traits
 };
 
 #pragma endregion
+
+#endif // !__FILE_STATIC_TRAITS

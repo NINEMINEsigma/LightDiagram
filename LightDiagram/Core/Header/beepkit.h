@@ -1,4 +1,6 @@
-#pragma once
+#ifndef __FILE_BEEP_KIT
+
+#define __FILE_BEEP_KIT
 
 //q-low，1-high，s-helf
 
@@ -38,3 +40,6 @@
 #define beep_sfa1 1480
 #define beep_sso1 1661
 #define beep_sla1 1865
+
+#endif // !__FILE_BEEP_KIT
+

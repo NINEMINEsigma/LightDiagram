@@ -1,4 +1,6 @@
-#pragma once
+#ifndef __FILE_ANY_CLASS
+
+#define __FILE_ANY_CLASS
 
 #ifndef _LFramework_Config_
 #include<Core/Header/LF_Config.h>
@@ -138,3 +140,6 @@ _LF_C_API(Class)	any_class
 public:
 	virtual ~any_class() {}
 };
+
+#endif // !__FILE_ANY_CLASS
+

@@ -1,4 +1,6 @@
-#pragma once
+#ifndef __FILE_LIGHTDIAGRAM
+
+#define __FILE_LIGHTDIAGRAM
 
 //*
 //  Copyright (c) 2024, liu bai, ninemine
@@ -21,6 +23,7 @@
 //	Header
 //*
 
+#include<Core/Header/some_features.h>
 #include<Core/Header/LF_Config.h>
 #include<Core/Header/static_exist.h>
 #include<Core/Header/static_indicator.h>
@@ -64,3 +67,5 @@ namespace ld
 
 
 }
+
+#endif // !__FILE_LIGHTDIAGRAM

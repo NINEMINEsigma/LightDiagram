@@ -1,5 +1,3 @@
-#pragma once
-
 #include<Core/Header/static_traits.h>
 
 function_base::function_bases_type function_base::function_bases;

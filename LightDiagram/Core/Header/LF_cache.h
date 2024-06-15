@@ -1,6 +1,9 @@
-#pragma once
+#ifndef __FILE_LF_CACHE
+
+#define __FILE_LF_CACHE
 
 #include<Core/Header/LF_Config.h>
+#include<Core/Header/anyclass.h>
 #define Symbol_Push :
 
 namespace ld
@@ -17,10 +20,10 @@ namespace ld
     protected:
         IBase();
     public:
-        virtual IBase& operator=(const IBase&) abstract;
+        virtual IBase& operator=(const IBase&) =0;
         virtual ~IBase();
-        virtual void ToMap(_Out_ IBaseMap * BM) abstract;
-        virtual bool FromMap(_In_ IBaseMap * from) abstract;
+        virtual void ToMap(_Out_ IBaseMap * BM) =0;
+        virtual bool FromMap(_In_ IBaseMap * from) =0;
     };
 
     // Implementations for cache data , The relevant interfaces are : 
@@ -32,10 +35,12 @@ namespace ld
     protected:
         IBaseMap();
     public:
-        virtual IBaseMap& operator=(const IBaseMap&) abstract;
+        virtual IBaseMap& operator=(const IBaseMap&) =0;
         virtual ~IBaseMap();
-        virtual void ToInstance(_Out_ IBase * obj) abstract;
-        virtual bool FromInstance(_In_ IBase * from) abstract;
+        virtual void ToInstance(_Out_ IBase * obj) =0;
+        virtual bool FromInstance(_In_ IBase * from) =0;
     };
 
 }
+
+#endif // !__FILE_LF_CACHE

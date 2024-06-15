@@ -1,4 +1,6 @@
-#pragma once
+#ifndef __FILE_LF_TYPE
+
+#define __FILE_LF_TYPE
 
 #include<Core/Header/static_indicator.h>
 
@@ -78,3 +80,7 @@ _LF_C_API(OStruct) LDType_Indicator
 };
 
 #pragma endregion
+
+#endif // !__LF_TYPE
+
+
