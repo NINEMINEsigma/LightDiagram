@@ -7,10 +7,17 @@
 #include <cstdio>
 
 using namespace std;
+using namespace ld;
 
 int main()
 {
 	ld_test();
-	cout << std::is_base_of_v<any_class, ld::IBase>;
+
+	for (int i = 0, e = 308; i <= e; i++)
+	{
+		ld::EaseProgressBar(i/(double)e, 40, ConsoleBackgroundColor::Blue);
+		Sleep(50);
+	}
+
 	getchar();
 }

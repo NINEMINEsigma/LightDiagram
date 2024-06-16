@@ -120,6 +120,10 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#ifdef _WINDOW_
+#include <Windows.h>
+#endif // OS_TYPE_WINDOWS_CC
+
 using type_info = std::type_info;
 
 #pragma endregion
@@ -1112,6 +1116,10 @@ _LF_C_API(TStruct) choose_type < false, _True, _False >
 #ifndef _Out_
 #define _Out_
 #endif // !_Out_
+
+#pragma endregion
+
+#pragma region Console
 
 #pragma endregion
 
