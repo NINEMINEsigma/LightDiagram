@@ -9,14 +9,14 @@
 namespace ld
 {
 	// Enum class for console text color
-	enum class ConsoleColor
+	enum _LF_C_API(Class) ConsoleColor
 	{
 		Green, Red, Blue, White, Black, Yellow, Purple, Gray, Cyan, None,
 		GreenIntensity, RedIntensity, BlueIntensity, WhiteIntensity, BlackIntensity, YellowIntensity, PurpleIntensity, GrayIntensity, CyanIntensity
 	};
 
 	// Enum class for console background color
-	enum class ConsoleBackgroundColor
+	enum _LF_C_API(Class) ConsoleBackgroundColor
 	{
 		Green, Red, Blue, White, Black, Yellow, Purple, Gray, Cyan, None
 	};
@@ -45,9 +45,7 @@ namespace ld
 
     using string = string_indicator::tag;
 
-#ifndef _CUSTOM_CLOG
-    extern std::ofstream clog;
-#endif // !_CUSTOM_CLOG
+    extern std::ostream* clog;
 
     extern bool is_log_message_to_cout;
 
@@ -71,6 +69,29 @@ namespace ld
     void    _LF_C_API(DLL)  EaseProgressBar(double t, int length, ConsoleBackgroundColor color);
     //  Ease Progress Bar
     void    _LF_C_API(DLL)  EaseProgressBar(int a, int b, int length, ConsoleBackgroundColor color);
+
+    _LF_C_API(Class)    ConsolePro:
+    _LF_Inherited(anyclass)
+    {
+    public:
+        ConsolePro();
+        virtual ~ConsolePro();
+
+        using symbol_t = short;
+        using string = string_indicator::tag;
+
+        symbol_t Message, Warning, Error;
+        ConsoleColor FC;
+        ConsoleBackgroundColor BC;
+
+        ConsolePro& Log(const string & message, const string & label, const string & tail, const symbol_t & type) const;
+        ConsolePro& LogMessage(const string & message, const string & label, const string & tail) const;
+        ConsolePro& LogWarning(const string & message, const string & label, const string & tail) const;
+        ConsolePro& LogError(const string & message, const string & label, const string & tail) const;
+        ConsolePro& CoutMessage(const string & message, const string & label, const string & tail) const;
+        ConsolePro& CoutWarning(const string & message, const string & label, const string & tail) const;
+        ConsolePro& CoutError(const string & message, const string & label, const string & tail) const;
+    };
 }
 
 #endif // !__FILE_LF_EXCEPTION

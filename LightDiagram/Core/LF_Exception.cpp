@@ -153,9 +153,7 @@ namespace ld
 	}
 
 
-#ifndef _CUSTOM_CLOG
-	std::ofstream clog("./line exception.txt");
-#endif // !_CUSTOM_CLOG
+	std::ostream* clog = new std::ofstream("./line exception.txt");
 
 	bool is_log_message_to_cout = true;
 
@@ -188,7 +186,7 @@ namespace ld
 		if (*counter)
 		{
 			if (*is_release)return;
-			clog << "<break>" << message << "<!exception is not catch>" << std::endl;
+			(*clog) << "<break>" << message << "<!exception is not catch>" << std::endl;
 			if (is_log_message_to_cout)
 			{
 				std::cout
@@ -208,7 +206,7 @@ namespace ld
 		if (!*is_release)
 		{
 			*is_release = true;
-			clog << "<catch>" << message << "<!exception is catch>" << std::endl;
+			(*clog) << "<catch>" << message << "<!exception is catch>" << std::endl;
 			if (is_log_message_to_cout)
 			{
 				std::cout
@@ -251,4 +249,53 @@ namespace ld
 		std::cout << ConsoleColor::Blue << a << "/" << b << ConsoleColor::Black;
 		std::cout << "                                         \r";
 	}
+
+
+	ConsolePro& ConsolePro::Log(const ConsolePro::string& message, const ConsolePro::string& label, const ConsolePro::string& tail, const ConsolePro::symbol_t& type) const
+	{
+		if (type == this->Warning)
+		{
+
+		}
+		else if (type == this->Error)
+		{
+
+		}
+		else
+		{
+
+		}
+		(*clog) << "<" << label << ">" << message << "<!" << tail << ">" << std::endl;
+	}
+
+	ConsolePro& ConsolePro::LogMessage(const ConsolePro::string& message, const ConsolePro::string& label, const ConsolePro::string& tail) const
+	{
+		// TODO: 在此处插入 return 语句
+	}
+
+	ConsolePro& ConsolePro::LogWarning(const ConsolePro::string& message, const ConsolePro::string& label, const ConsolePro::string& tail) const
+	{
+		// TODO: 在此处插入 return 语句
+	}
+
+	ConsolePro& ConsolePro::LogError(const ConsolePro::string& message, const ConsolePro::string& label, const ConsolePro::string& tail) const
+	{
+		// TODO: 在此处插入 return 语句
+	}
+
+	ConsolePro& ConsolePro::CoutMessage(const ConsolePro::string& message, const ConsolePro::string& label, const ConsolePro::string& tail) const
+	{
+		// TODO: 在此处插入 return 语句
+	}
+
+	ConsolePro& ConsolePro::CoutWarning(const ConsolePro::string& message, const ConsolePro::string& label, const ConsolePro::string& tail) const
+	{
+		// TODO: 在此处插入 return 语句
+	}
+
+	ConsolePro& ConsolePro::CoutError(const ConsolePro::string& message, const ConsolePro::string& label, const ConsolePro::string& tail) const
+	{
+		// TODO: 在此处插入 return 语句
+	}
 }
+
