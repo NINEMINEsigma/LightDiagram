@@ -12,12 +12,11 @@ using namespace ld;
 int main()
 {
 	ld_test();
+	ConsolePro console;
 
-	for (int i = 0, e = 308; i <= e; i++)
-	{
-		ld::EaseProgressBar(i/(double)e, 40, ConsoleBackgroundColor::Blue);
-		Sleep(50);
-	}
+	console.LogMessage("Test Message");
+	console.LogWarning("Test Warning");
+	console.LogError("Test Error");
 
 	getchar();
 }

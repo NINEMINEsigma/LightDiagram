@@ -38,10 +38,10 @@ namespace ld
 #endif
 
 
-    std::ostream& operator<< (std::ostream& os, ConsoleColor data);
-    std::ostream& operator<< (std::ostream& os, ConsoleBackgroundColor data);
-    std::wostream& operator<< (std::wostream& os, ConsoleColor data);
-    std::wostream& operator<< (std::wostream& os, ConsoleBackgroundColor data);
+    std::ostream& operator<<    (std::ostream& os,  const ConsoleColor& data);
+    std::ostream& operator<<    (std::ostream& os,  const ConsoleBackgroundColor& data);
+    std::wostream& operator<<   (std::wostream& os, const ConsoleColor& data);
+    std::wostream& operator<<   (std::wostream& os, const ConsoleBackgroundColor& data);
 
     using string = string_indicator::tag;
 
@@ -71,10 +71,11 @@ namespace ld
     void    _LF_C_API(DLL)  EaseProgressBar(int a, int b, int length, ConsoleBackgroundColor color);
 
     _LF_C_API(Class)    ConsolePro:
-    _LF_Inherited(anyclass)
+    _LF_Inherited(any_class)
     {
     public:
         ConsolePro();
+        ConsolePro(const ConsolePro & from);
         virtual ~ConsolePro();
 
         using symbol_t = short;
@@ -84,13 +85,16 @@ namespace ld
         ConsoleColor FC;
         ConsoleBackgroundColor BC;
 
-        ConsolePro& Log(const string & message, const string & label, const string & tail, const symbol_t & type) const;
-        ConsolePro& LogMessage(const string & message, const string & label, const string & tail) const;
-        ConsolePro& LogWarning(const string & message, const string & label, const string & tail) const;
-        ConsolePro& LogError(const string & message, const string & label, const string & tail) const;
-        ConsolePro& CoutMessage(const string & message, const string & label, const string & tail) const;
-        ConsolePro& CoutWarning(const string & message, const string & label, const string & tail) const;
-        ConsolePro& CoutError(const string & message, const string & label, const string & tail) const;
+        const ConsolePro& Log(const string & message, const string & label, const string & tail, const symbol_t & type) const;
+        const ConsolePro& CoutMessage(const string & message, const string & label, const string & tail) const;
+        const ConsolePro& CoutWarning(const string & message, const string & label, const string & tail) const;
+        const ConsolePro& CoutError(const string & message, const string & label, const string & tail) const;
+        const ConsolePro& LogMessage(const string & message) const;
+        const ConsolePro& LogWarning(const string & message) const;
+        const ConsolePro& LogError(const string & message) const;
+        const ConsolePro& CoutMessage(const string & message) const;
+        const ConsolePro& CoutWarning(const string & message) const;
+        const ConsolePro& CoutError(const string & message) const;
     };
 }
 

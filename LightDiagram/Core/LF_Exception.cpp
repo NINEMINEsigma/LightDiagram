@@ -101,7 +101,7 @@ namespace ld
 #endif
 
 	// Operator overloading for console text color
-	std::ostream& operator<< (std::ostream& os, ConsoleColor data)
+	std::ostream& operator<< (std::ostream& os, const ConsoleColor& data)
 	{
 #ifdef _WINDOW_
 		HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -114,7 +114,7 @@ namespace ld
 	}
 
 	// Operator overloading for console background color
-	std::ostream& operator<< (std::ostream& os, ConsoleBackgroundColor data)
+	std::ostream& operator<< (std::ostream& os, const ConsoleBackgroundColor& data)
 	{
 #ifdef _WINDOW_
 		HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -127,7 +127,7 @@ namespace ld
 	}
 
 	// Operator overloading for console text color
-	std::wostream& operator<< (std::wostream& os, ConsoleColor data)
+	std::wostream& operator<< (std::wostream& os, const ConsoleColor& data)
 	{
 #ifdef _WINDOW_
 		HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -140,7 +140,7 @@ namespace ld
 	}
 
 	// Operator overloading for console background color
-	std::wostream& operator<< (std::wostream& os, ConsoleBackgroundColor data)
+	std::wostream& operator<< (std::wostream& os, const ConsoleBackgroundColor& data)
 	{
 #ifdef _WINDOW_
 		HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -250,52 +250,74 @@ namespace ld
 		std::cout << "                                         \r";
 	}
 
+	ConsolePro::ConsolePro()
+		: Message(0), Warning(1), Error(2), FC(ConsoleColor::None), BC(ConsoleBackgroundColor::None) {}
+	ConsolePro::ConsolePro(const ConsolePro& from)
+		: Message(from.Message), Warning(from.Warning), Error(from.Error), FC(from.FC), BC(from.BC) {}
+	ConsolePro::~ConsolePro() {}
 
-	ConsolePro& ConsolePro::Log(const ConsolePro::string& message, const ConsolePro::string& label, const ConsolePro::string& tail, const ConsolePro::symbol_t& type) const
+	const ConsolePro& ConsolePro::Log(const ConsolePro::string& message, const ConsolePro::string& label, const ConsolePro::string& tail, const ConsolePro::symbol_t& type) const
 	{
 		if (type == this->Warning)
-		{
-
-		}
+			std::cout << ConsoleColor::Yellow << message << std::endl;
 		else if (type == this->Error)
-		{
-
-		}
+			std::cout << ConsoleColor::Red << message << std::endl;
+		else if (type == this->Message)
+			std::cout << ConsoleColor::Blue << message << std::endl;
 		else
-		{
-
-		}
+			std::cout << message << std::endl;
+		if (is_log_message_to_cout)
+			std::cout << this->FC << this->BC;
 		(*clog) << "<" << label << ">" << message << "<!" << tail << ">" << std::endl;
+		return *this;
+	}
+	const ConsolePro& ConsolePro::LogMessage(const ConsolePro::string& message ) const
+	{
+		static ConsolePro::string label("message");
+		return Log(message, label, label, this->Message);
+	}
+	const ConsolePro& ConsolePro::LogWarning(const ConsolePro::string& message) const
+	{
+		static ConsolePro::string label("warning");
+		return Log(message, label, label, this->Warning);
+	}
+	const ConsolePro& ConsolePro::LogError(const ConsolePro::string& message) const
+	{
+		static ConsolePro::string label("error");
+		return Log(message, label, label, this->Error);
+	}
+	const ConsolePro& ConsolePro::CoutMessage(const ConsolePro::string& message, const ConsolePro::string& label, const ConsolePro::string& tail) const
+	{
+		std::cout << ConsoleColor::Blue << "<" << label << ">" << message << "<!" << tail << ">" << this->FC << std::endl;
+		return *this;
+	}
+	const ConsolePro& ConsolePro::CoutWarning(const ConsolePro::string& message, const ConsolePro::string& label, const ConsolePro::string& tail) const
+	{
+		std::cout << ConsoleColor::Yellow << "<" << label << ">" << message << "<!" << tail << ">" << this->FC << std::endl;
+		return *this;
+	}
+	const ConsolePro& ConsolePro::CoutError(const ConsolePro::string& message, const ConsolePro::string& label, const ConsolePro::string& tail) const
+	{
+		std::cout << ConsoleColor::Red << "<" << label << ">" << message << "<!" << tail << ">" << this->FC << std::endl;
+		return *this;
 	}
 
-	ConsolePro& ConsolePro::LogMessage(const ConsolePro::string& message, const ConsolePro::string& label, const ConsolePro::string& tail) const
+	const ConsolePro& ConsolePro::CoutMessage(const ConsolePro::string& message) const
 	{
-		// TODO: 在此处插入 return 语句
+		static ConsolePro::string label("message");
+		return CoutMessage(message, label, label);
 	}
-
-	ConsolePro& ConsolePro::LogWarning(const ConsolePro::string& message, const ConsolePro::string& label, const ConsolePro::string& tail) const
+	const ConsolePro& ConsolePro::CoutWarning(const ConsolePro::string& message) const
 	{
-		// TODO: 在此处插入 return 语句
+		static ConsolePro::string label("warning");
+		return CoutWarning(message, label, label);
 	}
-
-	ConsolePro& ConsolePro::LogError(const ConsolePro::string& message, const ConsolePro::string& label, const ConsolePro::string& tail) const
+	const ConsolePro& ConsolePro::CoutError(const ConsolePro::string& message) const
 	{
-		// TODO: 在此处插入 return 语句
-	}
-
-	ConsolePro& ConsolePro::CoutMessage(const ConsolePro::string& message, const ConsolePro::string& label, const ConsolePro::string& tail) const
-	{
-		// TODO: 在此处插入 return 语句
-	}
-
-	ConsolePro& ConsolePro::CoutWarning(const ConsolePro::string& message, const ConsolePro::string& label, const ConsolePro::string& tail) const
-	{
-		// TODO: 在此处插入 return 语句
-	}
-
-	ConsolePro& ConsolePro::CoutError(const ConsolePro::string& message, const ConsolePro::string& label, const ConsolePro::string& tail) const
-	{
-		// TODO: 在此处插入 return 语句
+		static ConsolePro::string label("error");
+		return CoutError(message, label, label);
 	}
 }
+
+
 

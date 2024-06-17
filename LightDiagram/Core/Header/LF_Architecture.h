@@ -6,6 +6,8 @@
 #include<Core/Header/static_traits.h>
 #include<Core/Header/LF_Exception.h>
 
+#include<Core/Header/ArchCom/Interface.h>
+
 namespace ld
 {
 
