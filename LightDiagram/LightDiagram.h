@@ -38,4 +38,8 @@ public:
 
 #include<Core/Header/LF_Architecture.h>
 
+//	Extension
+
+#include<Extension/Header/KitSocket.h>
+
 #endif // !__FILE_LIGHTDIAGRAM
