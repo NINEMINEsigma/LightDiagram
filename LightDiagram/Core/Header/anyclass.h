@@ -2,9 +2,7 @@
 
 #define __FILE_ANY_CLASS
 
-#ifndef _LFramework_Config_
 #include<Core/Header/LF_Config.h>
-#endif
 
 #pragma region is_base_of_template
 
@@ -135,10 +133,35 @@ _LF_C_API(Struct) void_ptr_t
 
 #pragma endregion
 
-_LF_C_API(Class)	any_class
+_LF_C_API(OClass)	any_class
 {
 public:
 	virtual ~any_class() {}
+	template<typename T> T& AsRef()
+	{
+		return *this;
+	}
+	template<typename T> T AsValue()
+	{
+		return *this;
+	}
+	template<typename T> T* AsStaticPtr()
+	{
+		return static_cast<T*>(this);
+	}
+	template<typename T> T* AsDynamicPtr()
+	{
+		return dynamic_cast<T*>(this);
+	}
+
+	template<typename T> T& Fetch(T& from) const
+	{
+		return from;
+	}
+	template<typename T> const T& Fetch(const T& from) const
+	{
+		return from;
+	}
 };
 
 #endif // !__FILE_ANY_CLASS

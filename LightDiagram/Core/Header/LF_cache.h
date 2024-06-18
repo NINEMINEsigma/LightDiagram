@@ -4,7 +4,6 @@
 
 #include<Core/Header/LF_Config.h>
 #include<Core/Header/anyclass.h>
-#define Symbol_Push :
 
 namespace ld
 {

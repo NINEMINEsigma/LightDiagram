@@ -98,4 +98,25 @@ namespace ld
     };
 }
 
+#define CatchingLDException(func)                       \
+catch(const LDException& ex)                            \
+{                                                       \
+    ConsolePro console;                                 \
+    func;                                               \
+    console.LogError(ex.message());}
+
+#define CatchingSTDException(func)                      \
+catch(const std::exception ex)                          \
+{                                                       \
+    ConsolePro console;                                 \
+    func;                                               \
+    console.LogError(string(__FILE__)+" "+_STR_LINE_+": "+ex.what());}
+
+#define CatchingUnknown(func)                           \
+catch(...)                                              \
+{                                                       \
+    ConsolePro console;                                 \
+    func;                                               \
+    console.LogError(string(__FILE__)+" "+_STR_LINE_+": "+"Unknown Error");}
+
 #endif // !__FILE_LF_EXCEPTION
