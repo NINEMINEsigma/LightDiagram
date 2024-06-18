@@ -5,29 +5,6 @@
 #include<Core/Header/anyclass.h>
 #include<Core/Header/LF_Exception.h>
 
-//*
-//  This allows you to declare a field's Property Binder
-//  and allow it to use pointers and dereferences for assignment and exgression
-//*
-#define _LFramework_API_PropertyBindToFieldObj(name)    \
-void set_##name(decltype(name)* value){name = *value;}  \
-decltype(name)* get_##name() const{return &name;}
-
-//*
-//  This allows you to declare a field's Property Binder
-//  and allow the field itself to be a pointer type, which is assigned and passed out directly to its type
-//*
-#define _LFramework_API_PropertyBindToFieldPtr(name)    \
-void set_##name(decltype(name) value){name = value;}    \
-decltype(name) get_##name() const{return name;}
-
-//*
-//  This allows you to declare a field's Property Binder, it is a ref-type
-//*
-#define _LFramework_API_PropertyBindToFieldRef(name)    \
-void set_##name(decltype(name)& value){name = value;}   \
-decltype(name)& get_##name(){return name;}
-
 #define _LFramework_API_BindingTo(name,type) _LFramework_API_PropertyBindToField##type ( name )
 
 namespace ld

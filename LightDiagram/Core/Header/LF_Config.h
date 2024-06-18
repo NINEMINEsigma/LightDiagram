@@ -1092,6 +1092,34 @@ _LFramework_Config_API_Struct ___utype{ size_t ignore; __LFramework_T(Type) cons
 #define Symbol_Push :
 #define Symbol_Link ,
 
+//*
+//  This allows you to declare a field's Property Binder
+//  and allow it to use pointers and dereferences for assignment and exgression
+//*
+#define _LFramework_API_PropertyBindToFieldObj(name)    \
+void set_##name(decltype(name)* value){name = *value;}  \
+decltype(name)* get_##name() const{return &name;}
+
+//*
+//  This allows you to declare a field's Property Binder
+//  and allow the field itself to be a pointer type, which is assigned and passed out directly to its type
+//*
+#define _LFramework_API_PropertyBindToFieldPtr(name)    \
+void set_##name(decltype(name) value){name = value;}    \
+decltype(name) get_##name() const{return name;}
+
+//*
+//  This allows you to declare a field's Property Binder, it is a ref-type
+//*
+#define _LFramework_API_PropertyBindToFieldRef(name)    \
+void set_##name(decltype(name)& value){name = value;}   \
+decltype(name)& get_##name(){return name;}
+
+#define _LF_SL_(x)		#x
+#define _LF_Strline_(x) _LF_SL_(x)
+#define _STR_LINE_		_LF_Strline_(__LINE__)
+
+
 #pragma region choose_type
 
 template < bool value, typename _True, typename _False> _LF_C_API(TStruct) choose_type;
