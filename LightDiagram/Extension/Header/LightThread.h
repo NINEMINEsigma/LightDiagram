@@ -8,6 +8,7 @@
 #include <set>
 #include <condition_variable>
 #include <memory>
+#include <functional>
 
 namespace ld
 {
@@ -34,7 +35,7 @@ namespace ld
 						if (!first) 
 						{
 							//Add ourselves to the availability list
-							std::unique_lock<std::mutex> ml(LightThread::mtx);
+							std::unique_lock<std::mutex> ml(mtx);
 							threads.push(this);
 						}
 					}

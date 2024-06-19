@@ -258,16 +258,18 @@ namespace ld
 
 	const ConsolePro& ConsolePro::Log(const ConsolePro::string& message, const ConsolePro::string& label, const ConsolePro::string& tail, const ConsolePro::symbol_t& type) const
 	{
-		if (type == this->Warning)
-			std::cout << ConsoleColor::Yellow << message << std::endl;
-		else if (type == this->Error)
-			std::cout << ConsoleColor::Red << message << std::endl;
-		else if (type == this->Message)
-			std::cout << ConsoleColor::Blue << message << std::endl;
-		else
-			std::cout << message << std::endl;
 		if (is_log_message_to_cout)
+		{
+			if (type == this->Warning)
+				std::cout << ConsoleColor::Yellow << message << std::endl;
+			else if (type == this->Error)
+				std::cout << ConsoleColor::Red << message << std::endl;
+			else if (type == this->Message)
+				std::cout << ConsoleColor::Blue << message << std::endl;
+			else
+				std::cout << message << std::endl;
 			std::cout << this->FC << this->BC;
+		}
 		(*clog) << "<" << label << ">" << message << "<!" << tail << ">" << std::endl;
 		return *this;
 	}
