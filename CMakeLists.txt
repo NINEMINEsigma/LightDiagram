@@ -23,9 +23,16 @@ set(C_STANDARD 11)
 # Version
 set (LightDiagram_VERSION_MAJOR 1)
 set (LightDiagram_VERSION_MINOR 0)
+set (LightDiagram_LASTEDIT_TIME 202406202200)
 
 # Sub Project
 include_directories ("${PROJECT_SOURCE_DIR}/LightDiagram")
 add_subdirectory ("LightDiagram")
 
 set(CMAKE_INSTALL_PREFIX "${PROJECT_SOURCE_DIR}/out/")
+
+#Boost Setting 
+#You can define __REF_BOOST to include all boost header,
+#and you need to include boost lib and directories here
+
+#--------------------------
