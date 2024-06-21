@@ -18,24 +18,29 @@
 #include <boost/atomic.hpp>
 #include <boost/beast.hpp>
 #include <boost/bimap.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
+using namespace boost::placeholders;
 #include <boost/blank.hpp>
 #include <boost/blank_fwd.hpp>
 #include <boost/callable_traits.hpp>
 #include <boost/call_traits.hpp>
 #include <boost/cast.hpp>
 #include <boost/cerrno.hpp>
-#include <boost/charconv.hpp>
+//#include <boost/charconv.hpp>
 #include <boost/checked_delete.hpp>
 #include <boost/chrono.hpp>
 #include <boost/circular_buffer.hpp>
 #include <boost/circular_buffer_fwd.hpp>
-#include <boost/cobalt.hpp>
+//#include <boost/cobalt.hpp>
 #include <boost/compressed_pair.hpp>
+#ifdef CL_PLATFORM_VERSION
 #include <boost/compute.hpp>
+#endif
 #include <boost/concept_archetype.hpp>
 #include <boost/concept_check.hpp>
+#ifdef MPI_MAX_PROCESSOR_NAME
 #include <boost/config.hpp>
+#endif
 #include <boost/contract.hpp>
 #include <boost/contract_macro.hpp>
 #include <boost/convert.hpp>
@@ -78,7 +83,6 @@
 #include <boost/intrusive_ptr.hpp>
 #include <boost/io_fwd.hpp>
 #include <boost/is_placeholder.hpp>
-#include <boost/iterator.hpp>
 #include <boost/iterator_adaptors.hpp>
 #include <boost/json.hpp>
 #include <boost/lambda2.hpp>
@@ -123,14 +127,15 @@
 #include <boost/process.hpp>
 #include <boost/program_options.hpp>
 #include <boost/progress.hpp>
+#ifdef __REF_PYTHON
 #include <boost/python.hpp>
+#endif
 #include <boost/qvm.hpp>
 #include <boost/qvm_lite.hpp>
 #include <boost/random.hpp>
 #include <boost/range.hpp>
 #include <boost/ratio.hpp>
 #include <boost/rational.hpp>
-#include <boost/redis.hpp>
 #include <boost/ref.hpp>
 #include <boost/regex.h>
 #include <boost/regex.hpp>
@@ -1310,12 +1315,99 @@ _LF_C_API(TStruct) choose_type < false, _True, _False >
 
 #pragma region SAL
 
+/*---------------------------------------------------------------------------*/
+/* SAL ANNOTATIONS                                                           */
+/*---------------------------------------------------------------------------*/
+/*
+ * Define SAL annotations if they aren't defined yet.
+ */
+#ifndef _Success_
+#define _Success_( x )
+#endif
+#ifndef _Notref_
+#define _Notref_
+#endif
+#ifndef _When_
+#define _When_( x, y )
+#endif
+#ifndef _Pre_valid_
+#define _Pre_valid_
+#endif
+#ifndef _Pre_opt_valid_
+#define _Pre_opt_valid_
+#endif
+#ifndef _Post_invalid_
+#define _Post_invalid_
+#endif
 #ifndef _In_
 #define _In_
-#endif // !_In_
+#endif
+#ifndef _In_z_
+#define _In_z_
+#endif
+#ifndef _In_opt_
+#define _In_opt_
+#endif
+#ifndef _In_range_
+#define _In_range_( x, y )
+#endif
+#ifndef _In_reads_
+#define _In_reads_( x )
+#endif
+#ifndef _In_reads_z_
+#define _In_reads_z_( x )
+#endif
+#ifndef _In_reads_opt_
+#define _In_reads_opt_( x )
+#endif
+#ifndef _In_reads_bytes_opt_
+#define _In_reads_bytes_opt_( x )
+#endif
 #ifndef _Out_
 #define _Out_
-#endif // !_Out_
+#endif
+#ifndef _Out_opt_
+#define _Out_opt_
+#endif
+#ifndef _Out_writes_
+#define _Out_writes_( x )
+#endif
+#ifndef _Out_writes_z_
+#define _Out_writes_z_( x )
+#endif
+#ifndef _Out_writes_opt_
+#define _Out_writes_opt_( x )
+#endif
+#ifndef _Out_writes_to_opt_
+#define _Out_writes_to_opt_( x, y )
+#endif
+#ifndef _Out_writes_bytes_opt_
+#define _Out_writes_bytes_opt_( x )
+#endif
+#ifndef _Inout_
+#define _Inout_
+#endif
+#ifndef _Inout_opt_
+#define _Inout_opt_
+#endif
+#ifndef _Inout_updates_opt_
+#define _Inout_updates_opt_( x )
+#endif
+#ifndef _Deref_in_range_
+#define _Deref_in_range_( x, y )
+#endif
+#ifndef _Deref_out_range_
+#define _Deref_out_range_( x, y )
+#endif
+#ifndef _Pre_satisfies_
+#define _Pre_satisfies_( x )
+#endif
+#ifndef _Post_satisfies_
+#define _Post_satisfies_( x )
+#endif
+#ifndef _Post_equal_to_
+#define _Post_equal_to_( x )
+#endif
 
 #pragma endregion
 

@@ -14,6 +14,8 @@
 //	You need to use include_directories(boost directory) to put on those files
 //	like: include_directories("C:\Boost") -> C:\Boost\boost\align.hpp ...
 //	lib is also need install on Path youself
+// 
+//	->At Boost, you can define __REF_PYTHON to include <boost/python.hpp>
 //*
 
 #ifndef __FILE_LIGHTDIAGRAM
