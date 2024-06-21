@@ -251,7 +251,7 @@ namespace ld
 	}
 
 	ConsolePro::ConsolePro()
-		: Message(0), Warning(1), Error(2), FC(ConsoleColor::None), BC(ConsoleBackgroundColor::None) {}
+		: Message(0), Warning(1), Error(2), FC(ConsoleColor::White), BC(ConsoleBackgroundColor::Black) {}
 	ConsolePro::ConsolePro(const ConsolePro& from)
 		: Message(from.Message), Warning(from.Warning), Error(from.Error), FC(from.FC), BC(from.BC) {}
 	ConsolePro::~ConsolePro() {}
@@ -261,14 +261,13 @@ namespace ld
 		if (is_log_message_to_cout)
 		{
 			if (type == this->Warning)
-				std::cout << ConsoleColor::Yellow << message << std::endl;
+				std::cout << ConsoleColor::Yellow << message << this->FC << this->BC << std::endl;
 			else if (type == this->Error)
-				std::cout << ConsoleColor::Red << message << std::endl;
+				std::cout << ConsoleColor::Red << message << this->FC << this->BC << std::endl;
 			else if (type == this->Message)
-				std::cout << ConsoleColor::Blue << message << std::endl;
+				std::cout << ConsoleColor::Blue << message << this->FC << this->BC << std::endl;
 			else
 				std::cout << message << std::endl;
-			std::cout << this->FC << this->BC;
 		}
 		(*clog) << "<" << label << ">" << message << "<!" << tail << ">" << std::endl;
 		return *this;

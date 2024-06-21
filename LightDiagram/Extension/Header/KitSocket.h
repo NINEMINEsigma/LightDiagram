@@ -36,31 +36,31 @@ namespace ld
 {
     namespace socketkit
     {
-        int InitializeSocketEnvironment();
-        void FreeSocketEnvironment();
-        void GetAddressFrom(SOCKADDR_IN* addr, const char* ip, int port);
-        void GetIpAddress(char* ip, SOCKADDR_IN* addr);
-        bool IsValidSocketHandle(HSocket handle);
-        int GetLastSocketError();
+        int _LF_C_API(Func) InitializeSocketEnvironment();
+        void _LF_C_API(Func) FreeSocketEnvironment();
+        void _LF_C_API(Func) GetAddressFrom(SOCKADDR_IN* addr, const char* ip, int port);
+        void _LF_C_API(Func) GetIpAddress(char* ip, SOCKADDR_IN* addr);
+        bool _LF_C_API(Func) IsValidSocketHandle(HSocket handle);
+        int  _LF_C_API(Func)  GetLastSocketError();
 
-        HSocket SocketOpen(int tcpudp);
-        void SocketClose(HSocket& handle);
+        HSocket _LF_C_API(Func)  SocketOpen(int tcpudp);
+        void _LF_C_API(Func)  SocketClose(HSocket& handle);
 
-        int SocketBlock(HSocket hs, bool bblock);
-        int SocketTimeOut(HSocket hs, int recvtimeout, int sendtimeout, int lingertimeout);
+        int _LF_C_API(Func) SocketBlock(HSocket hs, bool bblock);
+        int _LF_C_API(Func) SocketTimeOut(HSocket hs, int recvtimeout, int sendtimeout, int lingertimeout);
 
-        int SocketBind(HSocket hs, SOCKADDR_IN* addr);
-        HSocket SocketAccept(HSocket hs, SOCKADDR_IN* addr);
-        int SocketListen(HSocket hs, int maxconn);
+        int  _LF_C_API(Func) SocketBind(HSocket hs, SOCKADDR_IN* addr);
+        HSocket _LF_C_API(Func)  SocketAccept(HSocket hs, SOCKADDR_IN* addr);
+        int _LF_C_API(Func)  SocketListen(HSocket hs, int maxconn);
 
-        void SocketSend(HSocket hs, const char* ptr, int nbytes, transresult_t& rt);
-        void SocketRecv(HSocket hs, char* ptr, int nbytes, transresult_t& rt);
-        void SocketTryRecv(HSocket hs, char* ptr, int nbytes, int milliseconds, transresult_t& rt);
-        void SocketTrySend(HSocket hs, const char* ptr, int nbytes, int milliseconds, transresult_t& rt);
+        void _LF_C_API(Func) SocketSend(HSocket hs, const char* ptr, int nbytes, transresult_t& rt);
+        void _LF_C_API(Func) SocketRecv(HSocket hs, char* ptr, int nbytes, transresult_t& rt);
+        void _LF_C_API(Func) SocketTryRecv(HSocket hs, char* ptr, int nbytes, int milliseconds, transresult_t& rt);
+        void _LF_C_API(Func) SocketTrySend(HSocket hs, const char* ptr, int nbytes, int milliseconds, transresult_t& rt);
 
-        void SocketClearRecvBuffer(HSocket hs);
+        void  _LF_C_API(Func)  SocketClearRecvBuffer(HSocket hs);
 
-        class CSockWrap
+        _LF_C_API(Class) CSockWrap
         {
         public:
             CSockWrap(int tcpudp);
@@ -85,6 +85,8 @@ namespace ld
             SOCKADDR_IN m_stAddr;
             int m_tcpudp;
         };
+
+        using kit = CSockWrap;
     }
 }
 

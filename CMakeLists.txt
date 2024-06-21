@@ -30,9 +30,3 @@ include_directories ("${PROJECT_SOURCE_DIR}/LightDiagram")
 add_subdirectory ("LightDiagram")
 
 set(CMAKE_INSTALL_PREFIX "${PROJECT_SOURCE_DIR}/out/")
-
-#Boost Setting 
-#You can define __REF_BOOST to include all boost header,
-#and you need to include boost lib and directories here
-
-#--------------------------
