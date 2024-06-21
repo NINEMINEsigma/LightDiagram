@@ -1,5 +1,9 @@
 #Project Setting
 
+if(DEFINED _WINDOW_)
+    include_directories("${PROJECT_BINARY_DIR}/MSVC/MPI/Include")
+endif()
+
 include_directories		("${PROJECT_BINARY_DIR}" "${PROJECT_BINARY_DIR}/Core/Header" "${PROJECT_BINARY_DIR}/Extension/Header")
 include_directories		("${PROJECT_BINARY_DIR}/Core" "${PROJECT_BINARY_DIR}/Extension")
 aux_source_directory	(. Main_Cpp_List)
@@ -23,11 +27,13 @@ set(BOOST_ROOT "E:\\user\\boost_1_82_0\\boost_1_82_0\\buildup")
 set(Boost_NO_SYSTEM_PATHS ON) 
 find_package(Boost COMPONENTS regex system REQUIRED)
 
-if(Boost_FOUND)
-
+if(DEFINED Boost_FOUND)
 	add_compile_definitions(__REF_BOOST)
 
     include_directories(${Boost_INCLUDE_DIRS})
+    if(DEFINED _WINDOW_)
+        target_link_libraries(LightDiagram "${PROJECT_BINARY_DIR}/MSVC/MPI/Lib")
+    endif()
     
     MESSAGE( STATUS "Boost_INCLUDE_DIRS = ${Boost_INCLUDE_DIRS}.")
     MESSAGE( STATUS "Boost_LIBRARIES = ${Boost_LIBRARIES}.")
