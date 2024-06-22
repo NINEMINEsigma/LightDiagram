@@ -261,11 +261,11 @@ namespace ld
 		if (is_log_message_to_cout)
 		{
 			if (type == this->Warning)
-				std::cout << ConsoleColor::Yellow << message << this->FC << this->BC << std::endl;
+				std::cout << ConsoleColor::Yellow << message << std::endl << this->FC;
 			else if (type == this->Error)
-				std::cout << ConsoleColor::Red << message << this->FC << this->BC << std::endl;
+				std::cout << ConsoleColor::Red << message << std::endl << this->FC;
 			else if (type == this->Message)
-				std::cout << ConsoleColor::Blue << message << this->FC << this->BC << std::endl;
+				std::cout << ConsoleColor::Blue << message << std::endl << this->FC;
 			else
 				std::cout << message << std::endl;
 		}

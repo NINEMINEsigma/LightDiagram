@@ -27,7 +27,8 @@ int main()
 	char str2[50];
 	auto result = socker1.Send(str, sizeof(str));
 	console.LogMessage(string(str) + " is send");
-	cout <<ConsoleColor::White<< result.nbytes << "\t" << result.nbytes << "\n";
+	cout //<<ConsoleColor::White
+		<< result.nbytes << "\t" << result.nbytes << "\n";
 	result = socker2.Recv(str2, sizeof(str2));
 	this_thread::sleep_for(chrono::milliseconds(3000));
 	cout <<result.nbytes << "\t" << result.nbytes << "\n";

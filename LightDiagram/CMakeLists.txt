@@ -24,21 +24,23 @@ add_executable (LightDiagram ${Main_Cpp_List} ${Core_Cpp_List} ${Extension_Cpp_L
 #and you need to include boost lib and directories here
  
 set(BOOST_ROOT "E:\\user\\boost_1_82_0\\boost_1_82_0\\buildup")
-set(Boost_NO_SYSTEM_PATHS ON) 
-find_package(Boost COMPONENTS regex system REQUIRED)
-
-if(DEFINED Boost_FOUND)
-	add_compile_definitions(__REF_BOOST)
-
-    include_directories(${Boost_INCLUDE_DIRS})
-    if(DEFINED _WINDOW_)
-        target_link_libraries(LightDiagram "${PROJECT_BINARY_DIR}/MSVC/MPI/Lib")
-    endif()
+if(EXISTS BOOST_ROOT)
+    set(Boost_NO_SYSTEM_PATHS ON) 
+    find_package(Boost COMPONENTS regex system REQUIRED)
     
-    MESSAGE( STATUS "Boost_INCLUDE_DIRS = ${Boost_INCLUDE_DIRS}.")
-    MESSAGE( STATUS "Boost_LIBRARIES = ${Boost_LIBRARIES}.")
-    MESSAGE( STATUS "Boost_LIB_VERSION = ${Boost_LIB_VERSION}.")
-    target_link_libraries (LightDiagram ${Boost_LIBRARIES})
+    if(DEFINED Boost_FOUND)
+    	add_compile_definitions(__REF_BOOST)
+    
+        include_directories(${Boost_INCLUDE_DIRS})
+        if(DEFINED _WINDOW_)
+            target_link_libraries(LightDiagram "${PROJECT_BINARY_DIR}/MSVC/MPI/Lib")
+        endif()
+        
+        MESSAGE( STATUS "Boost_INCLUDE_DIRS = ${Boost_INCLUDE_DIRS}.")
+        MESSAGE( STATUS "Boost_LIBRARIES = ${Boost_LIBRARIES}.")
+        MESSAGE( STATUS "Boost_LIB_VERSION = ${Boost_LIB_VERSION}.")
+        target_link_libraries (LightDiagram ${Boost_LIBRARIES})
+    endif()
 endif()
 
 #--------------------------
