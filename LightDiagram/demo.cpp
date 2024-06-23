@@ -1,4 +1,3 @@
-//#define _Source_DLL_EXPORT
 
 #include"LightDiagram.h"
 
