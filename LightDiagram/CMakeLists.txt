@@ -1,9 +1,13 @@
 #Project Setting
 
-if(DEFINED _WINDOW_)
+if(DEFINED _WINDOWS)
     set(MSCV_MPI_ROOT "${PROJECT_BINARY_DIR}/MSVC/MPI/Include")
     if(EXISTS MSCV_MPI_ROOT)
         include_directories(MSCV_MPI_ROOT)
+        message("msvc mpi part cpp: ")
+        message("${MSCV_MPI_ROOT}")
+    else(EXISTS MSCV_MPI_ROOT)
+        message("mscv mpi part cpp can not find")
     endif()
 endif()
 
@@ -26,12 +30,12 @@ add_executable (LightDiagram ${Main_Cpp_List} ${Core_Cpp_List} ${Extension_Cpp_L
 #You can define __REF_BOOST to include all boost header,
 #and you need to include boost lib and directories here
  
-if(EXISTS E:/user/boost_1_82_0/boost_1_82_0/buildup )
-    set(BOOST_ROOT "E:\\user\\boost_1_82_0\\boost_1_82_0\\buildup")
+set(BOOST_ROOT E:/user/boost_1_82_0/boost_1_82_0/buildup)
+if(NOT EXISTS BOOST_ROOT )
+    message("reset boost root")
+    #set(BOOST_ROOT E:/boost_1_85_0/buildup/single_thread)
 endif()
-if(EXISTS E:/boost_1_85_0/buildup/single_thread/include/boost-1_85/boost/config.hpp )
-    set(BOOST_ROOT "E\\boost_1_85_0\\buildup\\single_thread")
-endif()
+
 if(EXISTS BOOST_ROOT)
     set(Boost_NO_SYSTEM_PATHS ON) 
     find_package(Boost COMPONENTS regex system REQUIRED)
@@ -48,8 +52,11 @@ if(EXISTS BOOST_ROOT)
         MESSAGE( STATUS "Boost_LIBRARIES = ${Boost_LIBRARIES}.")
         MESSAGE( STATUS "Boost_LIB_VERSION = ${Boost_LIB_VERSION}.")
         target_link_libraries (LightDiagram ${Boost_LIBRARIES})
+        message("Boost setting over")
+    else(DEFINED Boost_FOUND)
+        message("Boost setting failed")
     endif()
-else()
+else(EXISTS BOOST_ROOT)
     message( STATUS "Can not find Boost Path" )
 endif()
 
