@@ -1,14 +1,29 @@
 #Project Setting
+ 
+option(ENABLE_MPI "Enable MPI parallelization" OFF)
+set(MPI_NO_SYSTEM_PATHS ON) 
+find_package(MPI)
+if(MPI_FOUND)
+    include_directories(${MPI_INCLUDE_DIR})
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MPI_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MPI_CXX_FLAGS}")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MPI_EXE_LINKER_FLAGS}")
+    MESSAGE( STATUS "MPI_INCLUDE_DIRS = ${MPI_INCLUDE_DIR}") 
+    MESSAGE( "MPI setting successfully")
+else()
+    MESSAGE( "MPI setting faild")
+endif()
 
-if(DEFINED _WINDOWS)
-    set(MSCV_MPI_ROOT "${PROJECT_BINARY_DIR}/MSVC/MPI/Include")
-    if(EXISTS MSCV_MPI_ROOT)
-        include_directories(MSCV_MPI_ROOT)
-        message("msvc mpi part cpp: ")
-        message("${MSCV_MPI_ROOT}")
-    else(EXISTS MSCV_MPI_ROOT)
-        message("mscv mpi part cpp can not find")
-    endif()
+set(Boost_NO_SYSTEM_PATHS ON) 
+find_package(Boost)
+if(Boost_FOUND)
+	add_compile_definitions(__REF_BOOST)
+    include_directories(${Boost_INCLUDE_DIR})
+    MESSAGE( STATUS "Boost_INCLUDE_DIR = ${Boost_INCLUDE_DIR}.")
+    MESSAGE( STATUS "Boost_LIB_VERSION = ${Boost_LIB_VERSION}.")
+    message("Boost setting successfully")
+else()
+    message("Boost setting failed")
 endif()
 
 include_directories		("${PROJECT_BINARY_DIR}" "${PROJECT_BINARY_DIR}/Core/Header" "${PROJECT_BINARY_DIR}/Extension/Header")
@@ -16,51 +31,21 @@ include_directories		("${PROJECT_BINARY_DIR}/Core" "${PROJECT_BINARY_DIR}/Extens
 aux_source_directory	(. Main_Cpp_List)
 aux_source_directory	(./Core Core_Cpp_List)
 aux_source_directory	(./Extension Extension_Cpp_List)
-message("main part cpp: ")
-message(${Main_Cpp_List})
-message("core part cpp: ")
-message(${Core_Cpp_List})
-message("extension part cpp: ")
-message(${Extension_Cpp_List})
+message( STATUS "main part cpp = ${Main_Cpp_List}")
+message( STATUS "core part cpp = ${Core_Cpp_List}")
+message( STATUS "extension part cpp = ${Extension_Cpp_List}")
 add_executable (LightDiagram ${Main_Cpp_List} ${Core_Cpp_List} ${Extension_Cpp_List})
 
-#--------------------------
-
-#Boost Setting 
-#You can define __REF_BOOST to include all boost header,
-#and you need to include boost lib and directories here
- 
-set(BOOST_ROOT E:/user/boost_1_82_0/boost_1_82_0/buildup)
-if(NOT EXISTS BOOST_ROOT )
-    message("reset boost root")
-    #set(BOOST_ROOT E:/boost_1_85_0/buildup/single_thread)
+if(MPI_FOUND)
+    target_link_libraries(LightDiagram ${MPI_LIBRARIES})
+    set_property(TARGET LightDiagram PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    message( STATUS "MPI_LIBRARIES = ${MPI_LIBRARIES}")
 endif()
 
-if(EXISTS BOOST_ROOT)
-    set(Boost_NO_SYSTEM_PATHS ON) 
-    find_package(Boost COMPONENTS regex system REQUIRED)
-    
-    if(DEFINED Boost_FOUND)
-    	add_compile_definitions(__REF_BOOST)
-    
-        include_directories(${Boost_INCLUDE_DIRS})
-        if(DEFINED _WINDOW_)
-            target_link_libraries(LightDiagram "${PROJECT_BINARY_DIR}/MSVC/MPI/Lib")
-        endif()
-        
-        MESSAGE( STATUS "Boost_INCLUDE_DIRS = ${Boost_INCLUDE_DIRS}.")
-        MESSAGE( STATUS "Boost_LIBRARIES = ${Boost_LIBRARIES}.")
-        MESSAGE( STATUS "Boost_LIB_VERSION = ${Boost_LIB_VERSION}.")
-        target_link_libraries (LightDiagram ${Boost_LIBRARIES})
-        message("Boost setting over")
-    else(DEFINED Boost_FOUND)
-        message("Boost setting failed")
-    endif()
-else(EXISTS BOOST_ROOT)
-    message( STATUS "Can not find Boost Path" )
+if(Boost_FOUND)
+    target_link_libraries (LightDiagram ${Boost_LIBRARIES})
+    message( STATUS "Boost_LIBRARIES = ${Boost_LIBRARIES}")
 endif()
-
-#--------------------------
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET LightDiagram PROPERTY CXX_STANDARD 17)

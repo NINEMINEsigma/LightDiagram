@@ -103,7 +103,9 @@ using namespace boost::placeholders;
 #include <boost/multi_array.hpp>
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index_container_fwd.hpp>
+#ifdef __REF_MYSQL
 #include <boost/mysql.hpp>
+#endif
 #include <boost/next_prior.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/nondet_random.hpp>
