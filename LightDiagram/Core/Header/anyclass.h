@@ -133,11 +133,6 @@ _LF_C_API(Struct) void_ptr_t
 
 #pragma endregion
 
-_LF_C_API(Class)	nullable_package
-{
-
-};
-
 _LF_C_API(Class)	any_class
 {
 	bool __is_static_object;

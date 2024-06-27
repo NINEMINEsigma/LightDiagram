@@ -102,6 +102,34 @@ namespace ld
         virtual const type_info& GetCommandType() const abstract;
     };
 
+    extern ConsolePro DefaultConsolePro;
+
+    _LF_C_API(Class)    ISystem Symbol_Push
+        _LF_Inherited(ICanInitialize) Symbol_Link
+        _LF_Inherited(ICanGetArchitecture) Symbol_Link
+        _LF_Inherited(ICanGetSystem) Symbol_Link
+        _LF_Inherited(ICanGetModel) Symbol_Link
+        _LF_Inherited(ICanGetController) Symbol_Link
+        _LF_Inherited(ICanSendCommand)
+    {
+        
+    }
+    {
+
+    }
+    _LF_C_API(Class) IModel
+    {
+
+    }
+    _LF_C_API(Class) IController
+    {
+
+    }
+    _LF_C_API(Class) ICommand
+    {
+
+    }
+
     //*
     //  By implementing this interface, you can customize the real behavior of Architectures
     //      ->  The relevant behaviour interfaces are : IADCommand, IADController, IADModel, IADSystem
@@ -117,12 +145,17 @@ namespace ld
     {
         using objects_container_type = std::map<size_t, IAnyArchitecture*>;
         objects_container_type objects_container;
+    private:
+        /// <summary>
+        /// Obtain target component on this architecture
+        /// </summary>
+        /// <param name="type">:please use typeid(type) to get arg</param>
+        /// <returns>If exist, return ptr, otherwise nullptr</returns>
+        IAnyArchitecture* ToolGetComponent(const type_info & type) const;
     public:
-        friend ICanGetSystem;
-        friend ICanGetModel;
-        friend ICanGetController;
-        friend ICanSendCommand;
-
+        IArchitecture();
+        IArchitecture(const IArchitecture&) = delete;
+        virtual ~IArchitecture();
 
 #pragma region Message
 
@@ -139,6 +172,18 @@ namespace ld
         /// <param name="message">:Target message</param>
         /// <returns>Itself</returns>
         IArchitecture* AddMessage(string message) const;
+        /// <summary>
+        /// Save the warning generated during the Architecture running
+        /// </summary>
+        /// <param name="message">:Target message</param>
+        /// <returns>Itself</returns>
+        IArchitecture* AddWarning(string message) const;
+        /// <summary>
+        /// Save the error message generated during the Architecture running
+        /// </summary>
+        /// <param name="message">:Target message</param>
+        /// <returns>Itself</returns>
+        IArchitecture* AddError(string message) const;
 
 #pragma endregion
 
@@ -147,21 +192,30 @@ namespace ld
         /// Obtain model on this architecture
         /// </summary>
         /// <param name="model_type">:please use typeid(type) to get arg</param>
-        /// <returns>If exist, return model ptr, otherwise nullptr</returns>
+        /// <returns>If exist, return ptr, otherwise nullptr</returns>
         IModel* GetModel(const type_info & model_type);
+        /// <summary>
+        /// Obtain system on this architecture
+        /// </summary>
+        /// <param name="system_type">:please use typeid(type) to get arg</param>
+        /// <returns>If exist, return ptr, otherwise nullptr</returns>
         ISystem* GetSystem(const type_info & system_type);
+        /// <summary>
+        /// Obtain controller on this architecture
+        /// </summary>
+        /// <param name="model_type">:please use typeid(type) to get arg</param>
+        /// <returns>If exist, return ptr, otherwise nullptr</returns>
         IController* GetController(const type_info & controller_type);
 #pragma endregion
 
 #pragma region Register By Instance
-        IArchitecture* RegisterModel(IModel * model);
-        IArchitecture* RegisterSystem(ISystem * system);
-        IArchitecture* RegisterController(IController * controller);
-        IArchitecture* RegisterCommand(ICommand * command);
+        IArchitecture* RegisterModel(const type_info& type,IModel * model);
+        IArchitecture* RegisterSystem(const type_info& type,ISystem * system);
+        IArchitecture* RegisterController(const type_info& type,IController * controller);
+        IArchitecture* RegisterCommand(const type_info& type,ICommand * command);
 #pragma endregion
 
 #pragma region Send Command Execute By OnExecute()
-        IArchitecture* SendImmediatelyCommand(const type_info & command_type);
         IArchitecture* SendCommand(const type_info & command_type);
 #pragma endregion
 
@@ -172,10 +226,28 @@ namespace ld
 
 #pragma region Register Or UnRegister Or Contains
         IArchitecture* UnRegister(const type_info& type);
-        IArchitecture* Register(IAnyArchitecture * instance);
-        bool Contains(const type_info& type);
+        IArchitecture* Register(const type_info& type,IAnyArchitecture * instance);
+        bool Contains(const type_info& type) const;
 #pragma endregion
     };
+    
+    // When first use this function to obtain architecture's instance
+    // the instance will be generate, but it will be never delete
+    // Generate Process ->new TargetArch() -> Init()
+    template<typename TargetArch>
+    TargetArch* ArchitectureInstance()
+    {
+        static_assert(std::is_base_of<IArchitecture, TargetArch>::value, "TargetArch must be derived from IArchitecture");
+        static TargetArch* instance = nullptr;
+        if (instance == nullptr) 
+        {
+            instance = new TargetArch();
+            IArchitecture* arch = instance;
+            arch->Init();
+            arch->AddMessage("Architecture Instance Generated");
+        }
+        return instance;
+    }
 }
 
 #endif // !__FILE_ARCH_INTERFACE
