@@ -1,6 +1,6 @@
 #Project Setting
  
-option(ENABLE_MPI "Enable MPI parallelization" OFF)
+option(ENABLE_MPI "Enable MPI parallelization" ON)
 set(MPI_NO_SYSTEM_PATHS ON) 
 find_package(MPI)
 if(MPI_FOUND)
@@ -9,6 +9,7 @@ if(MPI_FOUND)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MPI_CXX_FLAGS}")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MPI_EXE_LINKER_FLAGS}")
     MESSAGE( STATUS "MPI_INCLUDE_DIRS = ${MPI_INCLUDE_DIR}") 
+    MESSAGE( STATUS "MPI_VERSION = ${MPI_VERSION}")
     MESSAGE( "MPI setting successfully")
 else()
     MESSAGE( "MPI setting faild")

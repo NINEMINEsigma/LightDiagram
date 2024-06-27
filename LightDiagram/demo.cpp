@@ -8,7 +8,7 @@
 using namespace std;
 using namespace ld;
 
-#include<mpi>
+#include<>
 
 int main()
 {
