@@ -8,8 +8,6 @@
 using namespace std;
 using namespace ld;
 
-#include<>
-
 int main()
 {
 	ld_test();

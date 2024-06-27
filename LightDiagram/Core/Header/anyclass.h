@@ -133,17 +133,27 @@ _LF_C_API(Struct) void_ptr_t
 
 #pragma endregion
 
-_LF_C_API(OClass)	any_class
+_LF_C_API(Class)	nullable_package
 {
+
+};
+
+_LF_C_API(Class)	any_class
+{
+	bool __is_static_object;
 public:
+	any_class()
+	{
+
+	}
 	virtual ~any_class() {}
 	template<typename T> T& AsRef()
 	{
-		return *this;
+		return *static_cast<T*>(this);
 	}
 	template<typename T> T AsValue()
 	{
-		return *this;
+		return static_cast<T>(*this);
 	}
 	template<typename T> T* AsStaticPtr()
 	{
@@ -158,10 +168,39 @@ public:
 	{
 		return from;
 	}
-	template<typename T> const T& Fetch(const T& from) const
+	template<typename T> T&& Fetch(T&& from) const
 	{
 		return from;
 	}
+	template<typename T> T* FetchPtr(T* from) const
+	{
+		return from;
+	}
+	template<typename T> any_class* StaticShare(_Inout_ T** object_ptr) const
+	{
+		*object_ptr = static_cast<T*>(this);
+		return this;
+	}
+	template<typename T> any_class* DynamicShare(_Inout_ T** object_ptr) const
+	{
+		*object_ptr = dynamic_cast<T*>(this);
+		return this;
+	}
+
+	const type_info& GetType() const
+	{
+		return typeid(*this);
+	}
+	virtual const char* ToString() const
+	{
+		return typeid(*this).name();
+	}
+	virtual any_class* GetClone() const
+	{
+		return nullptr;
+	}
+
+
 };
 
 #endif // !__FILE_ANY_CLASS

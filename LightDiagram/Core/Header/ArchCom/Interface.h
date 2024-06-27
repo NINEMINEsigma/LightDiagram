@@ -56,52 +56,56 @@ namespace ld
         IArchitecture* Architecture() const;
     };
 
+    //  Can get System from Architecture
     _LF_C_API(Class) ICanGetSystem Symbol_Push
         _LF_Inherited(ICanGetArchitecture)
     {
     public:
         virtual ~ICanGetSystem();
-        ISystem* GetSystem(const type_info & type);
+        ISystem* GetSystem(const type_info & type) const;
     };
 
+    //  Can get Model from Architecture
     _LF_C_API(Class) ICanGetModel Symbol_Push
         _LF_Inherited(ICanGetArchitecture)
     {
     public:
         virtual ~ICanGetModel();
-        IModel* GetModel(const type_info & type);
+        IModel* GetModel(const type_info & type) const;
     };
 
+    //  Can get Controller from Architecture
     _LF_C_API(Class) ICanGetController Symbol_Push
         _LF_Inherited(ICanGetArchitecture)
     {
     public:
         virtual ~ICanGetController();
-        IController* GetController(const type_info & type);
+        IController* GetController(const type_info & type) const;
     };
 
+    //  Can obtain Command from Architecture and send them
     _LF_C_API(Class) ICanSendCommand Symbol_Push
         _LF_Inherited(ICanGetArchitecture)
     {
     public:
         virtual ~ICanSendCommand();
-        void SendCommand(const type_info & type);
+        void SendCommand(const type_info & type) const;
     };
 
+    //  When target command is diffusion on Architecture, it invoke <OnCommandInvoke>
     _LF_C_API(Class) ICanMonitorCommand Symbol_Push
         _LF_Inherited(ICanGetArchitecture)
     {
-        const type_info& target_type;
     public:
-        friend IArchitecture;
-        ICanMonitorCommand();
         virtual ~ICanMonitorCommand();
-        void OnCommandInvoke(const type_info & type);
+        virtual void OnCommandInvoke(const type_info & type) abstract;
+        virtual const type_info& GetCommandType() const abstract;
     };
 
     //*
     //  By implementing this interface, you can customize the real behavior of Architectures
-    //      ->  The relevant interfaces are : IADCommand, IADController, IADModel, IADSystem
+    //      ->  The relevant behaviour interfaces are : IADCommand, IADController, IADModel, IADSystem
+    //      ->  The relevant invoker interfaces are : ICanSendCommand, ICanMonitorCommand
     //*
     _LF_C_API(Class)    IArchitecture Symbol_Push
         _LF_Inherited(ICanInitialize) Symbol_Link
@@ -111,22 +115,39 @@ namespace ld
         _LF_Inherited(ICanGetController) Symbol_Link
         _LF_Inherited(ICanSendCommand)
     {
+        using objects_container_type = std::map<size_t, IAnyArchitecture*>;
+        objects_container_type objects_container;
     public:
         friend ICanGetSystem;
         friend ICanGetModel;
         friend ICanGetController;
         friend ICanSendCommand;
 
+
+#pragma region Message
+
         using string = string_indicator::tag;
 
         /// <summary>
+        /// virtual function, you need to override it 
+        /// </summary>
+        /// <returns>Itself</returns>
+        virtual IArchitecture* RegisterMessageStream();
+        /// <summary>
         /// Save the messages generated during the Architecture running
         /// </summary>
-        /// <param name="message">Target message</param>
-        /// <returns>Architecture itself</returns>
-        IArchitecture* AddMessage(string message);
+        /// <param name="message">:Target message</param>
+        /// <returns>Itself</returns>
+        IArchitecture* AddMessage(string message) const;
+
+#pragma endregion
 
 #pragma region Get
+        /// <summary>
+        /// Obtain model on this architecture
+        /// </summary>
+        /// <param name="model_type">:please use typeid(type) to get arg</param>
+        /// <returns>If exist, return model ptr, otherwise nullptr</returns>
         IModel* GetModel(const type_info & model_type);
         ISystem* GetSystem(const type_info & system_type);
         IController* GetController(const type_info & controller_type);

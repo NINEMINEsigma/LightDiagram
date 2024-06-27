@@ -46,9 +46,11 @@ public:
 	ld_test();
 };
 
-//#include<Core/Header/LF_Architecture.h>
+#include<Core/Header/LF_Architecture.h>
 
+//*
 //	Extension
+//*
 
 #include<Extension/Header/KitSocket.h>
 
