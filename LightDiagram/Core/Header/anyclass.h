@@ -135,12 +135,7 @@ _LF_C_API(Struct) void_ptr_t
 
 _LF_C_API(Class)	any_class
 {
-	bool __is_static_object;
 public:
-	any_class()
-	{
-
-	}
 	virtual ~any_class() {}
 	template<typename T> T& AsRef()
 	{
@@ -195,7 +190,27 @@ public:
 		return nullptr;
 	}
 
-
+	template<typename T> any_class* IfIam(void(*foo)(T*))
+	{
+		T* cat = dynamic_cast<T*>(this);
+		if (cat)
+			foo(cat);
+		return this;
+	}
+	template<typename T,typename C> any_class* IfIam(void(C::*foo)(T*))
+	{
+		T* cat = dynamic_cast<T*>(this);
+		if (cat)
+			foo(cat);
+		return this;
+	}
+	template<typename T, typename R> any_class* IfIam(R foo)
+	{
+		T* cat = dynamic_cast<T*>(this);
+		if (cat)
+			foo(cat);
+		return this;
+	}
 };
 
 #endif // !__FILE_ANY_CLASS

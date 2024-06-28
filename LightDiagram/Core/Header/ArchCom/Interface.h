@@ -28,7 +28,19 @@ namespace ld
     _LF_C_API(Class) IAnyArchitecture Symbol_Push
         _LF_Inherited(any_class)
     {
+        using ReleaseAction = void(IAnyArchitecture*);
+        /// <summary>
+        /// When this component release from architecture, it will be invoke by architecture
+        /// </summary>
+        /// <returns>Function ptr which call by architecture</returns>
+        virtual ReleaseAction* WithRelease() const;
+        /// <summary>
+        /// When this component buildup to architecture, it will be invoke by architecture
+        /// </summary>
+        /// <returns>Function ptr which call by architecture</returns>
+        virtual ReleaseAction* WithBuildup() const;
     public:
+        friend IArchitecture;
         virtual ~IAnyArchitecture();
     };
 
@@ -107,28 +119,38 @@ namespace ld
     _LF_C_API(Class)    ISystem Symbol_Push
         _LF_Inherited(ICanInitialize) Symbol_Link
         _LF_Inherited(ICanGetArchitecture) Symbol_Link
+        _LF_Inherited(ICanSendCommand) Symbol_Link
         _LF_Inherited(ICanGetSystem) Symbol_Link
         _LF_Inherited(ICanGetModel) Symbol_Link
-        _LF_Inherited(ICanGetController) Symbol_Link
+        _LF_Inherited(ICanGetController)
+    {
+
+    };
+    _LF_C_API(Class)    IModel Symbol_Push
+        _LF_Inherited(ICanInitialize) Symbol_Link
+        _LF_Inherited(ICanGetArchitecture) Symbol_Link
         _LF_Inherited(ICanSendCommand)
     {
-        
-    }
+
+    };
+    _LF_C_API(Class)    IController Symbol_Push
+        _LF_Inherited(ICanInitialize) Symbol_Link
+        _LF_Inherited(ICanGetArchitecture) Symbol_Link
+        _LF_Inherited(ICanSendCommand) Symbol_Link
+        _LF_Inherited(ICanGetSystem) 
     {
 
-    }
-    _LF_C_API(Class) IModel
+    };
+    _LF_C_API(Class)    ICommand Symbol_Push
+        _LF_Inherited(ICanGetArchitecture) Symbol_Link
+        _LF_Inherited(ICanGetSystem) Symbol_Link
+        _LF_Inherited(ICanGetModel) Symbol_Link
+        _LF_Inherited(ICanGetController)
     {
-
-    }
-    _LF_C_API(Class) IController
-    {
-
-    }
-    _LF_C_API(Class) ICommand
-    {
-
-    }
+    public:
+        ~ICommand();
+        virtual void OnExecute() abstract;
+    };
 
     //*
     //  By implementing this interface, you can customize the real behavior of Architectures
@@ -152,6 +174,8 @@ namespace ld
         /// <param name="type">:please use typeid(type) to get arg</param>
         /// <returns>If exist, return ptr, otherwise nullptr</returns>
         IAnyArchitecture* ToolGetComponent(const type_info & type) const;
+        void ToolTrySetupComponentArchitectureParent(ICanGetArchitecture * ptr);
+        void ToolTryReleaseComponentArchitectureParent(ICanGetArchitecture * ptr);
     public:
         IArchitecture();
         IArchitecture(const IArchitecture&) = delete;
@@ -162,28 +186,23 @@ namespace ld
         using string = string_indicator::tag;
 
         /// <summary>
-        /// virtual function, you need to override it 
-        /// </summary>
-        /// <returns>Itself</returns>
-        virtual IArchitecture* RegisterMessageStream();
-        /// <summary>
         /// Save the messages generated during the Architecture running
         /// </summary>
         /// <param name="message">:Target message</param>
         /// <returns>Itself</returns>
-        IArchitecture* AddMessage(string message) const;
+        virtual IArchitecture* AddMessage(string message) const;
         /// <summary>
         /// Save the warning generated during the Architecture running
         /// </summary>
         /// <param name="message">:Target message</param>
         /// <returns>Itself</returns>
-        IArchitecture* AddWarning(string message) const;
+        virtual IArchitecture* AddWarning(string message) const;
         /// <summary>
         /// Save the error message generated during the Architecture running
         /// </summary>
         /// <param name="message">:Target message</param>
         /// <returns>Itself</returns>
-        IArchitecture* AddError(string message) const;
+        virtual IArchitecture* AddError(string message) const;
 
 #pragma endregion
 
@@ -193,19 +212,19 @@ namespace ld
         /// </summary>
         /// <param name="model_type">:please use typeid(type) to get arg</param>
         /// <returns>If exist, return ptr, otherwise nullptr</returns>
-        IModel* GetModel(const type_info & model_type);
+        IModel* GetModel(const type_info & model_type) const;
         /// <summary>
         /// Obtain system on this architecture
         /// </summary>
         /// <param name="system_type">:please use typeid(type) to get arg</param>
         /// <returns>If exist, return ptr, otherwise nullptr</returns>
-        ISystem* GetSystem(const type_info & system_type);
+        ISystem* GetSystem(const type_info & system_type) const;
         /// <summary>
         /// Obtain controller on this architecture
         /// </summary>
         /// <param name="model_type">:please use typeid(type) to get arg</param>
         /// <returns>If exist, return ptr, otherwise nullptr</returns>
-        IController* GetController(const type_info & controller_type);
+        IController* GetController(const type_info & controller_type) const;
 #pragma endregion
 
 #pragma region Register By Instance
