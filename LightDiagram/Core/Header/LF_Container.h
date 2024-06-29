@@ -30,23 +30,108 @@ namespace ld
 		size_t GetIndex() const;
 
 	protected:
-		void SetRight(tag * ptr);
-		void SetLeft(tag * ptr);
+		// Set new linkship: this -> ptr -> old-link right
+		void InsertRight(tag * ptr);
+		// Set new linkship: old-link left -> ptr -> this
+		void InsertLeft(tag * ptr);
+		// Set childs tail's right
+		void InsertEnd(tag * ptr);
+		// Set childs head's left
+		void InsertBegin(tag * ptr);
+		// Break linkship between right and this
+		void InsertRight(nullptr_t);
+		// Break linkship between left and this
+		void InsertLeft(nullptr_t);
+		// Get link left one
+		tag* GetLeft() const;
+		// Get link right one
+		tag* GetRight() const;
+		// Get childs head one
 		tag* GetBegin() const;
+		// Get childs tail one
 		tag* GetEnd() const;
 	private:
 		size_t index_from_head = 0;
 		size_t index_from_tail = 0;
+	private:
+		// Check stats from left to right
+		void StatsCheck() const volatile;
+		// Check stats from top to child
+		void BranchCheck() const volatile;
 	};
 
-	
+#pragma region FourWay Pointer
+
 	template<typename T>
-	void FourWayPointer<T>::SetLeft(FourWayPointer<T>::tag* ptr)
+	void FourWayPointer<T>::InsertLeft(tag* ptr)
 	{
-		index_from_head++;
-		this->left_ptr->SetRight(ptr);
-		ptr->SetRight(this);
+		this->StatsCheck();
+		ptr->StatsCheck();
+		ptr->BranchCheck();
 	}
+	template<typename T>
+	void FourWayPointer<T>::InsertRight(tag* ptr)
+	{
+
+		this->StatsCheck();
+		ptr->StatsCheck();
+		ptr->BranchCheck();
+	}
+	template<typename T>
+	void FourWayPointer<T>::InsertLeft(nullptr_t)
+	{
+		this->StatsCheck();
+		ptr->StatsCheck();
+		ptr->BranchCheck();
+	}
+	template<typename T>
+	void FourWayPointer<T>::InsertRight(nullptr_t)
+	{
+		tag* old_right = this->GetRight();
+		this->right_prt = nullptr;
+		old_right->left_ptr = nullptr;
+		this->StatsCheck();
+		old_right->StatsCheck();
+	}
+	template<typename T>
+	void FourWayPointer<T>::InsertBegin(tag* ptr)
+	{
+		this->GetBegin()->InsertLeft(ptr);
+	}
+	template<typename T>
+	void FourWayPointer<T>::InsertEnd(tag* ptr)
+	{
+		this->GetEnd()->InsertRight(ptr);
+	}
+
+	template<typename T>
+	FourWayPointer<T>::tag* FourWayPointer<T>::GetLeft() const
+	{
+		return this->left_ptr;
+	}
+	template<typename T>
+	FourWayPointer<T>::tag* FourWayPointer<T>::GetRight() const
+	{
+		return this->right_ptr;
+	}
+	template<typename T>
+	FourWayPointer<T>::tag* FourWayPointer<T>::GetBegin() const
+	{
+		tag* result = this;
+		while (result->GetLeft())
+			resukt = result->GetLeft();
+		return result;
+	}
+	template<typename T>
+	FourWayPointer<T>::tag* FourWayPointer<T>::GetEnd() const
+	{
+		tag* result = this;
+		while (result->GetRight())
+			resukt = result->GetRight();
+		return result;
+	}
+
+#pragma endregion
 
 	template<
 		typename Key,typename Value,typename IndexOrderIndicator,typename MemoryIndicator,
