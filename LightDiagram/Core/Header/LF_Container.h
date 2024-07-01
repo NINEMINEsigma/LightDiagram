@@ -15,11 +15,18 @@ namespace ld
 	public:
 		using tag = FourWayPointer<T>;
 	protected:
+		// upward ptr, which is parent and root
 		tag* parent_ptr = nullptr;
+		// rightward ptr, which is on the same branch and layer
 		tag* right_prt = nullptr;
+		// leftward ptr, which is on the same branch and layer
 		tag* left_ptr = nullptr;
+		// downward ptr, which is the branch undering this and pointing to leftest one
 		tag* childs_begin_ptr = nullptr;
+		// downward ptr, which is the branch undering this and pointing to rightest one
 		tag* childs_end_ptr = nullptr;
+		// beyond ptr, when this ptr is leaf, it will be pointing to rightward leaf
+		tag* beyond_next_ptr = nullptr;
 	public:
 		template<
 			typename Key, typename Value, typename IndexOrderIndicator, typename MemoryIndicator,
@@ -27,72 +34,82 @@ namespace ld
 		>
 		friend class LFContainter;
 
-		size_t GetIndex() const;
-
-	protected:
+		//*
 		// Set new linkship: this -> ptr -> old-link right
+		//*
 		void InsertRight(tag * ptr);
+		//*
 		// Set new linkship: old-link left -> ptr -> this
+		//*
 		void InsertLeft(tag * ptr);
 		// Set childs tail's right
 		void InsertEnd(tag * ptr);
 		// Set childs head's left
 		void InsertBegin(tag * ptr);
-		// Break linkship between right and this
-		void InsertRight(nullptr_t);
-		// Break linkship between left and this
-		void InsertLeft(nullptr_t);
+		// Break linkship between right and this, and return old ptr
+		tag* BreakRight();
+		// Break linkship between left and this, and return old ptr
+		tag* BreakLeft();
 		// Get link left one
 		tag* GetLeft() const;
 		// Get link right one
 		tag* GetRight() const;
-		// Get childs head one
+		// Get this branch head one
 		tag* GetBegin() const;
-		// Get childs tail one
+		// Get this branch tail one
 		tag* GetEnd() const;
+		// Get size of this branch
+		size_t GetSizeOfBranch() const;
 	private:
 		size_t index_from_head = 0;
 		size_t index_from_tail = 0;
+	public:
+		//*
+		// Set new linkship: 
+		// old-link parent
+		// |-- ptr
+		// ----| this
+		//*
+		void InsertParent(tag* ptr);
+		// Break linkship between parent and this, and return old ptr(parent)
+		tag* BreakParent();
+		// Get parent ptr
+		tag* GetParent() const;
+		// Get root ptr
+		tag* GetRoot() const;
 	private:
-		// Check stats from left to right
-		void StatsCheck() const volatile;
-		// Check stats from top to child
-		void BranchCheck() const volatile;
+		size_t index_from_root = 0;
+		size_t index_from_farthest_leaf = 0;
+	public:
+		// Set new linkship:
+		// this
+		// |-- ptr ->old-link begin ->...
+		void InsertChildBegin(tag* ptr);
+		// Set new linkship:
+		// -----------------------------this
+		// ... <- old-link end <- ptr --|
+		void InsertChildEnd(tag * ptr)
+		// Break linkship between childs and this, and return old ptr(head)
+		tag* BreakChilds();
+		// Get childs branch head one
+		tag* GetChildsLeft() const;
+		// Get childs branch tail one
+		tag* GetChildsRight() const;
+	public:
+		// Get index from head
+		size_t GetIndex() const;
+		// Get index from tail
+		size_t GetRIndex() const;
+		// Get depth from root(index from root)
+		size_t GetDepth() const;
+		// Get distance from leaf(index from farthest leaf)
+		size_t GetRDepth() const;
+		// Get this sub tree depth(from root to farthest leaf of this ptr's childs)
+		size_t GetTreeDepth() const;
 	};
 
 #pragma region FourWay Pointer
 
-	template<typename T>
-	void FourWayPointer<T>::InsertLeft(tag* ptr)
-	{
-		this->StatsCheck();
-		ptr->StatsCheck();
-		ptr->BranchCheck();
-	}
-	template<typename T>
-	void FourWayPointer<T>::InsertRight(tag* ptr)
-	{
-
-		this->StatsCheck();
-		ptr->StatsCheck();
-		ptr->BranchCheck();
-	}
-	template<typename T>
-	void FourWayPointer<T>::InsertLeft(nullptr_t)
-	{
-		this->StatsCheck();
-		ptr->StatsCheck();
-		ptr->BranchCheck();
-	}
-	template<typename T>
-	void FourWayPointer<T>::InsertRight(nullptr_t)
-	{
-		tag* old_right = this->GetRight();
-		this->right_prt = nullptr;
-		old_right->left_ptr = nullptr;
-		this->StatsCheck();
-		old_right->StatsCheck();
-	}
 	template<typename T>
 	void FourWayPointer<T>::InsertBegin(tag* ptr)
 	{
@@ -102,6 +119,34 @@ namespace ld
 	void FourWayPointer<T>::InsertEnd(tag* ptr)
 	{
 		this->GetEnd()->InsertRight(ptr);
+	}
+	template<typename T>
+	void FourWayPointer<T>::InsertChildBegin(tag* ptr)
+	{
+		if(ptr==nullptr)return;
+		ptr->BreakParent();
+		if(this->childs_begin_ptr)
+		{
+			this->childs_begin_ptr->InsertLeft(ptr);
+		}
+		else
+		{
+			ptr->InsertParent(this);
+		}
+	}
+	template<typename T>
+	void FourWayPointer<T>::InsertChildEnd(tag* ptr)
+	{
+		if(ptr==nullptr)return;
+		ptr->BreakParent();
+		if(this->childs_end_ptr)
+		{
+			this->childs_end_ptr->InsertRight(ptr);
+		}
+		else
+		{
+			ptr->InsertParent(this);
+		}
 	}
 
 	template<typename T>
@@ -118,17 +163,37 @@ namespace ld
 	FourWayPointer<T>::tag* FourWayPointer<T>::GetBegin() const
 	{
 		tag* result = this;
-		while (result->GetLeft())
-			resukt = result->GetLeft();
+		while (result->left_ptr)
+			result = result->left_ptr;
 		return result;
 	}
 	template<typename T>
 	FourWayPointer<T>::tag* FourWayPointer<T>::GetEnd() const
 	{
 		tag* result = this;
-		while (result->GetRight())
-			resukt = result->GetRight();
+		while (result->right_prt)
+			result = result->right_prt;
 		return result;
+	}
+	template<typename T>
+	size_t FourWayPointer<T>::GetSizeOfBranch() const
+	{
+		return this->index_from_head+this->index_from_tail+1;
+	}
+	template<typename T>
+	FourWayPointer<T>::tag* FourWayPointer<T>::GetParent() const
+	{
+		return this->parent_ptr;
+	}
+	template<typename T>
+	FourWayPointer<T>::tag* FourWayPointer<T>::GetChildsLeft() const
+	{
+		return  this->childs_begin_ptr;
+	}
+	template<typename T>
+	FourWayPointer<T>::tag* FourWayPointer<T>::GetChildsRight() const
+	{
+		return  this->childs_end_ptr;
 	}
 
 #pragma endregion
