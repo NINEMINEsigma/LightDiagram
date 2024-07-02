@@ -19,7 +19,7 @@ namespace ld
 	{
 	public:
 		using tag = FourWayPointer<T>;
-	protected:
+	private:
 		// upward ptr, which is parent and root
 		tag* parent_ptr = nullptr;
 		// rightward ptr, which is on the same branch and layer
@@ -38,6 +38,7 @@ namespace ld
 			typename InsertIndicator, typename EarseIndicator
 		>
 		friend class LFContainter;
+	protected:
 #pragma region 
 		//*
 		// Set new linkship: this -> ptr -> old-link right
@@ -66,12 +67,12 @@ namespace ld
 		// Get size of this branch
 		size_t GetSizeOfBranch() const;
 #pragma endregion
-	protected:
+	private:
 		// index counter from left to right
 		size_t index_from_head = 0;
 		// index counter from right to left
 		size_t index_from_tail = 0;
-	public:
+	protected:
 #pragma region 
 		//*
 		// Set new linkship: 
@@ -87,14 +88,12 @@ namespace ld
 		// Get root ptr
 		tag* GetRoot() const;
 #pragma endregion
-	protected:
-#pragma region
+	private:
 		// index counter which is depth of this tree 
 		size_t index_from_root = 0;
 		// index counter which is distance from this ptr to farthest leaf
 		size_t index_from_farthest_leaf = 0;
-#pragma endregion
-	public:
+	protected:
 #pragma region 
 		// Set new linkship:
 		// this
@@ -103,15 +102,15 @@ namespace ld
 		// Set new linkship:
 		// -----------------------------this
 		// ... <- old-link end <- ptr --|
-		void InsertChildEnd(tag * ptr)
-			// Break linkship between childs and this, and return old ptr(head)
-			tag* BreakChilds();
+		void InsertChildEnd(tag * ptr);
+		// Break linkship between childs and this, and return old ptr(head)
+		tag* BreakChilds();
 		// Get childs branch head one
 		tag* GetChildsLeft() const;
 		// Get childs branch tail one
 		tag* GetChildsRight() const;
 #pragma endregion
-	public:
+	protected:
 #pragma region 
 		// Get index from head
 		size_t GetIndex() const;
@@ -124,13 +123,169 @@ namespace ld
 		// Get this sub tree depth(from root to farthest leaf of this ptr's childs)
 		size_t GetTreeDepth() const;
 #pragma endregion
-	public:
+	protected:
+#pragma region
+		// BreakLeft
+		void InsertLeft(nullptr_t);
+		// BreakRight
+		void InsertRight(nullptr_t);
+		// BreakParent
+		void InsertParent(nullptr_t);
+		// Break all linkship(not include childs ptr)
+		void BreakLinkship();
+#pragma endregion
+	private:
+#pragma region
+		// Rebuild index stats from this ptr to tail on this branch
+		// Best time to use this function rebuild index, this ptr need to be the head one
+		// return end ptr index
+		size_t RebuildBranchIndex();
+		// Rebuild depth stats from this ptr to all sub ptr
+		// Best time to use this function rebuild depth, this ptr need to be the root one
+		// return farthest leaf ptr depth
+		size_t RebuildDepthIndex();
+#pragma endregion
+	private:
 #pragma region
 
 #pragma endregion
 	};
 
 #pragma region FourWay Pointer
+
+	template<typename T>
+	void FourWayPointer<T>::InsertLeft(tag* ptr)
+	{
+		if (ptr)
+		{
+			tag* cat = this->left_ptr;
+			cat->right_prt = ptr;
+			ptr->left_ptr = cat;
+			ptr->parent_ptr = this->parent_ptr;
+			ptr->right_prt = this;
+			this->left_ptr = ptr;
+		}
+		else this->BreakLeft();
+	}
+	template<typename T>
+	void FourWayPointer<T>::InsertRight(tag* ptr)
+	{
+		if (ptr)
+		{
+			tag* cat = this->right_prt;
+			cat->left_ptr = ptr;
+			ptr->right_prt = cat;
+			ptr->parent_ptr = this->parent_ptr;
+			ptr->left_ptr = this;
+			this->right_prt = ptr;
+		}
+		else this->BreakRight();
+	}
+	template<typename T>
+	void FourWayPointer<T>::InsertParent(tag* ptr)
+	{
+		if (ptr)
+		{
+			tag* old_left = this->left_ptr, old_right = this->right_prt, old_parent = this->parent_ptr;
+			this->left_ptr = this->right_prt = this->parent_ptr = nullptr;
+			if (old_left)
+			{
+				old_left->right_prt = ptr;
+			}
+			if (old_right)
+			{
+				old_right.left_ptr = ptr;
+			}
+			if (old_parent)
+			{
+				if (old_parent.childs_begin_ptr == this)
+				{
+					old_parent.childs_begin_ptr = ptr;
+				}
+				if (old_parent.childs_end_ptr == this)
+				{
+					old_parent.childs_end_ptr = ptr;
+				}
+			}
+			ptr->parent_ptr = old_parent;
+			ptr->left_ptr = old_left;
+			ptr->right_prt = old_right;
+			ptr->InsertChildEnd(this);
+		}
+		else this->BreakParent();
+	}
+
+	template<typename T>
+	void FourWayPointer<T>::InsertLeft(nullptr_t)
+	{
+		this->BreakLeft();
+	}
+	template<typename T>
+	void FourWayPointer<T>::InsertRight(nullptr_t)
+	{
+		this->BreakRight();
+	}
+	template<typename T>
+	void FourWayPointer<T>::InsertParent(nullptr_t)
+	{
+		this->BreakParent();
+	}
+
+	template<typename T>
+	void FourWayPointer<T>::BreakLinkship()
+	{
+		this->BreakLeft();
+		this->BreakRight();
+		this->BreakParent();
+	}
+	template<typename T>
+	FourWayPointer<T>::tag* FourWayPointer<T>::BreakLeft()
+	{
+		if (this->left_ptr)
+		{
+			tag* result = this->left_ptr;
+			this->left_ptr->right_prt = nullptr;
+			this->left_ptr = nullptr;
+			return result;
+		}
+		return nullptr;
+	}
+	template<typename T>
+	FourWayPointer<T>::tag* FourWayPointer<T>::BreakRight()
+	{
+		if (this->right_prt)
+		{
+			tag* result = this->right_prt;
+			this->right_prt->left_ptr = nullptr;
+			this->right_prt = nullptr;
+			return result;
+		}
+		return nullptr;
+	}
+	template<typename T>
+	FourWayPointer<T>::tag* FourWayPointer<T>::BreakParent()
+	{
+		if (this->parent_ptr)
+		{
+			tag* result = this->parent_ptr;
+			this->parent_ptr = nullptr;
+			return result;
+		}
+		return nullptr;
+	}
+	template<typename T>
+	FourWayPointer<T>::tag* FourWayPointer<T>::BreakChilds()
+	{
+		tag* result = this->left_ptr;
+		tag* current = this->left_ptr;
+		while (current)
+		{
+			current->parent_ptr = nullptr;
+			current = current->right_prt;
+		}
+		this->left_ptr = this->right_prt = nullptr;
+		return result;
+	}
 
 	template<typename T>
 	void FourWayPointer<T>::InsertBegin(tag* ptr)
@@ -203,6 +358,22 @@ namespace ld
 		return this->index_from_head + this->index_from_tail + 1;
 	}
 	template<typename T>
+	FourWayPointer<T>::tag* FourWayPointer<T>::GetRoot() const
+	{
+		tag* result = this;
+		while (result->parent_ptr)
+		{
+			result = this->parent_ptr;
+		}
+		result = result->GetBegin();
+		return result;
+	}
+	template<typename T>
+	FourWayPointer<T>::tag* FourWayPointer<T>::GetParent() const
+	{
+		return this->parent_ptr;
+	}
+	template<typename T>
 	FourWayPointer<T>::tag* FourWayPointer<T>::GetParent() const
 	{
 		return this->parent_ptr;
@@ -221,13 +392,13 @@ namespace ld
 	size_t FourWayPointer<T>::GetIndex() const
 	{
 		return this->index_from_head;
-	}template<typename T>
-		template<typename T>
+	}
+	template<typename T>
 	size_t FourWayPointer<T>::GetRIndex() const
 	{
 		return this->index_from_tail;
-	}template<typename T>
-		template<typename T>
+	}
+	template<typename T>
 	size_t FourWayPointer<T>::GetDepth() const
 	{
 		return this->index_from_root;
@@ -242,23 +413,34 @@ namespace ld
 	{
 		return this->index_from_root + this->index_from_farthest_leaf + 1;
 	}
+
 	template<typename T>
-	FourWayPointer<T>::tag* FourWayPointer<T>::GetRoot() const
+	size_t FourWayPointer<T>::RebuildBranchIndex()
 	{
-		tag* result = this;
-		while (result->parent_ptr)
+		this->index_from_head = this->left_ptr ? (this->left_ptr->index_from_head + 1) : 0;
+		size_t result = this->index_from_head;
+		if (this->right_prt)
 		{
-			result = this->parent_ptr;
+			result = this->right_prt->RebuildBranchIndex();
 		}
-		result = result->GetBegin();
+		this->index_from_tail = result - this->index_from_head;
 		return result;
 	}
 	template<typename T>
-	FourWayPointer<T>::tag* FourWayPointer<T>::GetParent() const
+	size_t FourWayPointer<T>::RebuildDepthIndex()
 	{
-		return this->parent_ptr;
+		this->index_from_root = this->parent_ptr ? (this->parent_ptr->index_from_root + 1) : 0;
+		size_t result = this->index_from_root;
+		if (this->childs_begin_ptr)
+		{
+			for (tag* i = this->childs_begin_ptr; i; i = i->right_prt)
+			{
+				result = ld::Max(result, i->RebuildDepthIndex());
+			}
+		}
+		this->index_from_farthest_leaf = result - this->index_from_root;
+		return result;
 	}
-
 
 #pragma endregion
 

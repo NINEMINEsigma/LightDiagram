@@ -180,7 +180,6 @@ using namespace boost::placeholders;
 
 #pragma endregion
 
-
 #pragma region bits/stdc++
 
 // C++ includes used for precompiling -*- C++ -*-
@@ -1324,6 +1323,26 @@ _LF_C_API(TStruct) choose_type < false, _True, _False >
 	using tag = _False;
 };
 
+namespace ld
+{
+	template<typename T>
+	const T& Max(const T& first, const T& second)
+	{
+		if (first > second)
+			return first;
+		else
+			return second;
+	}
+	template<typename T, typename ...Args>
+	const T& Max(const T& first, const T& second, const Args&... args)
+	{
+		if (first > second)
+			return Max(first, args...);
+		else
+			return Max(second, args...);
+	}
+}
+
 #pragma endregion
 
 #pragma endregion
@@ -1429,5 +1448,15 @@ _LF_C_API(TStruct) choose_type < false, _True, _False >
 #pragma region Console
 
 #pragma endregion
+
+#ifdef NULL
+#undef NULL
+#define NULL nullptr
+#endif // NULL
+
+#ifdef Null
+#undef Null
+#define Null nullptr
+#endif // NULL
 
 #endif // !__FILE_LF_CONFIG
