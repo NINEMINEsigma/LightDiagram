@@ -34,6 +34,9 @@
 
 #include<Core/Header/some_features.h>
 #include<Core/Header/LF_Config.h>
+#if defined(_WINDOW_)
+#include <Core/Header/uni_utility.h>
+#endif
 #include<Core/Header/LF_Type.h>
 #include<Core/Header/anyclass.h>
 #include<Core/Header/LF_Cache.h>

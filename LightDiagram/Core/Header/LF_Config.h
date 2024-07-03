@@ -296,9 +296,16 @@ using namespace boost::placeholders;
 #include <unordered_map>
 #include <unordered_set>
 
-#ifdef _WINDOW_
+#if defined(_WINDOW_)
 #include <Windows.h>
+#include <ws2tcpip.h>
 #endif // OS_TYPE_WINDOWS_CC
+
+#if defined(_LINUX_)
+#include <unistd.h>
+#include <sys/epoll.h>
+#include <sys/eventfd.h>
+#endif
 
 using type_info = std::type_info;
 
@@ -1307,7 +1314,6 @@ decltype(name)& get_##name(){return name;}
 #define _LF_SL_(x)		#x
 #define _LF_Strline_(x) _LF_SL_(x)
 #define _STR_LINE_		_LF_Strline_(__LINE__)
-
 
 #pragma region choose_type
 

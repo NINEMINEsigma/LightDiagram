@@ -28,5 +28,7 @@ set (LightDiagram_LASTEDIT_TIME 202406202200)
 # Sub Project
 include_directories ("${PROJECT_SOURCE_DIR}/LightDiagram")
 add_subdirectory ("LightDiagram")
+include_directories ("${PROJECT_SOURCE_DIR}/WebServer")
+add_subdirectory ("WebServer")
 
 set(CMAKE_INSTALL_PREFIX "${PROJECT_SOURCE_DIR}/out/")
