@@ -1,5 +1,4 @@
 #ifndef __FILE_STATIC_TRAITS
-
 #define __FILE_STATIC_TRAITS
 
 #include<Core/Header/anyclass.h>
@@ -9,40 +8,22 @@
 
 #pragma region Traits (Static)
 
-_LF_C_API(Class)
+_LF_C_API(Class) 
 any_trait_base:	_LF_Inherited(any_class)
 {
 public:
 	using string = typename string_indicator::tag;
 
-	const char* read_symbol_name() const
-	{
-		return single_name;
-	}
-	const string& read_any_name() const
-	{
-		return name;
-	}
-	const type_info& read_type() const
-	{
-		return _type;
-	}
-	auto read_type_hash() const
-	{
-		return _type.hash_code();
-	}
+	const char* read_symbol_name() const;
+	const string& read_any_name() const;
+	const type_info& read_type() const;
+	auto read_type_hash() const;
 protected:
-	any_trait_base(const char* symbol_name, const string & func_name, const type_info & symbol_type) :
-		single_name(symbol_name),
-		name(func_name),
-		_type(symbol_type) {}
+	any_trait_base(const char* symbol_name, const string & func_name, const type_info & symbol_type);
 private:
 	const char* single_name;
 	string name;
 	const type_info& _type;
-
-public:
-
 };
 
 #define _LFramework_Kit_API_StaticOperatorBool(boolen)	operator bool() { return boolen ; }
@@ -52,8 +33,8 @@ public:
 /*
 	fail to get function information
 */
-template<typename _T> _LF_C_API(OStruct) function_traits
-
+template<typename _T> _LF_C_API(OStruct)
+function_traits
 {
 	_LFramework_Kit_API_StaticOperatorBool(false);
 	using tag = void;
@@ -66,7 +47,6 @@ template<typename _T> _LF_C_API(OStruct) function_traits
 	using consting = unconst_indicator;
 	using typen = LDType_Bad_Indicator;
 };
-
 
 /*
 	get regular function information
@@ -194,7 +174,8 @@ _LF_C_API(OStruct) function_traits_ex<Lambda, std::void_t<decltype(&Lambda::oper
 /*
 	get regular field information
 */
-template<typename _T> _LF_C_API(OStruct) field_traits
+template<typename _T> _LF_C_API(OStruct)
+field_traits
 {
 	_LFramework_Kit_API_StaticOperatorBool(true);
 	using tag = _T;
@@ -204,12 +185,34 @@ template<typename _T> _LF_C_API(OStruct) field_traits
 	using typen = LDType<tag>;
 };
 
+template<typename _Ret,typename... Args> _LF_C_API(OStruct)
+field_traits<_Ret(*)(Args...)>
+{
+	_LFramework_Kit_API_StaticOperatorBool(false);
+	using tag = _Ret(*)(Args...);
+	constexpr static bool value = false;
+
+	using origin = tag;
+	using typen = LDType<tag>;
+};
+
+template<typename _Ret, typename _C, typename... Args> _LF_C_API(OStruct)
+field_traits<_Ret(_C::*)(Args...)>
+{
+	_LFramework_Kit_API_StaticOperatorBool(false);
+	using tag = _Ret(*)(Args...);
+	constexpr static bool value = false;
+
+	using origin = tag;
+	using typen = LDType<tag>;
+};
+
 /*
 	get regular field information
 */
 template<typename T>
 _LF_C_API(OStruct)
-field_traits_ex : public function_traits<T>
+field_traits_ex : public field_traits<T>
 {
 	using field_traits_indicator = void;
 	using decay = generate_full_decay_typen<T>;
@@ -238,8 +241,7 @@ public:
 
 	using function_bases_type = std::map<size_t, function_base*>;
 protected:
-	function_base(const char* symbol_name, const string & func_name, const type_info & symbol_type) :
-		any_trait_base(symbol_name, func_name, symbol_type) {}
+	function_base(const char* symbol_name, const string & func_name, const type_info & symbol_type);
 private:
 	static function_bases_type function_bases;
 };
@@ -465,8 +467,7 @@ public:
 	}
 
 protected:
-	field_base(const char* symbol_name, const string & field_name, const type_info & symbol_type) :
-		any_trait_base(symbol_name, field_name, symbol_type) {}
+	field_base(const char* symbol_name, const string& field_name, const type_info& symbol_type);
 private:
 	static field_bases_type field_bases;
 };
@@ -581,7 +582,8 @@ const field_info<field, C>& create_or_get_field_info(size_t _offset, const char*
 #pragma endregion
 
 template<typename T>
-_LF_C_API(OStruct) LDType_Traits
+_LF_C_API(OStruct) 
+LDType_Traits
 {
 	using tag_function = function_traits_ex<T>;
 	using tag_field = field_traits_ex<T>;

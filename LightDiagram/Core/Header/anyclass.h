@@ -1,5 +1,4 @@
 #ifndef __FILE_ANY_CLASS
-
 #define __FILE_ANY_CLASS
 
 #include<Core/Header/LF_Config.h>
@@ -212,6 +211,35 @@ public:
 		return this;
 	}
 };
+
+_LF_C_API(Class) copy_enable
+{
+public:
+	using tag = void;
+	constexpr static bool value = true;
+protected:
+	copy_enable() {}
+	copy_enable(const copy_enable&) {}
+	~copy_enable() {}
+	copy_enable& operator=(const copy_enable&)
+	{
+		return *this;
+	}
+};
+_LF_C_API(Class) copy_disable
+{
+public:
+	using tag = void;
+	constexpr static bool value = true;
+protected:
+	copy_disable() {}
+	copy_disable(const copy_disable&) {}
+	~copy_disable() {}
+private:
+	copy_disable(const copy_disable&) = delete;
+	copy_disable& operator=(const copy_disable&) = delete;
+};
+using noncopyable = copy_disable;
 
 #endif // !__FILE_ANY_CLASS
 
