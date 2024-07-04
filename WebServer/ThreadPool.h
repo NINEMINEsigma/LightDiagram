@@ -1,7 +1,4 @@
-// @Author Lin Ya
-// @Email xxbbb@vip.qq.com
-
-// This file has not been used
+#if false
 #pragma once
 #include "Channel.h"
 #include <pthread.h>
@@ -55,3 +52,4 @@ public:
     static int threadpool_free();
     static void *threadpool_thread(void *args);
 };
+#endif

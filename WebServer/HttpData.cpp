@@ -630,7 +630,7 @@ AnalysisState HttpData::analysisRequest()
         {
             header += "Content-Type: image/png\r\n";
             header += "Content-Length: " + to_string(sizeof favicon) + "\r\n";
-            header += "Server: LinYa's Web Server\r\n";
+            header += "Server: LightDiagram's Web Server\r\n";
 
             header += "\r\n";
             outBuffer_ += header;
@@ -647,7 +647,7 @@ AnalysisState HttpData::analysisRequest()
         }
         header += "Content-Type: " + filetype + "\r\n";
         header += "Content-Length: " + to_string(sbuf.st_size) + "\r\n";
-        header += "Server: LinYa's Web Server\r\n";
+        header += "Server: LightDiagram's Web Server\r\n";
         // 头部结束
         header += "\r\n";
         outBuffer_ += header;
@@ -715,3 +715,13 @@ void HttpData::newEvent()
     channel_->setEvents(DEFAULT_EVENT);
     loop_->addToPoller(channel_, DEFAULT_EXPIRED_TIME);
 }
+
+void HttpData::linkTimer(std::shared_ptr<TimerNode> mtimer)
+{
+    // shared_ptr重载了bool, 但weak_ptr没有
+    timer_ = mtimer;
+}
+
+std::shared_ptr<Channel> HttpData::getChannel() { return channel_; }
+
+EventLoop* HttpData::getLoop() { return loop_; }

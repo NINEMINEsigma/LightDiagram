@@ -1,3 +1,4 @@
+#if false
 // @Author Lin Ya
 // @Email xxbbb@vip.qq.com
 
@@ -176,3 +177,4 @@ void *ThreadPool::threadpool_thread(void *args)
     pthread_exit(NULL);
     return(NULL);
 }
+#endif

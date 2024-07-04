@@ -102,6 +102,11 @@ void*   _LF_C_API(DLL)  mmap(void* start, size_t length, int prot, int flags, in
 // linux function on window
 // free
 int      _LF_C_API(DLL) munmap(void* start, size_t length);
+// linux function on window
+// let addr write to stream(file)
+int msync(void* addr, size_t len, int flags);
+
+int gettimeofday(struct timeval* tp, void* tzp);
 
 extern std::map<int,std::fstream> __uni_helper_fd_map;
 extern std::set<int> __uni_helper_fd_index;
@@ -164,6 +169,29 @@ extern std::set<int> __uni_helper_fd_index;
 #define S_IXOTH     00001  
 #endif 
 #pragma endregion
+#pragma region prot -> int
+#define PROT_EXEC   4
+#define PROT_READ   1
+#define PROT_WRITE  2
+#define PROT_NONE   0
+#pragma endregion
+#pragma region memory -> int
+#define MAP_FIXED       (0)
+#define MAP_SHARED      (1<<0)
+#define MAP_PRIVATE     (1<<1)
+#define MAP_ANONYMOUS   (1<<2)
+#define MAP_DENYWRITE   (1<<3)
+#define MAP_LOCKED      (1<<4)
+#define MAP_NORESERVE   (1<<5)
+#define MAP_LOCKED      (1<<6)
+#define MAP_GROWSDOWN   (1<<7)
+#define MAP_ANON        (1<<8)
+#define MAP_FILE        (1<<9)
+#define MAP_32BIT       (1<<10)
+#define MAP_POPULATE    (1<<11)
+#define MAP_NONBLOCK    (1<<12)
+#pragma endregion
+
 
 # ifndef __GETOPT_H_
 # define __GETOPT_H_

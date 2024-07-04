@@ -87,6 +87,8 @@ int pthread_once(pthread_once_t *once_control, void (*init_routine) (void))
     }
 }
 
+std::map<void*,int> __uni_helper_mmaparr;
+
 void* mmap(void* start, size_t length, int prot, int flags, int fd, off_t offset)
 {
     if (__uni_helper_fd_map.count(fd))
@@ -97,6 +99,7 @@ void* mmap(void* start, size_t length, int prot, int flags, int fd, off_t offset
         {
             void* result = malloc(sizeof(char) * length);
         }
+        __uni_helper_mmaparr[result] = fd;
         read(fd, result, length);
         return result;
     }
@@ -105,8 +108,40 @@ void* mmap(void* start, size_t length, int prot, int flags, int fd, off_t offset
 
 int munmap(void* start, size_t length)
 {
+    __uni_helper_mmaparr.erase(start);
     ::free(start);
     return length;
+}
+
+int msync(void* addr, size_t len, int flags)
+{
+    if (__uni_helper_mmaparr.count(addr) && __uni_helper_fd_map.count(__uni_helper_mmaparr[addr]))
+    {
+        write(__uni_helper_mmaparr[addr], addr, len);
+        return len;
+    }
+    return 0;
+}
+
+#include <time.h>
+
+int gettimeofday(struct timeval* tp, void* tzp)
+{
+    time_t clock;
+    struct tm tm;
+    SYSTEMTIME wtm;
+    GetLocalTime(&wtm);
+    tm.tm_year = wtm.wYear - 1900;
+    tm.tm_mon = wtm.wMonth - 1;
+    tm.tm_mday = wtm.wDay;
+    tm.tm_hour = wtm.wHour;
+    tm.tm_min = wtm.wMinute;
+    tm.tm_sec = wtm.wSecond;
+    tm.tm_isdst = -1;
+    clock = mktime(&tm);
+    tp->tv_sec = clock;
+    tp->tv_usec = wtm.wMilliseconds * 1000;
+    return (0);
 }
 
 #pragma region getopt.h

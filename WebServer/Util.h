@@ -1,4 +1,7 @@
+#ifndef __FILE_UTIL
+#define __FILE_UTIL
 #pragma once
+#include <LightDiagram.h>
 #include <cstdlib>
 #include <string>
 
@@ -13,3 +16,5 @@ void setSocketNodelay(int fd);
 void setSocketNoLinger(int fd);
 void shutDownWR(int fd);
 int socket_bind_listen(int port);
+
+#endif // !__FILE_UTIL

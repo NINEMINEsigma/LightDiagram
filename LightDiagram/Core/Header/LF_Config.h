@@ -334,6 +334,10 @@ struct platform_indicator
 #include <arpa/inet.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/time.h>
+#include <netinet/tcp.h>
 struct platform_indicator
 {
 	using tag = void;

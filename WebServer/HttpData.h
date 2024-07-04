@@ -93,22 +93,19 @@ private:
 };
 
 _LF_C_API(Class) HttpData final:
-    public std::enable_shared_from_this<HttpData>,
-    public any_class
+public std::enable_shared_from_this<HttpData>,
+public any_class
 {
- public:
+public:
   HttpData(EventLoop * loop, int connfd);
   ~HttpData();
   void reset();
   void seperateTimer();
-  void linkTimer(std::shared_ptr<TimerNode> mtimer) {
-      // shared_ptr重载了bool, 但weak_ptr没有
-      timer_ = mtimer;
-    }
-    std::shared_ptr<Channel> getChannel() { return channel_; }
-    EventLoop* getLoop() { return loop_; }
-    void handleClose();
-    void newEvent();
+  void linkTimer(std::shared_ptr<TimerNode> mtimer);
+  std::shared_ptr<Channel> getChannel();
+  EventLoop* getLoop();
+  void handleClose();
+  void newEvent();
 
 private:
     EventLoop* loop_;
