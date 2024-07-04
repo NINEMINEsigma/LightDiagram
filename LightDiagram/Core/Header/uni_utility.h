@@ -3,7 +3,7 @@
 #define __FILE_UNI_UTITIY
 
 // on window(with linux)
-#if defined(_WINDOW_)
+#if defined(_LINUX_ON_WINDOW_)
 
 #include <Core/Header/LF_Config.h>
 
@@ -22,6 +22,10 @@ struct pthread_once_t
 {
     std::mutex locker;
     int stats = 0;
+    bool operator==(const pthread_once_t& o)
+    {
+        return o.stats == this->stats;
+    }
 };
 #ifndef PTHREAD_ONCE_INIT
 #define PTHREAD_ONCE_INIT pthread_once_t()
@@ -73,13 +77,34 @@ struct epoll_event
 #include <map>
 #include <set>
 
-extern int open(const char *pathname, int flags, mode_t mode);
-extern ssize_t write(int fd, const void *buf, size_t count);
-extern ssize_t read(int fd, void *buf, size_t count);
-extern int pthread_once(pthread_once_t* once_control, void (*init_routine) (void));
+// linux function on window
+// fstream and id(int) with map
+// open a path of file
+int     _LF_C_API(DLL)  open(const char *pathname, int flags, mode_t mode);
+// linux function on window
+// fstream and id(int) with map
+// write bytes to one opened file
+ssize_t _LF_C_API(DLL)  write(int fd, const void* buf, size_t count);
+// linux function on window
+// fstream and id(int) with map
+// read bytes from one opened file
+ssize_t _LF_C_API(DLL)  read(int fd, void *buf, size_t count);
+// linux function on window
+// fstream and id(int) with map
+// close one opened file
+int     _LF_C_API(DLL)  close(int fd);
+// linux function on window
+// just work once on a thread
+int     _LF_C_API(DLL)  pthread_once(pthread_once_t* once_control, void (*init_routine) (void));
+// linux function on window
+// malloc
+void*   _LF_C_API(DLL)  mmap(void* start, size_t length, int prot, int flags, int fd, off_t offset);
+// linux function on window
+// free
+int      _LF_C_API(DLL) munmap(void* start, size_t length);
 
-std::map<int,std::fstream> __uni_helper_fd_map;
-std::set<int> __uni_helper_fd_index;
+extern std::map<int,std::fstream> __uni_helper_fd_map;
+extern std::set<int> __uni_helper_fd_index;
 
 #pragma region open -> int flags
 #ifndef O_RDONLY

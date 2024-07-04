@@ -1,42 +1,39 @@
-// @Author Lin Ya
-// @Email xxbbb@vip.qq.com
+#ifndef __FILE_EVENTLOOP
+#define __FILE_EVENTLOOP
+
 #pragma once
+#include <LightDiagram.h>
 #include <functional>
 #include <memory>
 #include <vector>
-#include "Channel.h"
-#include "Epoll.h"
-#include "Util.h"
-#include "base/CurrentThread.h"
-#include "base/Logging.h"
-#include "base/Thread.h"
+#include <Channel.h>
+#include <Epoll.h>
+#include <Util.h>
+#include <base/CurrentThread.h>
+#include <base/Logging.h>
+#include <base/Thread.h>
 
 
 #include <iostream>
 using namespace std;
 
-class EventLoop {
+using Functor = std::function<void()>;
+
+_LF_C_API(Class) EventLoop final: public any_class
+{
  public:
-  typedef std::function<void()> Functor;
   EventLoop();
   ~EventLoop();
   void loop();
   void quit();
   void runInLoop(Functor&& cb);
   void queueInLoop(Functor&& cb);
-  bool isInLoopThread() const { return threadId_ == CurrentThread::tid(); }
-  void assertInLoopThread() { assert(isInLoopThread()); }
-  void shutdown(shared_ptr<Channel> channel) { shutDownWR(channel->getFd()); }
-  void removeFromPoller(shared_ptr<Channel> channel) {
-    // shutDownWR(channel->getFd());
-    poller_->epoll_del(channel);
-  }
-  void updatePoller(shared_ptr<Channel> channel, int timeout = 0) {
-    poller_->epoll_mod(channel, timeout);
-  }
-  void addToPoller(shared_ptr<Channel> channel, int timeout = 0) {
-    poller_->epoll_add(channel, timeout);
-  }
+  bool isInLoopThread() const;
+  void assertInLoopThread();
+  void shutdown(shared_ptr<Channel> channel);
+  void removeFromPoller(shared_ptr<Channel> channel);
+  void updatePoller(shared_ptr<Channel> channel, int timeout = 0);
+  void addToPoller(shared_ptr<Channel> channel, int timeout = 0);
 
  private:
   // 声明顺序 wakeupFd_ > pwakeupChannel_
@@ -56,3 +53,5 @@ class EventLoop {
   void doPendingFunctors();
   void handleConn();
 };
+
+#endif // !__FILE_EVENTLOOP

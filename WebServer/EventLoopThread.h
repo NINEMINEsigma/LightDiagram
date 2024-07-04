@@ -3,18 +3,23 @@
 #pragma once
 #include "EventLoop.h"
 #include "base/Condition.h"
-#include "base/MutexLock.h"
-#include "base/Thread.h"
-#include "base/noncopyable.h"
+#ifndef __FILE_EVENTLOOPTHREAD
+#define __FILE_EVENTLOOPTHREAD
+
+#include <LightDiagram.h>
+#include <base/MutexLock.h>
+#include <base/Thread.h>
+#include <base/noncopyable.h>
 
 
-class EventLoopThread : noncopyable {
- public:
+_LF_C_API(Class) EventLoopThread final: noncopyable, public any_class
+{
+public:
   EventLoopThread();
   ~EventLoopThread();
   EventLoop* startLoop();
 
- private:
+private:
   void threadFunc();
   EventLoop* loop_;
   bool exiting_;
@@ -22,3 +27,5 @@ class EventLoopThread : noncopyable {
   MutexLock mutex_;
   Condition cond_;
 };
+
+#endif // !__FILE_EVENTLOOPTHREAD

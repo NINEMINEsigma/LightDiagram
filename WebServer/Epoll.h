@@ -1,20 +1,17 @@
+#ifndef __FILE_EPOLL
+#define __FILE_EPOLL
 #pragma once
 #include <LightDiagram.h>
-#ifdef _LINUX_
-#include <sys/epoll.h>
-#else
-#include <Windows.h>
-#endif
 #include <memory>
 #include <unordered_map>
 #include <vector>
-#include "Channel.h"
-#include "HttpData.h"
-#include "Timer.h"
+#include <Channel.h>
+#include <HttpData.h>
+#include <Timer.h>
 
-
-class Epoll {
- public:
+_LF_C_API(Class) Epoll final:public any_class
+{
+public:
   Epoll();
   ~Epoll();
   void epoll_add(SP_Channel request, int timeout);
@@ -25,12 +22,13 @@ class Epoll {
   void add_timer(std::shared_ptr<Channel> request_data, int timeout);
   int getEpollFd() { return epollFd_; }
   void handleExpired();
-
- private:
-  static const int MAXFDS = 100000;
-  int epollFd_;
-  std::vector<epoll_event> events_;
-  std::shared_ptr<Channel> fd2chan_[MAXFDS];
-  std::shared_ptr<HttpData> fd2http_[MAXFDS];
-  TimerManager timerManager_;
+private:
+	constexpr static int MAXFDS = 1 << 16;
+	int epollFd_;
+	std::vector<epoll_event> events_;
+	std::shared_ptr<Channel> fd2chan_[MAXFDS];
+	std::shared_ptr<HttpData> fd2http_[MAXFDS];
+	TimerManager timerManager_;
 };
+#endif // !__FILE_EPOLL
+

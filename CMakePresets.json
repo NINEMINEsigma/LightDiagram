@@ -19,7 +19,7 @@
     },
     {
       "name": "x64-debug",
-      "displayName": "x64 Debug",
+      "displayName": "Windows x64 Debug",
       "inherits": "windows-base",
       "architecture": {
         "value": "x64",
@@ -32,7 +32,7 @@
     },
     {
       "name": "x64-release",
-      "displayName": "x64 Release",
+      "displayName": "Windows x64 Release",
       "inherits": "x64-debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
@@ -41,7 +41,7 @@
     },
     {
       "name": "x86-debug",
-      "displayName": "x86 Debug",
+      "displayName": "Windows x86 Debug",
       "inherits": "windows-base",
       "architecture": {
         "value": "x86",
@@ -54,13 +54,14 @@
     },
     {
       "name": "x86-release",
-      "displayName": "x86 Release",
+      "displayName": "Windows x86 Release",
       "inherits": "x86-debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "_WINDOWS": "x86"
       }
     },
+
     {
       "name": "linux-base",
       "hidden": true,
@@ -120,6 +121,51 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "_LINUX": "x86"
+      }
+    },
+
+    {
+      "name": "linux on windows x64-debug",
+      "displayName": "Linux on windows x64 Debug",
+      "inherits": "windows-base",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "_LINUX_ON_WINDOWS": "x64"
+      }
+    },
+    {
+      "name": "linux on windows x64-release",
+      "displayName": "Linux on windows x64 Release",
+      "inherits": "linux on windows x64-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "_LINUX_ON_WINDOWS": "x64"
+      }
+    },
+    {
+      "name": "linux on windows x86-debug",
+      "displayName": "Linux on windows x86 Debug",
+      "inherits": "windows-base",
+      "architecture": {
+        "value": "x86",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "_LINUX_ON_WINDOWS": "x86"
+      }
+    },
+    {
+      "name": "linux on windows x86-release",
+      "displayName": "Linux on windows x86 Release",
+      "inherits": "linux on windows x86-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "_LINUX_ON_WINDOWS": "x86"
       }
     }
   ]

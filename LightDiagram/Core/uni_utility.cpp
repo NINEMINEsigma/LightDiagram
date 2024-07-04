@@ -1,4 +1,4 @@
-#ifdef _WINDOW_
+#ifdef _LINUX_ON_WINDOW_
 # ifndef _CRT_SECURE_NO_WARNINGS
 #     define _CRT_SECURE_NO_WARNINGS
 # endif
@@ -8,55 +8,58 @@
 # include <tchar.h>
 # include <Core/Header/uni_utility.h>
 
-int open(const char *pathname, int flags, mode_t mode)
+std::map<int, std::fstream> __uni_helper_fd_map;
+std::set<int> __uni_helper_fd_index;
+
+int open(const char* pathname, int flags, mode_t mode)
 {
-    std::ios::openmode mode_type=0;
-    if(flags&O_RDONLY)mode_type=mode_type|std::ios::in;
-    if(flags&O_WRONLY)mode_type=mode_type|std::ios::out;
-    if(flags&O_RDWR)mode_type=mode_type|std::ios::in|std::ios::out;
-    if(flags&O_CREAT)mode_type=mode_type|std::ios::in;
-    if(flags&O_APPEND)mode_type=mode_type|std::ios::ate;
-    int result =__uni_helper_fd_map.size();
-    for(auto& i:__uni_helper_fd_index)
+    std::ios::openmode mode_type = 0;
+    if (flags & O_RDONLY)mode_type = mode_type | std::ios::in;
+    if (flags & O_WRONLY)mode_type = mode_type | std::ios::out;
+    if (flags & O_RDWR)mode_type = mode_type | std::ios::in | std::ios::out;
+    if (flags & O_CREAT)mode_type = mode_type | std::ios::in;
+    if (flags & O_APPEND)mode_type = mode_type | std::ios::ate;
+    int result = __uni_helper_fd_map.size();
+    for (auto& i : __uni_helper_fd_index)
     {
         result = i;
         __uni_helper_fd_index.erase(i);
         break;
     }
-    __uni_helper_fd_map[result].open(pathname,mode_type);
+    __uni_helper_fd_map[result].open(pathname, mode_type);
     return result;
 }
 
-ssize_t write(int fd, const void *buf, size_t count)
+ssize_t write(int fd, const void* buf, size_t count)
 {
-    if(__uni_helper_fd_map.count(fd))
+    if (__uni_helper_fd_map.count(fd))
     {
         try
         {
-        __uni_helper_fd_map[fd].write(static_cast<const char*>(buf),count).flush();
+            __uni_helper_fd_map[fd].write(static_cast<const char*>(buf), count).flush();
         }
-        catch(const std::exception& e)
+        catch (const std::exception& e)
         {
-        __uni_helper_fd_map[fd].clear();
-        return -1;
+            __uni_helper_fd_map[fd].clear();
+            return -1;
         }
         return count;
     }
     return -1;
 }
 
-ssize_t read(int fd, void *buf, size_t count)
+ssize_t read(int fd, void* buf, size_t count)
 {
-    if(__uni_helper_fd_map.count(fd))
+    if (__uni_helper_fd_map.count(fd))
     {
         try
         {
-        __uni_helper_fd_map[fd].read(static_cast<char*>(buf),count);
+            __uni_helper_fd_map[fd].read(static_cast<char*>(buf), count);
         }
-        catch(const std::exception& e)
+        catch (const std::exception& e)
         {
-        __uni_helper_fd_map[fd].clear();
-        return -1;
+            __uni_helper_fd_map[fd].clear();
+            return -1;
         }
         return count;
     }
@@ -65,11 +68,11 @@ ssize_t read(int fd, void *buf, size_t count)
 
 int close(int fd)
 {
-    if(__uni_helper_fd_map.count(cd))
+    if (__uni_helper_fd_map.count(fd))
     {
-    __uni_helper_fd_map[cd].close();
-    __uni_helper_fd_map.erase(fd);
-    __uni_helper_fd_index.push(fd);
+        __uni_helper_fd_map[fd].close();
+        __uni_helper_fd_map.erase(fd);
+        __uni_helper_fd_index.insert(fd);
     }
     return fd;
 }
@@ -84,7 +87,29 @@ int pthread_once(pthread_once_t *once_control, void (*init_routine) (void))
     }
 }
 
-#pragma region
+void* mmap(void* start, size_t length, int prot, int flags, int fd, off_t offset)
+{
+    if (__uni_helper_fd_map.count(fd))
+    {
+        __uni_helper_fd_map[fd].seekg(offset, std::ios::beg);
+        void* result = start;
+        if (result == nullptr)
+        {
+            void* result = malloc(sizeof(char) * length);
+        }
+        read(fd, result, length);
+        return result;
+    }
+    return nullptr;
+}
+
+int munmap(void* start, size_t length)
+{
+    ::free(start);
+    return length;
+}
+
+#pragma region getopt.h
 
 # ifdef __cplusplus
 #     define _GETOPT_THROW throw()

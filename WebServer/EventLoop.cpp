@@ -1,8 +1,7 @@
-#include "EventLoop.h"
-#include <LightDiagram.h>
+#include <EventLoop.h>
 #include <iostream>
-#include "Util.h"
-#include "base/Logging.h"
+#include <Util.h>
+#include <base/Logging.h>
 
 using namespace std;
 
@@ -84,6 +83,23 @@ void EventLoop::queueInLoop(Functor&& cb) {
   }
 
   if (!isInLoopThread() || callingPendingFunctors_) wakeup();
+}
+
+bool EventLoop::isInLoopThread() const { return threadId_ == CurrentThread::tid(); }
+void EventLoop::assertInLoopThread() { assert(isInLoopThread()); }
+void EventLoop::shutdown(shared_ptr<Channel> channel) { shutDownWR(channel->getFd()); }
+void EventLoop::removeFromPoller(shared_ptr<Channel> channel)
+{
+    // shutDownWR(channel->getFd());
+    poller_->epoll_del(channel);
+}
+void EventLoop::updatePoller(shared_ptr<Channel> channel, int timeout = 0)
+{
+    poller_->epoll_mod(channel, timeout);
+}
+void EventLoop::addToPoller(shared_ptr<Channel> channel, int timeout = 0)
+{
+    poller_->epoll_add(channel, timeout);
 }
 
 void EventLoop::loop() {

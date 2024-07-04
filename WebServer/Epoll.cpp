@@ -1,26 +1,21 @@
-// @Author Lin Ya
-// @Email xxbbb@vip.qq.com
-#include "Epoll.h"
+#include <LightDiagram.h>
+#include <Epoll.h>
 #include <assert.h>
 #include <errno.h>
-#include <netinet/in.h>
 #include <string.h>
-#include <sys/epoll.h>
-#include <sys/socket.h>
 #include <deque>
 #include <queue>
-#include "Util.h"
-#include "base/Logging.h"
+#include <Util.h>
+#include <base/Logging.h>
 
 
-#include <arpa/inet.h>
 #include <iostream>
 using namespace std;
 
 const int EVENTSNUM = 4096;
 const int EPOLLWAIT_TIME = 10000;
 
-typedef shared_ptr<Channel> SP_Channel;
+//using SP_Channel = shared_ptr<Channel>;
 
 Epoll::Epoll() : epollFd_(epoll_create1(EPOLL_CLOEXEC)), events_(EVENTSNUM) {
   assert(epollFd_ > 0);

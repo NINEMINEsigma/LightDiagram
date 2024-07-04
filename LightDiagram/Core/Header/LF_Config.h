@@ -296,15 +296,51 @@ using namespace boost::placeholders;
 #include <unordered_map>
 #include <unordered_set>
 
+enum class platform_current
+{
+	linux_on_windows,windows,linux
+};
+
+#if defined(_LINUX_ON_WINDOW_)
+#include <Winsock2.h>
+#include <ws2tcpip.h>
+#include <Windows.h>
+struct platform_indicator
+{
+	using tag = void;
+	constexpr static bool value = false;
+	constexpr static const char* name = "linux on windows";
+	constexpr static platform_current mode = platform_current::linux_on_windows;
+};
+#endif
+
 #if defined(_WINDOW_)
 #include <Windows.h>
-#include <ws2tcpip.h>
-#endif // OS_TYPE_WINDOWS_CC
+struct platform_indicator
+{
+	using tag = void;
+	constexpr static bool value = false;
+	constexpr static const char* name = "windows";
+	constexpr static platform_current mode = platform_current::windows;
+};
+#endif
 
 #if defined(_LINUX_)
 #include <unistd.h>
 #include <sys/epoll.h>
 #include <sys/eventfd.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+struct platform_indicator
+{
+	using tag = void;
+	constexpr static bool value = false;
+	constexpr static const char* name = "linux";
+	constexpr static platform_current mode = platform_current::linux;
+};
 #endif
 
 using type_info = std::type_info;
