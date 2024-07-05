@@ -4,6 +4,12 @@
 
 //release:	std::type_info to global namespace
 
+#pragma region easyx
+#if defined(__REF_EASYX)
+
+#endif
+#pragma endregion
+
 #pragma region Boost
 
 #ifdef __REF_BOOST
