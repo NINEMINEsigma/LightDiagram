@@ -6,7 +6,8 @@
 
 #pragma region easyx
 #if defined(__REF_EASYX)
-
+#include <easyx.h>
+#include <graphics.h>
 #endif
 #pragma endregion
 
@@ -311,6 +312,7 @@ enum class platform_current
 #include <Winsock2.h>
 #include <ws2tcpip.h>
 #include <Windows.h>
+#include <io.h>
 struct platform_indicator
 {
 	using tag = void;
@@ -322,6 +324,7 @@ struct platform_indicator
 
 #if defined(_WINDOW_)
 #include <Windows.h>
+#include <io.h>
 struct platform_indicator
 {
 	using tag = void;
@@ -344,6 +347,7 @@ struct platform_indicator
 #include <netinet/in.h>
 #include <sys/time.h>
 #include <netinet/tcp.h>
+#include <dirent.h>
 #define _USE_DEFINED_CALL_
 struct platform_indicator
 {

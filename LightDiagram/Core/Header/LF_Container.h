@@ -473,7 +473,8 @@ namespace ld
 
 #pragma endregion
 
-	_LF_C_API(OClass) DefaultContainerMemory
+	_LF_C_API(OClass)
+		DefaultContainerMemory
 	{
 	public:
 		static void* Malloc(size_t size);
@@ -491,7 +492,35 @@ namespace ld
 		::free(ptr);
 	}
 
-	template<typename _Key,typename _Value,typename Memory>
+	template<typename Key, typename Value, typename Memory>
+	_LF_C_API(TClass)
+		DefaultContainerController
+	{
+	public:
+		using key_tag = Key;
+		using value_tag = Value;
+		using memory_indictaor = Memory;
+		using pair_type = ld::pair<Key, Value, memory_indictaor>;
+		using node = FourWayPointer<pair_type>;
+	public:
+		node* ReadFromRoot(node* root, node* leaf, const Key& key) const;
+		node* QuickDetectContain(node* root, const Key& key) const;
+		node* GenerateToRoot(node*& root, node*& leaf, const Key& key, void* new_ptr)
+		{
+			if (root)
+			{
+
+			}
+			else
+			{
+				root = new(new_ptr) node();
+			}
+		}
+		node* RemoveFromRoot(node* root, node* leaf, const Key& key);
+		template<_Ty> node* RemoveFromRoot(node* root, _Ty);
+	};
+
+	template<typename _Key, typename _Value, typename Memory>
 	class pair
 	{
 	public:
@@ -551,8 +580,8 @@ namespace ld
 
 	template<
 		typename Key, typename Value,
-		class MemoryIndicator,
-		class Controller
+		class MemoryIndicator = DefaultContainerMemory,
+		class Controller = DefaultContainerController<Key, Value, MemoryIndicator>
 	>
 	_LF_C_API(TClass) LFContainter
 	{
@@ -568,16 +597,13 @@ namespace ld
 		// Controller: constructor with no argument, control all the behaviour
 		// -> public node* ReadFromRoot(node* root, node* leaf, const Key& key) const;
 		// -> public node* QuickDetectContain(node* root, const Key& key) const
-		// -> public node* GenerateToRoot(node*& root, node*& leaf, const Key& key, node* new_ptr);
+		// -> public node* GenerateToRoot(node*& root, node*& leaf, const Key& key, void* new_ptr);
 		// -> public node* RemoveFromRoot(node* root, node* leaf, const Key& key)
 		// -> public template<_Ty> node* RemoveFromRoot(node* root, _Ty)
 		using controller_type = Controller;
-		LFContainter() :root(nullptr), leaf(nullptr)
-		{
-
-		}
-		LFContainter(LFContainter&) = delete;
-		LFContainter(LFContainter&& right) :root(right.root), leaf(leaf), my_controller(right.my_controller) noexcept {}
+		LFContainter(controller_type & controller) :root(nullptr), leaf(nullptr), my_controller(controller) {}
+		LFContainter(LFContainter&&) = delete;
+		LFContainter(LFContainter& right) :root(right.root), leaf(leaf), my_controller(right.my_controller) noexcept {}
 		~LFContainter()
 		{
 			this->ClearTree();
@@ -588,7 +614,7 @@ namespace ld
 	private:
 		node* root = nullptr;
 		node* leaf = nullptr;
-		controller_type my_controller;
+		controller_type& my_controller;
 	protected:
 		void ToolClear(node * _node) const
 		{
@@ -634,7 +660,7 @@ namespace ld
 			node* result = my_controller.ReadFromRoot(root, leaf, key);
 			if (result == nullptr)
 			{
-				result = my_controller.GenerateToRoot(root, leaf, key, (node*)memory_indictaor::Malloc(sizeof(node)));
+				result = my_controller.GenerateToRoot(root, leaf, key, memory_indictaor::Malloc(sizeof(node)));
 			}
 			return result->data;
 		}
@@ -643,7 +669,7 @@ namespace ld
 			node* result = my_controller.ReadFromRoot(root, leaf, key);
 			if (result == nullptr)
 			{
-				result = my_controller.GenerateToRoot(root, leaf, *key, (node*)memory_indictaor::Malloc(sizeof(node)));
+				result = my_controller.GenerateToRoot(root, leaf, *key, memory_indictaor::Malloc(sizeof(node)));
 			}
 			return result->data;
 		}
@@ -672,22 +698,6 @@ namespace ld
 		{
 			return my_controller.ReadFromRoot(root, leaf, key);
 		}
-	};
-
-	template<typename Key,typename Value,class Memory>
-	_LF_C_API(OClass) DefaultController
-	{
-		using pair_type = ld::pair<Key, Value, memory_indictaor>;
-	public:
-		using node = FourWayPointer<pair_type>;
-		node* ReadFromRoot(node * root, node * leaf, const Key & key) const
-		{
-
-		}
-		node* QuickDetectContain(node * root, const Key & key) const;
-		node* GenerateToRoot(node*& root, node*& leaf, const Key& key, node* new_ptr);
-		node* RemoveFromRoot(node* root, node* leaf, const Key& key)
-		template<_Ty> node* RemoveFromRoot(node* root, _Ty)
 	};
 }
 

@@ -13,5 +13,8 @@ int main()
 	ld_test();
 	ConsolePro console;
 
+	ld::LFContainter<int, int>::controller_type controller;
+	ld::LFContainter<int,int> container(controller);
+
 	getchar();
 }

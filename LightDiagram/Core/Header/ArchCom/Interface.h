@@ -271,7 +271,7 @@ namespace ld
     // the instance will be generate, but it will be never delete
     // Generate Process ->new TargetArch() -> Init()
     template<typename TargetArch>
-    TargetArch* ArchitectureInstance()
+    TargetArch& ArchitectureInstance()
     {
         static_assert(std::is_base_of<IArchitecture, TargetArch>::value, "TargetArch must be derived from IArchitecture");
         static TargetArch* instance = nullptr;
@@ -282,7 +282,7 @@ namespace ld
             arch->Init();
             arch->AddMessage("Architecture Instance Generated");
         }
-        return instance;
+        return *instance;
     }
 }
 
