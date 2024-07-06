@@ -1,4 +1,4 @@
-#include "LightDiagram.h"
+#include <LightDiagram.h>
 
 ld_test::ld_test()
 {

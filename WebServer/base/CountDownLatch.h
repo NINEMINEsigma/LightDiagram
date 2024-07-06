@@ -1,9 +1,7 @@
-// @Author Lin Ya
-// @Email xxbbb@vip.qq.com
 #pragma once
-#include "Condition.h"
-#include "MutexLock.h"
-#include "noncopyable.h"
+#include <LightDiagram.h>
+#include <Condition.h>
+#include <MutexLock.h>
 
 // CountDownLatch的主要作用是确保Thread中传进去的func真的启动了以后
 // 外层的start才返回

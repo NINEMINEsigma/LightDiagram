@@ -1,9 +1,8 @@
-// @Author Lin Ya
-// @Email xxbbb@vip.qq.com
+#ifndef __FILE_FILEUTIL
+#define __FILE_FILEUTIL
 #pragma once
+#include <LightDiagram.h>
 #include <string>
-#include "noncopyable.h"
-
 
 class AppendFile : noncopyable {
  public:
@@ -18,3 +17,5 @@ class AppendFile : noncopyable {
   FILE *fp_;
   char buffer_[64 * 1024];
 };
+
+#endif // !__FILE_FILEUTIL

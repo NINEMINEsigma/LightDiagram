@@ -1,3 +1,4 @@
+#define __FILE_LIGHTTHREAD
 #ifndef __FILE_LIGHTTHREAD
 
 #define __FILE_LIGHTTHREAD

@@ -1,9 +1,8 @@
-// @Author Lin Ya
-// @Email xxbbb@vip.qq.com
+#ifndef __FILE_MUTEXLOCK
+#define __FILE_MUTEXLOCK
 #pragma once
 #include <pthread.h>
 #include <cstdio>
-#include "noncopyable.h"
 
 
 class MutexLock : noncopyable {
@@ -33,3 +32,6 @@ class MutexLockGuard : noncopyable {
  private:
   MutexLock &mutex;
 };
+
+#endif // !__FILE_MUTEXLOCK
+

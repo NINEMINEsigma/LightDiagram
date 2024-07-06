@@ -304,7 +304,7 @@ using namespace boost::placeholders;
 
 enum class platform_current
 {
-	linux_on_windows,windows,linux
+	linux_on_windows_platform,windows_platform,linux_platform
 };
 
 #if defined(_LINUX_ON_WINDOW_)
@@ -316,7 +316,7 @@ struct platform_indicator
 	using tag = void;
 	constexpr static bool value = false;
 	constexpr static const char* name = "linux on windows";
-	constexpr static platform_current mode = platform_current::linux_on_windows;
+	constexpr static platform_current mode = platform_current::linux_on_windows_platform;
 };
 #endif
 
@@ -327,7 +327,7 @@ struct platform_indicator
 	using tag = void;
 	constexpr static bool value = false;
 	constexpr static const char* name = "windows";
-	constexpr static platform_current mode = platform_current::windows;
+	constexpr static platform_current mode = platform_current::windows_platform;
 };
 #endif
 
@@ -344,12 +344,13 @@ struct platform_indicator
 #include <netinet/in.h>
 #include <sys/time.h>
 #include <netinet/tcp.h>
+#define _USE_DEFINED_CALL_
 struct platform_indicator
 {
 	using tag = void;
 	constexpr static bool value = false;
 	constexpr static const char* name = "linux";
-	constexpr static platform_current mode = platform_current::linux;
+	constexpr static platform_current mode = platform_current::linux_platform;
 };
 #endif
 

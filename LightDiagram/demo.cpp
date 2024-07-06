@@ -5,8 +5,6 @@
 
 #include <cstdio>
 
-#include <mpi.h>
-
 using namespace std;
 using namespace ld;
 

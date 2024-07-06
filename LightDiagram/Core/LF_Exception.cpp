@@ -107,7 +107,7 @@ namespace ld
 		HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
 		SetConsoleTextAttribute(handle, GetColorCode(data));
 #else 
-		std::cout << GetColorCode(data);
+		std::cout << to_string(GetColorCode(data));
 #endif
 
 		return os;
@@ -120,7 +120,7 @@ namespace ld
 		HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
 		SetConsoleTextAttribute(handle, GetBackgroundColorCode(data));
 #else 
-		std::cout << GetBackgroundColorCode(data);
+		std::cout << to_string(GetBackgroundColorCode(data));
 #endif
 
 		return os;
@@ -153,7 +153,7 @@ namespace ld
 	}
 
 
-	std::wostream* clog = new std::wofstream(L"./line exception.txt");
+	std::wostream* clog = new std::wofstream("./line exception.txt");
 
 	bool is_log_message_to_cout = true;
 
@@ -333,7 +333,7 @@ namespace ld
 			else
 				std::wcout << message << std::endl;
 		}
-		(*clog) << "<" << label << ">" << message << "<!" << tail << ">" << std::endl;
+		(*clog) << L"<" << label << L">" << message << L"<!" << tail << L">" << std::endl;
 		return *this;
 	}
 

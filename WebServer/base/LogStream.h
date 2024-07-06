@@ -1,10 +1,10 @@
-// @Author Lin Ya
-// @Email xxbbb@vip.qq.com
+#ifndef __FILE_LOGSTREAM
+#define __FILE_LOGSTREAM
 #pragma once
+#include <LightDiagram.h>
 #include <assert.h>
 #include <string.h>
 #include <string>
-#include "noncopyable.h"
 
 class AsyncLogging;
 const int kSmallBuffer = 4000;
@@ -104,3 +104,5 @@ class LogStream : noncopyable {
 
   static const int kMaxNumericSize = 32;
 };
+
+#endif // !__FILE_LOGSTREAM

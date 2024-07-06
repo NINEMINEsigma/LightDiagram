@@ -1,13 +1,12 @@
-// @Author Lin Ya
-// @Email xxbbb@vip.qq.com
+#ifndef __FILE_CONDITION
+#define __FILE_CONDITION
 #pragma once
 #include <errno.h>
 #include <pthread.h>
 #include <pthread.h>
 #include <time.h>
 #include <cstdint>
-#include "MutexLock.h"
-#include "noncopyable.h"
+#include <MutexLock.h>
 
 
 class Condition : noncopyable {
@@ -30,3 +29,5 @@ class Condition : noncopyable {
   MutexLock &mutex;
   pthread_cond_t cond;
 };
+
+#endif // !__FILE_CONDITION

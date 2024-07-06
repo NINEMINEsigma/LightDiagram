@@ -1,14 +1,14 @@
-// @Author Lin Ya
-// @Email xxbbb@vip.qq.com
+#ifndef __FILE_THREAD
+#define __FILE_THREAD
 #pragma once
+#include <LightDiagram.h>
 #include <pthread.h>
 #include <sys/syscall.h>
 #include <unistd.h>
 #include <functional>
 #include <memory>
 #include <string>
-#include "CountDownLatch.h"
-#include "noncopyable.h"
+#include <CountDownLatch.h>
 
 class Thread : noncopyable {
  public:
@@ -31,3 +31,5 @@ class Thread : noncopyable {
   std::string name_;
   CountDownLatch latch_;
 };
+
+#endif // !__FILE_THREAD

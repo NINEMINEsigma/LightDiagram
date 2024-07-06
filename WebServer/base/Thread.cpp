@@ -1,6 +1,4 @@
-// @Author Lin Ya
-// @Email xxbbb@vip.qq.com
-#include "Thread.h"
+#include <Thread.h>
 #include <assert.h>
 #include <errno.h>
 #include <linux/unistd.h>
@@ -10,7 +8,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <memory>
-#include "CurrentThread.h"
+#include <CurrentThread.h>
 
 
 #include <iostream>

@@ -196,11 +196,11 @@ public:
 			foo(cat);
 		return this;
 	}
-	template<typename T,typename C> any_class* IfIam(void(C::*foo)(T*))
+	template<typename T, typename C> any_class* IfIam(void(C::* foo)(T*), C* user = nullptr)
 	{
 		T* cat = dynamic_cast<T*>(this);
 		if (cat)
-			foo(cat);
+			((*user).*foo)(cat);
 		return this;
 	}
 	template<typename T, typename R> any_class* IfIam(R foo)

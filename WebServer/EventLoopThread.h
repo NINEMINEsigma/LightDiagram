@@ -1,15 +1,11 @@
-// @Author Lin Ya
-// @Email xxbbb@vip.qq.com
 #pragma once
-#include "EventLoop.h"
-#include "base/Condition.h"
 #ifndef __FILE_EVENTLOOPTHREAD
 #define __FILE_EVENTLOOPTHREAD
-
 #include <LightDiagram.h>
+#include <EventLoop.h>
+#include <base/Condition.h>
 #include <base/MutexLock.h>
 #include <base/Thread.h>
-#include <base/noncopyable.h>
 
 
 _LF_C_API(Class) EventLoopThread final: noncopyable, public any_class

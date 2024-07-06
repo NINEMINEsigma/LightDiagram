@@ -27,7 +27,7 @@ namespace ld
 	{
 		return __DefaultAction;
 	}
-	IAnyArchitecture::ReleaseAction* IAnyArchitecture::WithRelease() const
+	IAnyArchitecture::BuildupAction* IAnyArchitecture::WithBuildup() const
 	{
 		return __DefaultAction;
 	}
@@ -87,15 +87,30 @@ namespace ld
 
 	}
 
-	IArchitecture* IArchitecture::AddMessage(IArchitecture::string message) const
+	IArchitecture* IArchitecture::AddMessage(IArchitecture::string message)
+	{
+		DefaultConsolePro.LogMessage(message);
+		return this;
+	}
+	IArchitecture* IArchitecture::AddWarning(IArchitecture::string message)
+	{
+		DefaultConsolePro.LogWarning(message);
+		return this;
+	}
+	IArchitecture* IArchitecture::AddError(IArchitecture::string message)
+	{
+		DefaultConsolePro.LogError(message);
+		return this;
+	}
+	void IArchitecture::AddMessageConst(IArchitecture::string message) const
 	{
 		DefaultConsolePro.LogMessage(message);
 	}
-	IArchitecture* IArchitecture::AddWarning(IArchitecture::string message) const
+	void IArchitecture::AddWarningConst(IArchitecture::string message) const
 	{
 		DefaultConsolePro.LogWarning(message);
 	}
-	IArchitecture* IArchitecture::AddError(IArchitecture::string message) const
+	void IArchitecture::AddErrorConst(IArchitecture::string message) const
 	{
 		DefaultConsolePro.LogError(message);
 	}
@@ -112,7 +127,7 @@ namespace ld
 		}
 		else
 		{
-			this->AddError(IArchitecture::string("Target component[") + type.name() + "] not found");
+			this->AddErrorConst(IArchitecture::string("Target component[") + type.name() + "] not found");
 			return nullptr;
 		}
 	}
@@ -123,7 +138,7 @@ namespace ld
 		{
 			ISystem* result = dynamic_cast<ISystem*>(component);
 			if (result) return result;
-			else AddWarning("Target component is not a system");
+			else AddWarningConst("Target component is not a system");
 		}
 		return nullptr;
 	}
@@ -134,7 +149,7 @@ namespace ld
 		{
 			IModel* result = dynamic_cast<IModel*>(component);
 			if (result) return result;
-			else AddWarning("Target component is not a model");
+			else AddWarningConst("Target component is not a model");
 		}
 		return nullptr;
 	}
@@ -145,7 +160,7 @@ namespace ld
 		{
 			IController* result = dynamic_cast<IController*>(component);
 			if (result) return result;
-			else AddWarning("Target component is not a controller");
+			else AddWarningConst("Target component is not a controller");
 		}
 		return nullptr;
 	}
@@ -173,7 +188,7 @@ namespace ld
 				this->AddMessage(IArchitecture::string("Target component[slot=") + type.name() + ", real=" +
 					typeid(*instance).name() + "] registered");
 				instance
-					->IfIam(ToolTrySetupComponentArchitectureParent)
+					->IfIam(&IArchitecture::ToolTrySetupComponentArchitectureParent,this)
 					->IfIam(__TryInit);
 			}
 		}
@@ -233,7 +248,7 @@ namespace ld
 				typeid(*cat).name() + "] registered");
 			(cat->WithRelease())(cat);
 			this->objects_container.erase(type.hash_code());
-			cat->IfIam(ToolTryReleaseComponentArchitectureParent);		
+			cat->IfIam(&IArchitecture::ToolTryReleaseComponentArchitectureParent, this);
 		}
 		return this;
 	}

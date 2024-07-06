@@ -1,3 +1,5 @@
+#if 0
+
 #include <stdio.h>
 #include <string.h>
 #include <fcntl.h>
@@ -470,3 +472,6 @@ namespace ld
         }
     }
 }
+
+
+#endif // 0

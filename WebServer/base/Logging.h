@@ -1,11 +1,12 @@
-// @Author Lin Ya
-// @Email xxbbb@vip.qq.com
+#ifndef __FILE_LOGGING
+#define __FILE_LOGGING
 #pragma once
+#include <LightDiagram.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <string.h>
 #include <string>
-#include "LogStream.h"
+#include <LogStream.h>
 
 
 class AsyncLogging;
@@ -34,3 +35,5 @@ class Logger {
 };
 
 #define LOG Logger(__FILE__, __LINE__).stream()
+
+#endif // !__FILE_LOGGING

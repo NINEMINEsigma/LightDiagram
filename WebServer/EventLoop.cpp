@@ -93,11 +93,11 @@ void EventLoop::removeFromPoller(shared_ptr<Channel> channel)
     // shutDownWR(channel->getFd());
     poller_->epoll_del(channel);
 }
-void EventLoop::updatePoller(shared_ptr<Channel> channel, int timeout = 0)
+void EventLoop::updatePoller(shared_ptr<Channel> channel, int timeout)
 {
     poller_->epoll_mod(channel, timeout);
 }
-void EventLoop::addToPoller(shared_ptr<Channel> channel, int timeout = 0)
+void EventLoop::addToPoller(shared_ptr<Channel> channel, int timeout)
 {
     poller_->epoll_add(channel, timeout);
 }

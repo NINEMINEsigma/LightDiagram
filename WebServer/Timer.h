@@ -7,7 +7,6 @@
 #include <queue>
 #include <HttpData.h>
 #include <base/MutexLock.h>
-#include <base/noncopyable.h>
 
 class HttpData;
 

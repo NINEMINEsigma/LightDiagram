@@ -1,3 +1,4 @@
+#define __FILE_KITSOCKET
 #ifndef __FILE_KITSOCKET
 
 #define __FILE_KITSOCKET

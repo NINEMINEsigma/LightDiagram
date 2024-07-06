@@ -29,6 +29,7 @@ namespace ld
         _LF_Inherited(any_class)
     {
         using ReleaseAction = void(IAnyArchitecture*);
+        using BuildupAction = void(IAnyArchitecture*);
         /// <summary>
         /// When this component release from architecture, it will be invoke by architecture
         /// </summary>
@@ -38,7 +39,7 @@ namespace ld
         /// When this component buildup to architecture, it will be invoke by architecture
         /// </summary>
         /// <returns>Function ptr which call by architecture</returns>
-        virtual ReleaseAction* WithBuildup() const;
+        virtual BuildupAction* WithBuildup() const;
     public:
         friend IArchitecture;
         virtual ~IAnyArchitecture();
@@ -157,7 +158,8 @@ namespace ld
     //      ->  The relevant behaviour interfaces are : IADCommand, IADController, IADModel, IADSystem
     //      ->  The relevant invoker interfaces are : ICanSendCommand, ICanMonitorCommand
     //*
-    _LF_C_API(Class)    IArchitecture Symbol_Push
+    _LF_C_API(Class)
+        IArchitecture Symbol_Push
         _LF_Inherited(ICanInitialize) Symbol_Link
         _LF_Inherited(ICanGetArchitecture) Symbol_Link
         _LF_Inherited(ICanGetSystem) Symbol_Link
@@ -190,19 +192,34 @@ namespace ld
         /// </summary>
         /// <param name="message">:Target message</param>
         /// <returns>Itself</returns>
-        virtual IArchitecture* AddMessage(string message) const;
+        virtual IArchitecture* AddMessage(string message);
         /// <summary>
         /// Save the warning generated during the Architecture running
         /// </summary>
         /// <param name="message">:Target message</param>
         /// <returns>Itself</returns>
-        virtual IArchitecture* AddWarning(string message) const;
+        virtual IArchitecture* AddWarning(string message);
         /// <summary>
         /// Save the error message generated during the Architecture running
         /// </summary>
         /// <param name="message">:Target message</param>
         /// <returns>Itself</returns>
-        virtual IArchitecture* AddError(string message) const;
+        virtual IArchitecture* AddError(string message);
+        /// <summary>
+        /// Save the messages generated during the Architecture running
+        /// </summary>
+        /// <param name="message">:Target message</param>
+        void AddMessageConst(string message) const;
+        /// <summary>
+        /// Save the warning generated during the Architecture running
+        /// </summary>
+        /// <param name="message">:Target message</param>
+        void AddWarningConst(string message) const;
+        /// <summary>
+        /// Save the error message generated during the Architecture running
+        /// </summary>
+        /// <param name="message">:Target message</param>
+        void AddErrorConst(string message) const;
 
 #pragma endregion
 
@@ -228,10 +245,10 @@ namespace ld
 #pragma endregion
 
 #pragma region Register By Instance
-        IArchitecture* RegisterModel(const type_info& type,IModel * model);
-        IArchitecture* RegisterSystem(const type_info& type,ISystem * system);
-        IArchitecture* RegisterController(const type_info& type,IController * controller);
-        IArchitecture* RegisterCommand(const type_info& type,ICommand * command);
+        IArchitecture* RegisterModel(const type_info & type, IModel * model);
+        IArchitecture* RegisterSystem(const type_info & type, ISystem * system);
+        IArchitecture* RegisterController(const type_info & type, IController * controller);
+        IArchitecture* RegisterCommand(const type_info & type, ICommand * command);
 #pragma endregion
 
 #pragma region Send Command Execute By OnExecute()
@@ -244,9 +261,9 @@ namespace ld
 #pragma endregion
 
 #pragma region Register Or UnRegister Or Contains
-        IArchitecture* UnRegister(const type_info& type);
-        IArchitecture* Register(const type_info& type,IAnyArchitecture * instance);
-        bool Contains(const type_info& type) const;
+        IArchitecture* UnRegister(const type_info & type);
+        IArchitecture* Register(const type_info & type, IAnyArchitecture * instance);
+        bool Contains(const type_info & type) const;
 #pragma endregion
     };
     

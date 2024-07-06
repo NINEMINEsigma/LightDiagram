@@ -1,6 +1,7 @@
-// @Author Lin Ya
-// @Email xxbbb@vip.qq.com
+#ifndef __FILE_CURRENTTHREAD
+#define __FILE_CURRENTTHREAD
 #pragma once
+#include <LightDiagram.h>
 #include <stdint.h>
 
 namespace CurrentThread {
@@ -29,3 +30,5 @@ inline int tidStringLength()  // for logging
 
 inline const char* name() { return t_threadName; }
 }
+
+#endif // !__FILE_CURRENTTHREAD

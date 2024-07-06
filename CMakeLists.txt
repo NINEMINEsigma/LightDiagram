@@ -37,7 +37,9 @@ set (LightDiagram_VERSION_MINOR 0)
 # Sub Project
 include_directories ("${PROJECT_SOURCE_DIR}/LightDiagram")
 add_subdirectory ("LightDiagram")
-include_directories ("${PROJECT_SOURCE_DIR}/WebServer")
-add_subdirectory ("WebServer")
+if(DEFINED _LINUX OR DEFINED _LINUX_ON_WINDOWS)
+	include_directories ("${PROJECT_SOURCE_DIR}/WebServer")
+	add_subdirectory ("WebServer")
+endif()
 
 set(CMAKE_INSTALL_PREFIX "${PROJECT_SOURCE_DIR}/out/")

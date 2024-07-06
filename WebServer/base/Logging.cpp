@@ -1,9 +1,7 @@
-// @Author Lin Ya
-// @Email xxbbb@vip.qq.com
-#include "Logging.h"
-#include "CurrentThread.h"
-#include "Thread.h"
-#include "AsyncLogging.h"
+#include <Logging.h>
+#include <CurrentThread.h>
+#include <Thread.h>
+#include <AsyncLogging.h>
 #include <assert.h>
 #include <iostream>
 #include <time.h>  

@@ -1,10 +1,8 @@
-// @Author Lin Ya
-// @Email xxbbb@vip.qq.com
-#include "LogFile.h"
+#include <LogFile.h>
 #include <assert.h>
 #include <stdio.h>
 #include <time.h>
-#include "FileUtil.h"
+#include <FileUtil.h>
 
 
 using namespace std;

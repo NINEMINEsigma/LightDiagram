@@ -1,11 +1,11 @@
-// @Author Lin Ya
-// @Email xxbbb@vip.qq.com
+#ifndef __FILE_LOGFILE
+#define __FILE_LOGFILE
 #pragma once
+#include <LightDiagram.h>
 #include <memory>
 #include <string>
 #include "FileUtil.h"
 #include "MutexLock.h"
-#include "noncopyable.h"
 
 
 // TODO 提供自动归档功能
@@ -29,3 +29,5 @@ class LogFile : noncopyable {
   std::unique_ptr<MutexLock> mutex_;
   std::unique_ptr<AppendFile> file_;
 };
+
+#endif // !__FILE_LOGFILE

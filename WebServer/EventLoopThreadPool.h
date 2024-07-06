@@ -1,13 +1,11 @@
 #ifndef __FILE_EVENTLOOPTHREADPOOL
 #define __FILE_EVENTLOOPTHREADPOOL
-
 #pragma once
 #include <LightDiagram.h>
 #include <memory>
 #include <vector>
 #include <EventLoopThread.h>
 #include <base/Logging.h>
-#include <base/noncopyable.h>
 
 _LF_C_API(Class) EventLoopThreadPool final: noncopyable, public any_class
 {
