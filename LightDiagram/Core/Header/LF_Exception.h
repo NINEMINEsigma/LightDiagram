@@ -1,5 +1,4 @@
 #ifndef __FILE_LF_EXCEPTION
-
 #define __FILE_LF_EXCEPTION
 
 #include<Core/Header/LF_Config.h>
@@ -8,61 +7,62 @@
 
 namespace ld
 {
-	// Enum class for console text color
-	enum _LF_C_API(Class) ConsoleColor
-	{
-		Green, Red, Blue, White, Black, Yellow, Purple, Gray, Cyan, None,
-		GreenIntensity, RedIntensity, BlueIntensity, WhiteIntensity, BlackIntensity, YellowIntensity, PurpleIntensity, GrayIntensity, CyanIntensity
-	};
+    // Enum class for console text color
+    enum _LF_C_API(Class) ConsoleColor
+    {
+        Green, Red, Blue, White, Black, Yellow, Purple, Gray, Cyan, None,
+            GreenIntensity, RedIntensity, BlueIntensity, WhiteIntensity, BlackIntensity, YellowIntensity, PurpleIntensity, GrayIntensity, CyanIntensity
+    };
 
-	// Enum class for console background color
-	enum _LF_C_API(Class) ConsoleBackgroundColor
-	{
-		Green, Red, Blue, White, Black, Yellow, Purple, Gray, Cyan, None
-	};
+    // Enum class for console background color
+    enum _LF_C_API(Class) ConsoleBackgroundColor
+    {
+        Green, Red, Blue, White, Black, Yellow, Purple, Gray, Cyan, None
+    };
 
-#ifdef _WINDOW_
-	// Get the Windows color code for a given ConsoleColor
+#if defined(_WINDOW_)||defined(_LINUX_ON_WINDOW_)
+    // Get the Windows color code for a given ConsoleColor
     WORD GetColorCode(ConsoleColor color);
 #else
-	// Get the ANSI escape code for a given ConsoleColor
-	std::wstring GetColorCode(ConsoleColor color);
+    // Get the ANSI escape code for a given ConsoleColor
+    std::wstring GetColorCode(ConsoleColor color);
 #endif
 
-#ifdef _WINDOW_
-	// Get the Windows color code for a given ConsoleBackgroundColor
-	WORD GetBackgroundColorCode(ConsoleBackgroundColor color);
+#if defined(_WINDOW_)||defined(_LINUX_ON_WINDOW_)
+    // Get the Windows color code for a given ConsoleBackgroundColor
+    WORD GetBackgroundColorCode(ConsoleBackgroundColor color);
 #else
-	// Get the ANSI escape code for a given ConsoleBackgroundColor
-	std::wstring GetBackgroundColorCode(ConsoleBackgroundColor color);
+    // Get the ANSI escape code for a given ConsoleBackgroundColor
+    std::wstring GetBackgroundColorCode(ConsoleBackgroundColor color);
 #endif
 
 
-    std::ostream& operator<<    (std::ostream& os,  const ConsoleColor& data);
-    std::ostream& operator<<    (std::ostream& os,  const ConsoleBackgroundColor& data);
+    std::ostream& operator<<    (std::ostream& os, const ConsoleColor& data);
+    std::ostream& operator<<    (std::ostream& os, const ConsoleBackgroundColor& data);
     std::wostream& operator<<   (std::wostream& os, const ConsoleColor& data);
     std::wostream& operator<<   (std::wostream& os, const ConsoleBackgroundColor& data);
 
-    using string = string_indicator::tag;
+    using string = std::string;
 
-    extern std::ostream* clog;
+    extern std::wostream* clog;
 
     extern bool is_log_message_to_cout;
 
     // Commonly used exception
     _LF_C_API(Class)    LDException:    _LF_Inherited(any_class)
     {
-        LDException(const time_t & ts, const string & msg);
+        LDException(const time_t & ts, const std::wstring & msg);
         bool* is_release;
     public:
         LDException();
         LDException(const string & msg);
+        LDException(const std::wstring & msg);
         LDException(LDException & ex) noexcept;
         LDException(LDException && ex) noexcept;
         virtual ~LDException();
         void release() const noexcept;
         int* counter;
-        string message;
+        std::wstring message;
     };
 
     //  Ease Progress Bar
@@ -70,7 +70,8 @@ namespace ld
     //  Ease Progress Bar
     void    _LF_C_API(DLL)  EaseProgressBar(int a, int b, int length, ConsoleBackgroundColor color);
 
-    _LF_C_API(Class)    ConsolePro:
+    _LF_C_API(Class)
+        ConsolePro:
     _LF_Inherited(any_class)
     {
     public:
@@ -79,7 +80,8 @@ namespace ld
         virtual ~ConsolePro();
 
         using symbol_t = short;
-        using string = string_indicator::tag;
+        using string = std::string;
+        using wstring = std::wstring;
 
         symbol_t Message, Warning, Error;
         ConsoleColor FC;
@@ -95,6 +97,17 @@ namespace ld
         const ConsolePro& CoutMessage(const string & message) const;
         const ConsolePro& CoutWarning(const string & message) const;
         const ConsolePro& CoutError(const string & message) const;
+
+        const ConsolePro& Log(const wstring & message, const wstring & label, const wstring & tail, const symbol_t & type) const;
+        const ConsolePro& WcoutMessage(const wstring & message, const wstring & label, const wstring & tail) const;
+        const ConsolePro& WcoutWarning(const wstring & message, const wstring & label, const wstring & tail) const;
+        const ConsolePro& WcoutError(const wstring & message, const wstring & label, const wstring & tail) const;
+        const ConsolePro& LogMessage(const wstring & message) const;
+        const ConsolePro& LogWarning(const wstring & message) const;
+        const ConsolePro& LogError(const wstring & message) const;
+        const ConsolePro& WcoutMessage(const wstring & message) const;
+        const ConsolePro& WcoutWarning(const wstring & message) const;
+        const ConsolePro& WcoutError(const wstring & message) const;
     };
 }
 

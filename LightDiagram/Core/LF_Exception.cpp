@@ -2,7 +2,7 @@
 
 namespace ld
 {
-#ifdef _WINDOW_
+#if defined(_WINDOW_)||defined(_LINUX_ON_WINDOW_)
 	// Get the Windows color code for a given ConsoleColor
 	WORD GetColorCode(ConsoleColor color)
 	{
@@ -60,7 +60,7 @@ namespace ld
 	}
 #endif
 
-#ifdef _WINDOW_
+#if defined(_WINDOW_)||defined(_LINUX_ON_WINDOW_)
 	// Get the Windows color code for a given ConsoleBackgroundColor
 	WORD GetBackgroundColorCode(ConsoleBackgroundColor color)
 	{
@@ -103,7 +103,7 @@ namespace ld
 	// Operator overloading for console text color
 	std::ostream& operator<< (std::ostream& os, const ConsoleColor& data)
 	{
-#ifdef _WINDOW_
+#if defined(_WINDOW_)||defined(_LINUX_ON_WINDOW_)
 		HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
 		SetConsoleTextAttribute(handle, GetColorCode(data));
 #else 
@@ -116,7 +116,7 @@ namespace ld
 	// Operator overloading for console background color
 	std::ostream& operator<< (std::ostream& os, const ConsoleBackgroundColor& data)
 	{
-#ifdef _WINDOW_
+#if defined(_WINDOW_)||defined(_LINUX_ON_WINDOW_)
 		HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
 		SetConsoleTextAttribute(handle, GetBackgroundColorCode(data));
 #else 
@@ -129,7 +129,7 @@ namespace ld
 	// Operator overloading for console text color
 	std::wostream& operator<< (std::wostream& os, const ConsoleColor& data)
 	{
-#ifdef _WINDOW_
+#if defined(_WINDOW_)||defined(_LINUX_ON_WINDOW_)
 		HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
 		SetConsoleTextAttribute(handle, GetColorCode(data));
 #else 
@@ -142,7 +142,7 @@ namespace ld
 	// Operator overloading for console background color
 	std::wostream& operator<< (std::wostream& os, const ConsoleBackgroundColor& data)
 	{
-#ifdef _WINDOW_
+#if defined(_WINDOW_)||defined(_LINUX_ON_WINDOW_)
 		HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
 		SetConsoleTextAttribute(handle, GetBackgroundColorCode(data));
 #else 
@@ -153,16 +153,17 @@ namespace ld
 	}
 
 
-	std::ostream* clog = new std::ofstream("./line exception.txt");
+	std::wostream* clog = new std::wofstream(L"./line exception.txt");
 
 	bool is_log_message_to_cout = true;
 
-	LDException::LDException(const time_t& ts, const string& msg)
+	LDException::LDException(const time_t& ts, const std::wstring& msg)
 		:message(msg),
 		counter(new int(1)),
 		is_release(new bool(false)) {}
 	LDException::LDException() :LDException("unknown") {}
-	LDException::LDException(const string& msg) :LDException(time(nullptr), msg) {}
+	LDException::LDException(const string& msg) :LDException(time(nullptr),to_wstring(msg)) {}
+	LDException::LDException(const std::wstring& msg) :LDException(time(nullptr), msg) {}
 	LDException::LDException(LDException& ex) noexcept
 		:counter(ex.counter),
 		is_release(ex.is_release),
@@ -186,10 +187,10 @@ namespace ld
 		if (*counter)
 		{
 			if (*is_release)return;
-			(*clog) << "<break>" << message << "<!exception is not catch>" << std::endl;
+			(*clog) << L"<break>" << message << L"<!exception is not catch>" << std::endl;
 			if (is_log_message_to_cout)
 			{
-				std::cout
+				std::wcout
 					<< ConsoleColor::Red
 					<< message
 					<< ConsoleColor::None << std::endl;
@@ -206,10 +207,10 @@ namespace ld
 		if (!*is_release)
 		{
 			*is_release = true;
-			(*clog) << "<catch>" << message << "<!exception is catch>" << std::endl;
+			(*clog) << L"<catch>" << message << "L<!exception is catch>" << std::endl;
 			if (is_log_message_to_cout)
 			{
-				std::cout
+				std::wcout
 					<< ConsoleColor::Yellow
 					<< message
 					<< ConsoleColor::None << std::endl;
@@ -269,7 +270,7 @@ namespace ld
 			else
 				std::cout << message << std::endl;
 		}
-		(*clog) << "<" << label << ">" << message << "<!" << tail << ">" << std::endl;
+		(*clog) << L"<" << to_wstring(label) << L">" << to_wstring(message) << L"<!" << to_wstring(tail) << L">" << std::endl;
 		return *this;
 	}
 	const ConsolePro& ConsolePro::LogMessage(const ConsolePro::string& message ) const
@@ -317,6 +318,70 @@ namespace ld
 	{
 		static ConsolePro::string label("error");
 		return CoutError(message, label, label);
+	}
+
+	const ConsolePro& ConsolePro::Log(const ConsolePro::wstring& message, const ConsolePro::wstring& label, const ConsolePro::wstring& tail, const ConsolePro::symbol_t& type) const
+	{
+		if (is_log_message_to_cout)
+		{
+			if (type == this->Warning)
+				std::wcout << ConsoleColor::Yellow << message << std::endl << this->FC;
+			else if (type == this->Error)
+				std::wcout << ConsoleColor::Red << message << std::endl << this->FC;
+			else if (type == this->Message)
+				std::wcout << ConsoleColor::Blue << message << std::endl << this->FC;
+			else
+				std::wcout << message << std::endl;
+		}
+		(*clog) << "<" << label << ">" << message << "<!" << tail << ">" << std::endl;
+		return *this;
+	}
+
+	const ConsolePro& ConsolePro::LogMessage(const ConsolePro::wstring& message) const
+	{
+		static ConsolePro::wstring label(L"message");
+		return Log(message, label, label, this->Message);
+	}
+	const ConsolePro& ConsolePro::LogWarning(const ConsolePro::wstring& message) const
+	{
+		static ConsolePro::wstring label(L"warning");
+		return Log(message, label, label, this->Warning);
+	}
+	const ConsolePro& ConsolePro::LogError(const ConsolePro::wstring& message) const
+	{
+		static ConsolePro::wstring label(L"error");
+		return Log(message, label, label, this->Error);
+	}
+	const ConsolePro& ConsolePro::WcoutMessage(const ConsolePro::wstring& message, const ConsolePro::wstring& label, const ConsolePro::wstring& tail) const
+	{
+		std::wcout << ConsoleColor::Blue << L"<" << label << L">" << message << L"<!" << tail << L">" << this->FC << std::endl;
+		return *this;
+	}
+	const ConsolePro& ConsolePro::WcoutWarning(const ConsolePro::wstring& message, const ConsolePro::wstring& label, const ConsolePro::wstring& tail) const
+	{
+		std::wcout << ConsoleColor::Yellow << L"<" << label << L">" << message << L"<!" << tail << L">" << this->FC << std::endl;
+		return *this;
+	}
+	const ConsolePro& ConsolePro::WcoutError(const ConsolePro::wstring& message, const ConsolePro::wstring& label, const ConsolePro::wstring& tail) const
+	{
+		std::wcout << ConsoleColor::Red << L"<" << label << L">" << message << L"<!" << tail << L">" << this->FC << std::endl;
+		return *this;
+	}
+								  
+	const ConsolePro& ConsolePro::WcoutMessage(const ConsolePro::wstring& message) const
+	{
+		static ConsolePro::wstring label(L"message");
+		return WcoutMessage(message, label, label);
+	}
+	const ConsolePro& ConsolePro::WcoutWarning(const ConsolePro::wstring& message) const
+	{
+		static ConsolePro::wstring label(L"warning");
+		return WcoutWarning(message, label, label);
+	}
+	const ConsolePro& ConsolePro::WcoutError(const ConsolePro::wstring& message) const
+	{
+		static ConsolePro::wstring label(L"error");
+		return WcoutError(message, label, label);
 	}
 }
 

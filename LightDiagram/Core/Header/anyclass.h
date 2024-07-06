@@ -233,7 +233,6 @@ public:
 	constexpr static bool value = true;
 protected:
 	copy_disable() {}
-	copy_disable(const copy_disable&) {}
 	~copy_disable() {}
 private:
 	copy_disable(const copy_disable&) = delete;

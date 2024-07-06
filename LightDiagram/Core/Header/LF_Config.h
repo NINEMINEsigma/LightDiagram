@@ -1513,22 +1513,41 @@ namespace ld
 
 #pragma region string wstring
 
-#include <string>
 #include <locale>
 #include <codecvt>
 
 // convert string to wstring
 inline std::wstring to_wstring(const std::string& input)
 {
+#if defined(_LINUX_ON_WINDOW_)||defined(_WINDOW_)
+	DWORD dBufSize = MultiByteToWideChar(CP_ACP, 0, input.c_str(), input.size(), NULL, 0);
+	wchar_t* dBuf = new wchar_t[dBufSize];
+	wmemset(dBuf, 0, dBufSize);
+	MultiByteToWideChar(CP_ACP, 0, input.c_str(), input.size(), dBuf, dBufSize);
+	std::wstring result(dBuf);
+	delete dBuf;
+	return result;
+#else
 	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
 	return converter.from_bytes(input);
+#endif 
 }
 // convert wstring to string 
 inline std::string to_string(const std::wstring& input)
 {
+#if defined(_LINUX_ON_WINDOW_)||defined(_WINDOW_)
+	DWORD dBufSize = WideCharToMultiByte(CP_OEMCP, 0, input.c_str(), -1, NULL, 0, NULL, FALSE);
+	char* dBuf = new char[dBufSize];
+	memset(dBuf, 0, dBufSize);
+	WideCharToMultiByte(CP_OEMCP, 0, input.c_str(), -1, dBuf, dBufSize, NULL, FALSE);
+	std::string result(dBuf);
+	delete dBuf;
+	return result;
+#else
 	//std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
 	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
 	return converter.to_bytes(input);
+#endif
 }
 
 #pragma endregion
