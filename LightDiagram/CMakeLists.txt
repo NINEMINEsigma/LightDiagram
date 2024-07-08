@@ -1,9 +1,4 @@
 #Project Setting
-# Enable C++17
-set(CMAKE_CXX_STANDARD 17)
-# Enable C11
-set(C_STANDARD 11)
- 
 option(ENABLE_MPI "Enable MPI parallelization" ON)
 set(MPI_NO_SYSTEM_PATHS ON) 
 find_package(MPI)

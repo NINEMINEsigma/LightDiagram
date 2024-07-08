@@ -23,7 +23,7 @@ namespace ld
     {
         static_assert(std::is_base_of_v<IArchitecture, TargetArch>, "TargetArch need be architecture");
         if (ArchitectureInstance(typeid(TargetArch)) == nullptr)
-            return *dynamic_cast<TargetArch*>(ArchitectureInstance(typeid(TargetArch)), new TargetArch());
+            return *dynamic_cast<TargetArch*>(ArchitectureInstance(typeid(TargetArch), new TargetArch()));
         else
             return *dynamic_cast<TargetArch*>(ArchitectureInstance(typeid(TargetArch)));
     }
@@ -38,7 +38,7 @@ namespace ld
     template<typename Arch, typename SlotType>
     SlotType*       _LF_C_API(TDLL) RegisterOn(_In_ SlotType* component)
     {
-        IArchitecture& arch = *ArchitectureInstance(typeid(TargetArch));
+        IArchitecture& arch = *ArchitectureInstance(typeid(Arch));
         arch.Register(typeid(SlotType), component);
         return component;
     }
@@ -46,7 +46,7 @@ namespace ld
     template<typename Arch, typename SlotType>
     bool            _LF_C_API(TDLL) UnRegisterOn()
     {
-        IArchitecture& arch = *ArchitectureInstance(typeid(TargetArch));
+        IArchitecture& arch = *ArchitectureInstance(typeid(Arch));
         if (arch.Contains(typeid(SlotType)))
         {
             arch.UnRegister(typeid(SlotType));
@@ -58,28 +58,28 @@ namespace ld
     template<typename Arch, typename SlotType>
     bool            _LF_C_API(TDLL) ContainsOn()
     {
-        IArchitecture& arch = *ArchitectureInstance(typeid(TargetArch));
+        IArchitecture& arch = *ArchitectureInstance(typeid(Arch));
         return arch.Contains(typeid(SlotType));
     }
 
     template<typename Arch, typename SlotType>
     void            _LF_C_API(TDLL) TrySendOn()
     {
-        IArchitecture& arch = *ArchitectureInstance(typeid(TargetArch));
+        IArchitecture& arch = *ArchitectureInstance(typeid(Arch));
         arch.SendCommand(typeid(SlotType));
     }
 
     template<typename Arch, typename SlotType, typename Target>
     void            _LF_C_API(TDLL) TrySendTo()
     {
-        IArchitecture& arch = *ArchitectureInstance(typeid(TargetArch));
+        IArchitecture& arch = *ArchitectureInstance(typeid(Arch));
         arch.SendCommand(typeid(SlotType), typeid(Target));
     }
 
     template<typename Arch, typename SlotType>
     void            _LF_C_API(TDLL) TryDiffusingOn()
     {
-        IArchitecture& arch = *ArchitectureInstance(typeid(TargetArch));
+        IArchitecture& arch = *ArchitectureInstance(typeid(Arch));
         arch.Diffusing(typeid(SlotType));
     }
 
@@ -120,13 +120,13 @@ namespace ld
         }
 
         using traits = function_traits_ex<Func>;
-        using traits_indicator = traits::function_traits_indicator;
-        using result = traits::result;
-        using parameters = traits::parameters;
-        using belong = traits::belong;
-        using call = traits::call;
-        using consting = traits::consting;
-        using typen = traits::typen;
+        using traits_indicator = typename traits::function_traits_indicator;
+        using result = typename traits::result;
+        using parameters = typename traits::parameters;
+        using belong = typename traits::belong;
+        using call = typename traits::call;
+        using consting = typename traits::consting;
+        using typen = typename traits::typen;
 
         using OnInvokeResult = typename choose_type<std::is_same_v<result, void>, void, std::vector<result>>::tag;
 
@@ -137,7 +137,7 @@ namespace ld
             {
                 for (auto& i : this->functions)
                 {
-                    i.operator()(args...);
+                    i(args...);
                 }
             }
             else

@@ -312,7 +312,7 @@ namespace ld
 	{
 		if (*IArchitecture::ToolGetArchitecture(type) == nullptr)
 		{
-			*IArchitecture::ToolGetArchitecture(type) = ptr;
+			architecture_container[type.hash_code()] = ptr;
 			IArchitecture* arch = *IArchitecture::ToolGetArchitecture(type);
 			arch->Init();
 			arch->AddMessage("Architecture Instance Generated");

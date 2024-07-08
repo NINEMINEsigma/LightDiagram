@@ -3,8 +3,18 @@
 
 #include "test.h"
 
+int add__(int a, int b)
+{
+	return a + b;
+}
+int mut__(int a, int b)
+{
+	return a * b;
+}
+
 int main()
 {
+	cout << __cplusplus << endl;
 	console.LogMessage(L"-----env test--------");
 	ld_test test;
 	console.LogMessage(L"-----arch create-----");
@@ -24,5 +34,8 @@ int main()
 	console.LogMessage(L"-----release all-----");
 	ArchitectureDestory<arch>();
 	Sleep(1000);
+	ld::LDEvent<int(int,int)> event(add__);
+	event.AddListener(mut__);
+	cout << event.OnInvoke(2, 3)[0] << event.OnInvoke(2, 3)[1];
 	return 0;
 }

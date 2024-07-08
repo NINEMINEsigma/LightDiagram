@@ -1,5 +1,12 @@
 # Make Setting
 cmake_minimum_required (VERSION 3.12)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# Enable C++17
+set(CMAKE_CXX_STANDARD 17)
+# Enable C11
+set(C_STANDARD 11)
+#
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /permissive- /Zc /std:c++17 /Zc:__cplusplus") 
 
 message("PROJECT_BINARY_DIR = ${PROJECT_BINARY_DIR}")
 
@@ -34,11 +41,6 @@ add_compile_definitions(_PTHREADS)
 
 project ("LightDiagram")
 
-# Enable C++17
-set(CMAKE_CXX_STANDARD 17)
-# Enable C11
-set(C_STANDARD 11)
-
 # Version
 set (LightDiagram_VERSION_MAJOR 1)
 set (LightDiagram_VERSION_MINOR 0)
@@ -51,7 +53,11 @@ if(DEFINED _LINUX OR DEFINED _LINUX_ON_WINDOWS)
 	add_subdirectory ("WebServer")
 endif()
 add_subdirectory("test")
-add_subdirectory("LLMToolkit")
+#add_subdirectory("LLMToolkit")
 
 set(CMAKE_INSTALL_PREFIX "${PROJECT_SOURCE_DIR}/out/")
+
+message("CMAKE_CXX_STANDARD = ${CMAKE_CXX_STANDARD}" )
+message("CMAKE_CXX_FLAGS = ${CMAKE_CXX_FLAGS}")
+message("CMAKE_CXX_COMPILER_VERSION = ${CMAKE_CXX_COMPILER_VERSION}")
 

@@ -1,9 +1,4 @@
-﻿# Enable C++17
-set(CMAKE_CXX_STANDARD 17)
-# Enable C11
-set(C_STANDARD 11)
-
-message(STATUS "LLMToolKit aux source -> ${Platform_Name}")
+﻿message(STATUS "LLMToolKit aux source -> ${Platform_Name}")
 include_directories(".")
 include_directories("./Spack/${Platform_Name}/3.5/v1.1/include")
 
