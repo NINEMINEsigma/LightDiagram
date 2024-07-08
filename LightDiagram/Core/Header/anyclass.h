@@ -212,7 +212,7 @@ public:
 	}
 };
 
-_LF_C_API(Class) copy_enable
+_LF_C_API(Class) copy_enable:_LF_Inherited(any_class)
 {
 public:
 	using tag = void;
@@ -226,7 +226,7 @@ protected:
 		return *this;
 	}
 };
-_LF_C_API(Class) copy_disable
+_LF_C_API(Class) copy_disable:_LF_Inherited(any_class)
 {
 public:
 	using tag = void;

@@ -111,6 +111,8 @@ namespace ld
     };
 }
 
+extern ld::ConsolePro console;
+
 #define CatchingLDException(func)                       \
 catch(const LDException& ex)                            \
 {                                                       \

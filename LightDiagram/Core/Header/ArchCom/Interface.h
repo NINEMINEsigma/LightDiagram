@@ -28,18 +28,26 @@ namespace ld
     _LF_C_API(Class) IAnyArchitecture Symbol_Push
         _LF_Inherited(any_class)
     {
-        using ReleaseAction = void(IAnyArchitecture*);
-        using BuildupAction = void(IAnyArchitecture*);
+    public:
+        using ReleaseAction = std::function<void(IAnyArchitecture*)>;
+        using BuildupAction = std::function<void(IAnyArchitecture*)>;
+        using DestroyAction = std::function<void(IAnyArchitecture*)>;
+    private:
         /// <summary>
         /// When this component release from architecture, it will be invoke by architecture
         /// </summary>
         /// <returns>Function ptr which call by architecture</returns>
-        virtual ReleaseAction* WithRelease() const;
+        virtual ReleaseAction WithRelease() const;
         /// <summary>
         /// When this component buildup to architecture, it will be invoke by architecture
         /// </summary>
         /// <returns>Function ptr which call by architecture</returns>
-        virtual BuildupAction* WithBuildup() const;
+        virtual BuildupAction WithBuildup() const;
+        /// <summary>
+        /// When this component parent architecture will destroy, it will be invoke by architecture
+        /// </summary>
+        /// <returns>Function ptr which call by architecture</returns>
+        virtual DestroyAction WithDestroy() const;
     public:
         friend IArchitecture;
         virtual ~IAnyArchitecture();
@@ -106,6 +114,9 @@ namespace ld
     };
 
     //  When target command is diffusion on Architecture, it invoke <OnCommandInvoke>
+    //  Must Override
+    //  -> void OnCommandInvoke(const type_info & type)
+    //  -> const type_info& GetCommandType() const
     _LF_C_API(Class) ICanMonitorCommand Symbol_Push
         _LF_Inherited(ICanGetArchitecture)
     {
@@ -138,10 +149,12 @@ namespace ld
         _LF_Inherited(ICanInitialize) Symbol_Link
         _LF_Inherited(ICanGetArchitecture) Symbol_Link
         _LF_Inherited(ICanSendCommand) Symbol_Link
-        _LF_Inherited(ICanGetSystem) 
+        _LF_Inherited(ICanGetSystem)
     {
 
     };
+    // Must Override
+    // -> void OnExecute()
     _LF_C_API(Class)    ICommand Symbol_Push
         _LF_Inherited(ICanGetArchitecture) Symbol_Link
         _LF_Inherited(ICanGetSystem) Symbol_Link
@@ -167,7 +180,9 @@ namespace ld
         _LF_Inherited(ICanGetController) Symbol_Link
         _LF_Inherited(ICanSendCommand)
     {
+    public:
         using objects_container_type = std::map<size_t, IAnyArchitecture*>;
+    private:
         objects_container_type objects_container;
     private:
         /// <summary>
@@ -265,24 +280,46 @@ namespace ld
         IArchitecture* Register(const type_info & type, IAnyArchitecture * instance);
         bool Contains(const type_info & type) const;
 #pragma endregion
+    public:
+        template<typename TargetArch>
+        friend TargetArch& ArchitectureInstance();
+        template<typename TargetArch>
+        friend void ArchitectureDestory();
+    private:
+        template<typename TargetArch>
+        static TargetArch** ToolGetArchitecture();
     };
-    
+
+    template<typename TargetArch>
+    TargetArch** IArchitecture::ToolGetArchitecture()
+    {
+        static_assert(std::is_base_of<IArchitecture, TargetArch>::value, "TargetArch must be derived from IArchitecture");
+        static TargetArch* instance = nullptr;
+        return &instance;
+    }
+
     // When first use this function to obtain architecture's instance
     // the instance will be generate, but it will be never delete
     // Generate Process ->new TargetArch() -> Init()
     template<typename TargetArch>
     TargetArch& ArchitectureInstance()
     {
-        static_assert(std::is_base_of<IArchitecture, TargetArch>::value, "TargetArch must be derived from IArchitecture");
-        static TargetArch* instance = nullptr;
-        if (instance == nullptr) 
+        if (*IArchitecture::ToolGetArchitecture<TargetArch>() == nullptr)
         {
-            instance = new TargetArch();
-            IArchitecture* arch = instance;
+            *IArchitecture::ToolGetArchitecture<TargetArch>() = new TargetArch();
+            IArchitecture* arch = *IArchitecture::ToolGetArchitecture<TargetArch>();
             arch->Init();
             arch->AddMessage("Architecture Instance Generated");
         }
-        return *instance;
+        return *dynamic_cast<TargetArch*>(*IArchitecture::ToolGetArchitecture<TargetArch>());
+    }
+
+    // End target architecture life
+    template<typename TargetArch>
+    void ArchitectureDestory()
+    {
+        delete *IArchitecture::ToolGetArchitecture<TargetArch>();
+        *IArchitecture::ToolGetArchitecture<TargetArch>() = nullptr;
     }
 }
 

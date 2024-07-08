@@ -41,5 +41,6 @@ if(DEFINED _LINUX OR DEFINED _LINUX_ON_WINDOWS)
 	include_directories ("${PROJECT_SOURCE_DIR}/WebServer")
 	add_subdirectory ("WebServer")
 endif()
+add_subdirectory("test")
 
 set(CMAKE_INSTALL_PREFIX "${PROJECT_SOURCE_DIR}/out/")

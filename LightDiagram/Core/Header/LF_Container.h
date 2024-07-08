@@ -1,5 +1,5 @@
+#define __FILE_LF_CONTAINER
 #ifndef __FILE_LF_CONTAINER
-
 #define __FILE_LF_CONTAINER
 
 #include<Core/Header/LF_Config.h>

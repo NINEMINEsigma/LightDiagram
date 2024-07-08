@@ -23,11 +23,15 @@ namespace ld
 	{
 		return this->architecture;
 	}
-	IAnyArchitecture::ReleaseAction* IAnyArchitecture::WithRelease() const
+	IAnyArchitecture::ReleaseAction IAnyArchitecture::WithRelease() const
 	{
 		return __DefaultAction;
 	}
-	IAnyArchitecture::BuildupAction* IAnyArchitecture::WithBuildup() const
+	IAnyArchitecture::BuildupAction IAnyArchitecture::WithBuildup() const
+	{
+		return __DefaultAction;
+	}
+	IAnyArchitecture::BuildupAction IAnyArchitecture::WithDestroy() const
 	{
 		return __DefaultAction;
 	}
@@ -82,9 +86,19 @@ namespace ld
 
 #pragma region IArchitecture
 
-	IArchitecture::~IArchitecture()
+	IArchitecture::IArchitecture()
 	{
 
+	}
+	IArchitecture::~IArchitecture()
+	{
+		for (auto& i : this->objects_container)
+		{
+			IAnyArchitecture* cat = i.second;
+			(cat->WithRelease())(cat);
+			cat->IfIam(&IArchitecture::ToolTryReleaseComponentArchitectureParent, this);
+			(cat->WithDestroy())(cat);
+		}
 	}
 
 	IArchitecture* IArchitecture::AddMessage(IArchitecture::string message)
@@ -248,7 +262,7 @@ namespace ld
 				typeid(*cat).name() + "] registered");
 			(cat->WithRelease())(cat);
 			this->objects_container.erase(type.hash_code());
-			cat->IfIam(&IArchitecture::ToolTryReleaseComponentArchitectureParent, this);
+			cat->IfIam(&IArchitecture::ToolTryReleaseComponentArchitectureParent);
 		}
 		return this;
 	}

@@ -49,7 +49,7 @@ aux_source_directory    (./Extension Extension_Cpp_List)
 message( STATUS "main part cpp = ${Main_Cpp_List}")
 message( STATUS "core part cpp = ${Core_Cpp_List}")
 message( STATUS "extension part cpp = ${Extension_Cpp_List}")
-add_executable (LightDiagram ${Main_Cpp_List} ${Core_Cpp_List} ${Extension_Cpp_List} ${Utility_Cpp_List})
+add_library (LightDiagram ${Main_Cpp_List} ${Core_Cpp_List} ${Extension_Cpp_List} ${Utility_Cpp_List})
 
 if(MPI_FOUND)
     target_link_libraries(LightDiagram ${MPI_C_LIBRARIES})
@@ -67,3 +67,8 @@ if (CMAKE_VERSION VERSION_GREATER 3.12)
 endif()
 
 #install(TARGETS LightDiagram)
+#install(TARGETS ${head_files} DESTINATION  ${CMAKE_BINARY_DIR}/Lib)
+install(TARGETS LightDiagram 
+        RUNTIME DESTINATION ${CMAKE_BINARY_DIR}/bin
+        LIBRARY DESTINATION ${CMAKE_BINARY_DIR}/lib
+        ARCHIVE DESTINATION ${CMAKE_BINARY_DIR}/lib/static)

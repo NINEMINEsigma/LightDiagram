@@ -270,7 +270,7 @@ namespace ld
 			else
 				std::cout << message << std::endl;
 		}
-		(*clog) << L"<" << to_wstring(label) << L">" << to_wstring(message) << L"<!" << to_wstring(tail) << L">" << std::endl;
+		(*clog) << u8"<" << to_wstring(label) << u8">" << to_wstring(message) << u8"<!" << to_wstring(tail) << u8">" << std::endl;
 		return *this;
 	}
 	const ConsolePro& ConsolePro::LogMessage(const ConsolePro::string& message ) const
@@ -333,7 +333,7 @@ namespace ld
 			else
 				std::wcout << message << std::endl;
 		}
-		(*clog) << L"<" << label << L">" << message << L"<!" << tail << L">" << std::endl;
+		(*clog) << u8"<" << label << u8">" << message << u8"<!" << tail << u8">" << std::endl;
 		return *this;
 	}
 
@@ -385,5 +385,6 @@ namespace ld
 	}
 }
 
+ld::ConsolePro console;
 
 
