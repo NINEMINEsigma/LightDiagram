@@ -59,7 +59,7 @@ namespace ld
     bool            _LF_C_API(TDLL) ContainsOn()
     {
         IArchitecture& arch = *ArchitectureInstance(typeid(TargetArch));
-        return arch.Contains(typeid(SlotType)))
+        return arch.Contains(typeid(SlotType));
     }
 
     template<typename Arch, typename SlotType>
@@ -82,6 +82,97 @@ namespace ld
         IArchitecture& arch = *ArchitectureInstance(typeid(TargetArch));
         arch.Diffusing(typeid(SlotType));
     }
+
+    template<typename Func>
+    _LF_C_API(TClass) 
+        LDEvent Symbol_Push
+        _LF_Inherited(ICommand)
+    {
+    public:
+        using tag = std::function<Func>;
+        using func_container = std::vector<tag>;
+        func_container functions;
+
+        LDEvent& AddListener(const tag & func)
+        {
+            functions.push_back(func);
+            return *this;
+        }
+        LDEvent& AddListener(const LDEvent& event)
+        {
+            for (auto& i : event.functions) AddListener(i);
+            return *this;
+        }
+        LDEvent& AddListener(const func_container& event)
+        {
+            for (auto& i : event) AddListener(i);
+            return *this;
+        }
+        LDEvent& RemoveListener(const tag& func)
+        {
+            functions.erase(std::find(functions.begin(), functions.end(), func));
+            return *this;
+        }
+        LDEvent& ClearListeners()
+        {
+            functions.clear();
+            return *this;
+        }
+
+        using traits = function_traits_ex<Func>;
+        using traits_indicator = traits::function_traits_indicator;
+        using result = traits::result;
+        using parameters = traits::parameters;
+        using belong = traits::belong;
+        using call = traits::call;
+        using consting = traits::consting;
+        using typen = traits::typen;
+
+        using OnInvokeResult = typename choose_type<std::is_same_v<result, void>, void, std::vector<result>>::tag;
+
+        template<typename... Args>
+        OnInvokeResult OnInvoke(Args... args)
+        {
+            if constexpr (std::is_same_v<OnInvokeResult, void>)
+            {
+                for (auto& i : this->functions)
+                {
+                    i.operator()(args...);
+                }
+            }
+            else
+            {
+                std::vector<result> returner;
+                for (auto& i : this->functions)
+                {
+                    returner.push_back(i(args...));
+                }
+                return returner;
+            }
+        }
+
+        LDEvent() {}
+        LDEvent(const tag& func)
+        {
+            AddListener(func);
+        }
+        LDEvent(LDEvent& right)noexcept
+        {
+            this->functions = right.functions;
+        }
+        LDEvent(LDEvent&& right) noexcept
+        {
+            this->functions = std::move(right.functions);
+        }
+        virtual ~LDEvent()
+        {
+            this->ClearListeners();
+        }
+        virtual void OnExecute() override
+        {
+
+        }
+    };
 }
 
 #endif // !__FILE_LF_ARCHITECTURE

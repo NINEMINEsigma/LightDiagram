@@ -51,7 +51,7 @@ function_traits
 /*
 	get regular function information
 */
-template<typename Ret, typename... Args> _LF_C_API(OStruct) function_traits<Ret(*)(Args...)>
+template<typename Ret, typename... Args> _LF_C_API(OStruct) function_traits<Ret(Args...)>
 {
 	_LFramework_Kit_API_StaticOperatorBool(true);
 	using tag = Ret(*)(Args...);
@@ -68,7 +68,7 @@ template<typename Ret, typename... Args> _LF_C_API(OStruct) function_traits<Ret(
 /*
 	get regular function information
 */
-template<typename Ret> _LF_C_API(OStruct) function_traits<Ret(*)()>
+template<typename Ret> _LF_C_API(OStruct) function_traits<Ret(void)>
 {
 	_LFramework_Kit_API_StaticOperatorBool(true);
 	using tag = Ret(*)();
@@ -154,9 +154,10 @@ template<typename Ret, typename C> _LF_C_API(OStruct) function_traits<Ret(C::*)(
 /*
 	get regular function information
 */
-template<typename T, typename = template_fill_indicator> _LF_C_API(OStruct) function_traits_ex : public function_traits<T>
+template<typename T, typename = template_fill_indicator> 
+_LF_C_API(OStruct) function_traits_ex : public function_traits<T>
 {
-	using function_traits_indicator = void;
+	using function_traits_indicator = function_traits<T>;
 };
 /*
 	get lambda or Functor information
@@ -164,7 +165,7 @@ template<typename T, typename = template_fill_indicator> _LF_C_API(OStruct) func
 template<typename Lambda>
 _LF_C_API(OStruct) function_traits_ex<Lambda, std::void_t<decltype(&Lambda::operator())>> : public function_traits<decltype(&Lambda::operator())>
 {
-	using function_traits_indicator = void;
+	using function_traits_indicator = function_traits<decltype(&Lambda::operator())>;
 };
 
 #pragma endregion

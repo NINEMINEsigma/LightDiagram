@@ -1,4 +1,8 @@
 #Project Setting
+# Enable C++17
+set(CMAKE_CXX_STANDARD 17)
+# Enable C11
+set(C_STANDARD 11)
  
 option(ENABLE_MPI "Enable MPI parallelization" ON)
 set(MPI_NO_SYSTEM_PATHS ON) 
@@ -69,6 +73,6 @@ endif()
 #install(TARGETS LightDiagram)
 #install(TARGETS ${head_files} DESTINATION  ${CMAKE_BINARY_DIR}/Lib)
 install(TARGETS LightDiagram 
-        RUNTIME DESTINATION ${CMAKE_BINARY_DIR}/bin
-        LIBRARY DESTINATION ${CMAKE_BINARY_DIR}/lib
-        ARCHIVE DESTINATION ${CMAKE_BINARY_DIR}/lib/static)
+        RUNTIME DESTINATION ${Install_Path}/bin
+        LIBRARY DESTINATION ${Install_Path}/lib
+        ARCHIVE DESTINATION ${Install_Path}/lib/static)
