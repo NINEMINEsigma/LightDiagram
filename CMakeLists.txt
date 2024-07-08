@@ -53,7 +53,7 @@ if(DEFINED _LINUX OR DEFINED _LINUX_ON_WINDOWS)
 	add_subdirectory ("WebServer")
 endif()
 add_subdirectory("test")
-#add_subdirectory("LLMToolkit")
+add_subdirectory("LLMToolkit")
 
 set(CMAKE_INSTALL_PREFIX "${PROJECT_SOURCE_DIR}/out/")
 
