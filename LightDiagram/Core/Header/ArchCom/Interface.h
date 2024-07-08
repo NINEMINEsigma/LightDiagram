@@ -281,46 +281,16 @@ namespace ld
         bool Contains(const type_info & type) const;
 #pragma endregion
     public:
-        template<typename TargetArch>
-        friend TargetArch& ArchitectureInstance();
-        template<typename TargetArch>
-        friend void ArchitectureDestory();
+        friend IArchitecture* ArchitectureInstance(const type_info& type,IArchitecture* ptr);
+        friend IArchitecture* ArchitectureInstance(const type_info& type);
+        friend void ArchitectureDestory(const type_info& type);
     private:
-        template<typename TargetArch>
-        static TargetArch** ToolGetArchitecture();
+        static IArchitecture** ToolGetArchitecture(const type_info& type);
     };
 
-    template<typename TargetArch>
-    TargetArch** IArchitecture::ToolGetArchitecture()
-    {
-        static_assert(std::is_base_of<IArchitecture, TargetArch>::value, "TargetArch must be derived from IArchitecture");
-        static TargetArch* instance = nullptr;
-        return &instance;
-    }
-
-    // When first use this function to obtain architecture's instance
-    // the instance will be generate, but it will be never delete
-    // Generate Process ->new TargetArch() -> Init()
-    template<typename TargetArch>
-    TargetArch& ArchitectureInstance()
-    {
-        if (*IArchitecture::ToolGetArchitecture<TargetArch>() == nullptr)
-        {
-            *IArchitecture::ToolGetArchitecture<TargetArch>() = new TargetArch();
-            IArchitecture* arch = *IArchitecture::ToolGetArchitecture<TargetArch>();
-            arch->Init();
-            arch->AddMessage("Architecture Instance Generated");
-        }
-        return *dynamic_cast<TargetArch*>(*IArchitecture::ToolGetArchitecture<TargetArch>());
-    }
-
-    // End target architecture life
-    template<typename TargetArch>
-    void ArchitectureDestory()
-    {
-        delete *IArchitecture::ToolGetArchitecture<TargetArch>();
-        *IArchitecture::ToolGetArchitecture<TargetArch>() = nullptr;
-    }
+    IArchitecture* _LF_C_API(DLL) ArchitectureInstance(const type_info& type, _In_ IArchitecture* ptr);
+    IArchitecture* _LF_C_API(DLL) ArchitectureInstance(const type_info& type);
+    void _LF_C_API(DLL)  ArchitectureDestory(const type_info& type);
 }
 
 #endif // !__FILE_ARCH_INTERFACE

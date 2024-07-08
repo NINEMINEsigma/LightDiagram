@@ -301,6 +301,39 @@ namespace ld
 		return this;
 	}
 
+	std::map<size_t, IArchitecture*> architecture_container;
+
+	IArchitecture** IArchitecture::ToolGetArchitecture(const type_info& type)
+	{
+		return &architecture_container[type.hash_code()];
+	}
+
+	IArchitecture* ArchitectureInstance(const type_info& type,_In_ IArchitecture* ptr)
+	{
+		if (*IArchitecture::ToolGetArchitecture(type) == nullptr)
+		{
+			*IArchitecture::ToolGetArchitecture(type) = ptr;
+			IArchitecture* arch = *IArchitecture::ToolGetArchitecture(type);
+			arch->Init();
+			arch->AddMessage("Architecture Instance Generated");
+		}
+		else if (ptr == nullptr)
+		{
+			return *IArchitecture::ToolGetArchitecture(type);
+		}
+		else throw ld::LDException("multiple generate architecture");
+	}
+	IArchitecture* ArchitectureInstance(const type_info& type)
+	{
+		return *IArchitecture::ToolGetArchitecture(type);
+	}
+	void  ArchitectureDestory(const type_info& type)
+	{
+		delete* IArchitecture::ToolGetArchitecture(type);
+		*IArchitecture::ToolGetArchitecture(type) = nullptr;
+		architecture_container.erase(type.hash_code());
+	}
+
 #pragma endregion
 
 }
