@@ -185,7 +185,7 @@ namespace ld
         OnInvokeResult operator()(Args... args)
         {
             this->OnInvoke(args...);
-            if constexpr (std::is_same_v<OnInvokeResult, void>)
+            if constexpr (!std::is_same_v<OnInvokeResult, void>)
             {
                 return result_data;
             }

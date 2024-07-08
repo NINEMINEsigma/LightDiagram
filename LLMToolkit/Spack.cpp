@@ -1,15 +1,10 @@
 #include <Spack.h>
 
-#define GREEN "\033[32m"
-#define YELLOW "\033[33m"
-#define RED "\033[31m"
-#define RESET "\033[0m"
-
 using namespace SparkChain;
 using namespace std;
 using namespace llm::Spark;
 
-using SpackCallbacks = Callback;
+#pragma comment(lib, "F:/source/2024/LightDiagram/LLMToolkit/Windows/Spark/3.5/v1.1/libs/x64/SparkChain.lib") 
 
 Callback::Callback() {}
 Callback::~Callback() {}
@@ -27,133 +22,98 @@ void Callback::onLLMError(LLMError* error, void* usrContext)
 	this->OnError(error->getErrMsg(), error);
 }
 
-int initSDK()
+void LLMSystem::Init() {}
+LLMSystem::LLMSystem() :maxCache(5), domain("generalv3.5"), url("ws(s)://spark-api.xf-yun.com/v3.5/chat") {}
+void LLMSystem::InitSDK(const char* appID, const char* apiKey, const char* apiSecret)
 {
-	// 全局初始化
-	SparkChainConfig *config = SparkChainConfig::builder();
-	config->appID("1555396e")        // 你的appid
-		->apiKey("5ed9018f67a8c1a2ee5cede10cc405d5")        // 你的apikey
-		->apiSecret("ODUyNDBlNjllNTE4OTQzNzQ1YzVhNWY0"); // 你的apisecret
-	int ret = SparkChain::init(config);
-	printf(RED "\ninit SparkChain result:%d" RESET, ret);
-	return ret;
+	this->config = SparkChainConfig::builder();
+	config->appID(appID)->apiKey(apiKey)->apiSecret(apiSecret);
+	this->init_result = SparkChain::init(config);
+}
+void LLMSystem::UnInitSDK()
+{
+	SparkChain::unInit();
+}
+LLMSystem::LLMSystem(const char* appID, const char* apiKey, const char* apiSecret) :LLMSystem()
+{
+	this->InitSDK(appID, apiKey, apiSecret);
+}
+LLMSystem::~LLMSystem()
+{
+	this->UnInitSDK();
+}
+LLMSystem::operator bool() const
+{
+	return this->init_result == 0;
+}
+void LLMSystem::SetupModel(const string& _domain, const string& _url, const int _maxCache)
+{
+	this->domain = _domain;
+	this->url = _url;
+	this->maxCache = _maxCache;
 }
 
-void syncLLMTest()
+void LLMSystem::SyncSend(const string& message)
 {
-	cout << "\n######### 同步调用 #########" << endl;
-	// 配置大模型参数
-	LLMConfig *llmConfig = LLMConfig::builder();
-	llmConfig->domain("generalv3.5");
-	llmConfig->url("ws(s)://spark-api.xf-yun.com/v3.5/chat");
+	LLMConfig* llmConfig = LLMConfig::builder();
+	llmConfig->domain(this->domain.c_str())->url(this->url.c_str());
 
-	Memory* window_memory = Memory::WindowMemory(5);
-	LLM *syncllm = LLM::create(llmConfig, window_memory);
-
+	Memory* window_memory = Memory::WindowMemory(this->maxCache);
+	LLM* syncllm = LLM::create(llmConfig, window_memory);
 	// Memory* token_memory = Memory::TokenMemory(500);
 	// LLM *syncllm = LLM::create(llmConfig,token_memory);
-
-	int i = 0;
-	const char* input = "你好用英语怎么说？.";
-	while (i++ < 2)
+	LLMSyncOutput* result = syncllm->run(message.c_str());
+	if (result->getErrCode() != 0)
 	{
-		// 同步请求
-		LLMSyncOutput *result = syncllm->run(input);
-		if (result->getErrCode() != 0)
-		{
-			printf(RED "\nsyncOutput: %d:%s\n\n" RESET, result->getErrCode(), result->getErrMsg());
-			continue;
-		}
-		else
-		{
-			printf(GREEN "\nsyncOutput: %s:%s\n" RESET, result->getRole(), result->getContent());
-		}
-		input = "你还记得我刚刚问的是什么问题吗？.";
+		this->callback.OnError.OnInvoke(result->getErrMsg(), dynamic_cast<LLMError*>(result));
 	}
-	// 垃圾回收
+	else
+	{
+		this->callback.OnEnd.OnInvoke(result->getContent(), dynamic_cast<LLMResult*>(result));
+	}
 	if (syncllm != nullptr)
-	{
-		LLM::destroy(syncllm);
-	}
+		SparkChain::LLM::destroy(syncllm);
 }
 
-void asyncLLMTest()
+void LLMSystem::AsyncSend(const string& message, int user, int wait_clock_time, int wait_max_time)
 {
-	cout << "\n######### 异步调用 #########" << endl;
-	// 配置大模型参数
-	LLMConfig *llmConfig = LLMConfig::builder();
-	llmConfig->domain("generalv3.5");
-	llmConfig ->url("ws(s)://spark-api.xf-yun.com/v3.5/chat");
-	Memory* window_memory = Memory::WindowMemory(5);
-	LLM *asyncllm = LLM::create(llmConfig, window_memory);
+	LLMConfig* llmConfig = LLMConfig::builder();
+	llmConfig->domain(this->domain.c_str())->url(this->url.c_str());
 
+	Memory* window_memory = Memory::WindowMemory(this->maxCache);
+	LLM* asyncllm = LLM::create(llmConfig, window_memory);
 	// Memory* token_memory = Memory::TokenMemory(500);
 	// LLM *asyncllm = LLM::create(llmConfig,token_memory);
 	if (asyncllm == nullptr)
 	{
-		printf(RED "\nLLMTest fail, please setLLMConfig before" RESET);
+		this->callback.OnEnd.OnInvoke("fail, please setLLMConfig before", nullptr);
 		return;
 	}
-	// 注册监听回调
-	SparkCallbacks *cbs = new SparkCallbacks();
-	asyncllm->registerLLMCallbacks(cbs);
-
-	// 异步请求
-	int i = 0;
-	const char* input = "你好用英语怎么说？.";
-	while (i++ < 2)
+	asyncllm->registerLLMCallbacks(&this->callback);
+	this->async_finish = false;
+	int ret = asyncllm->arun(message.c_str(), &user);
+	do
 	{
-		finish = false;
-		int usrContext = 1;
-		int ret = asyncllm->arun(input, &usrContext);
 		if (ret != 0)
 		{
-			printf(RED "\narun failed: %d\n\n" RESET, ret);
-			finish = true;
+			this->callback.OnError.OnInvoke((string("AsyncSend failed: ") + to_string(ret)).c_str(), nullptr);
 			continue;
 		}
-
-		int times = 0;
-		while (!finish)
-		{ // 等待结果返回退出
-			Sleep(1000);
-			if (times++ > 10) // 等待十秒如果没有最终结果返回退出
-				break;
+		std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
+		std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+		std::chrono::milliseconds duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+		while (duration.count() < wait_max_time)
+		{
+#if defined(_WINDOW_)||defined(_LINUX_ON_WINDOW_)
+			Sleep(wait_clock_time);
+#else 
+			sleep(wait_clock_time);
+#endif
+			if (this->async_finish)break;
+			end = std::chrono::steady_clock::now();
+			duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 		}
-		input = "那日语呢？.";
-	}
-	// 垃圾回收
+	} while (false);
 	if (asyncllm != nullptr)
-	{
 		LLM::destroy(asyncllm);
-	}
-	if (cbs != nullptr)
-		delete cbs;
-}
-
-void uninitSDK()
-{
-	// 全局逆初始化
-	SparkChain::unInit();
-}
-
-int main(int argc, char const *argv[])
-{
-	system("chcp 65001");
-	cout << "\n######### llm Demo #########" << endl;
-	// 全局初始化
-	int ret = initSDK();
-	if (ret != 0)
-	{
-		cout << "initSDK failed:" << ret << endl;
-		return -1;
-	}
-
-	// 同步调用和异步调用选择一个执行
-	//syncLLMTest(); // 同步调用
-
-	 asyncLLMTest(); // 异步调用
-
-	// 退出
-	uninitSDK();
 }
