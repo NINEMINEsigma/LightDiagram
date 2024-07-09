@@ -45,9 +45,9 @@ int main()
 		sparkLLM->SetupModel("generalv3.5", "ws(s)://spark-api.xf-yun.com/v3.5/chat", 5);
 		sparkLLM->callback.OnEnd.AddListener([](const char* str, SparkChain::LLMResult* ptr)
 			{
-				cout << ld::GetColorCode(ld::ConsoleColor::Green) << ptr->getRole() << ": ";
+				cout << ld::ConsoleColor::Green << ptr->getRole() << ": ";
 				cout.flush();
-				cout << ld::GetColorCode(ld::ConsoleColor::None) << str << endl;
+				cout << ld::ConsoleColor::None << str << endl;
 			});
 	}
 	string qes;

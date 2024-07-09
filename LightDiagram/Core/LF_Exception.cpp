@@ -271,6 +271,11 @@ namespace ld
 				std::cout << message << std::endl;
 		}
 		(*clog) << u8"<" << to_wstring(label) << u8">" << to_wstring(message) << u8"<!" << to_wstring(tail) << u8">" << std::endl;
+		if (clog->fail())
+		{
+			clog->setstate(std::ios::beg);
+			*clog << L"\nclog is fail in error: " << errno << std::endl;
+		}
 		return *this;
 	}
 	const ConsolePro& ConsolePro::LogMessage(const ConsolePro::string& message ) const
@@ -334,6 +339,11 @@ namespace ld
 				std::wcout << message << std::endl;
 		}
 		(*clog) << u8"<" << label << u8">" << message << u8"<!" << tail << u8">" << std::endl;
+		if (clog->fail())
+		{
+			clog->setstate(std::ios::beg);
+			*clog << L"\nclog is fail in error: " << errno << std::endl;
+		}
 		return *this;
 	}
 
