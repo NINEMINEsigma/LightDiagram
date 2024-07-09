@@ -73,6 +73,7 @@ namespace ld
         _LF_API(BindingTo)(architecture, Ptr)
     public:
         friend IArchitecture;
+        ICanGetArchitecture();
         virtual ~ICanGetArchitecture();
         IArchitecture* Architecture() const;
     };

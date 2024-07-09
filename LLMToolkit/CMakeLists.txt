@@ -18,9 +18,10 @@ add_library(LLMToolKit ${LLMToolKit_Cpp_List})
 
 target_link_libraries(LLMToolKit LightDiagram)
 
-if (DEFINED _LINUX_ON_WINDOWS OR DEFINED _WINDOWS)
-	#target_link_libraries(LLMToolKit SparkChain.lib)
-	#target_link_libraries(LLMToolKit SparkChain.dll)
+if (DEFINED _LINUX_ON_WINDOWS)
+	target_link_libraries(LLMToolKit "${PROJECT_SOURCE_DIR}/LLMToolkit/Windows/Spark/3.5/v1.1/libs/${_LINUX_ON_WINDOWS}/SparkChain.lib")
+elseif (DEFINED _WINDOWS)
+	target_link_libraries(LLMToolKit "${PROJECT_SOURCE_DIR}/LLMToolkit/Windows/Spark/3.5/v1.1/libs/${_WINDOWS}/SparkChain.lib")
 elseif(DEFINED _LINUX)
 	#target_link_libraries(LLMToolKit SparkChain.a)
 endif()

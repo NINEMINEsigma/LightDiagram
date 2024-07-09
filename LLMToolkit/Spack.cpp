@@ -4,7 +4,7 @@ using namespace SparkChain;
 using namespace std;
 using namespace llm::Spark;
 
-#pragma comment(lib, "F:/source/2024/LightDiagram/LLMToolkit/Windows/Spark/3.5/v1.1/libs/x64/SparkChain.lib") 
+//#pragma comment(lib, "F:/source/2024/LightDiagram/LLMToolkit/Windows/Spark/3.5/v1.1/libs/x64/SparkChain.lib") 
 
 Callback::Callback() {}
 Callback::~Callback() {}

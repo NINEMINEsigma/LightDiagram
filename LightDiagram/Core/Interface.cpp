@@ -18,6 +18,7 @@ namespace ld
 	ConsolePro DefaultConsolePro;
 	IAnyArchitecture::~IAnyArchitecture() {}
 	ICanInitialize::~ICanInitialize() {}
+	ICanGetArchitecture::ICanGetArchitecture():architecture(nullptr){}
 	ICanGetArchitecture::~ICanGetArchitecture() {}
 	IArchitecture* ICanGetArchitecture::Architecture() const
 	{
