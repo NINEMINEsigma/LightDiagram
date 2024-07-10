@@ -32,7 +32,10 @@ void LLMSystem::Init()
 	if (llmarch != nullptr)
 		this->InitSDK(llmarch->appID.c_str(), llmarch->apiKey.c_str(), llmarch->apiSecret.c_str());
 }
-LLMSystem::LLMSystem() :init_result(0), maxCache(5), domain("generalv3.5"), url("ws(s)://spark-api.xf-yun.com/v3.5/chat") {}
+LLMSystem::LLMSystem() :async_finish(true), init_result(-1), maxCache(5), domain("generalv3.5"), url("ws(s)://spark-api.xf-yun.com/v3.5/chat")
+{
+
+}
 bool LLMSystem::InitSDK(const char* appID, const char* apiKey, const char* apiSecret)
 {
 	if (initer_ptr == this)
@@ -53,6 +56,7 @@ void LLMSystem::UnInitSDK()
 {
 	SparkChain::unInit();
 	initer_ptr = nullptr;
+	this->init_result = -1;
 }
 LLMSystem::LLMSystem(const char* appID, const char* apiKey, const char* apiSecret) :LLMSystem()
 {
