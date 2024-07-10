@@ -6,6 +6,8 @@ using namespace llm::Spark;
 
 //#pragma comment(lib, "F:/source/2024/LightDiagram/LLMToolkit/Windows/Spark/3.5/v1.1/libs/x64/SparkChain.lib") 
 
+LLMArchitecture::~LLMArchitecture() {}
+
 Callback::Callback() {}
 Callback::~Callback() {}
 void Callback::onLLMResult(LLMResult* result, void* usrContext)
@@ -22,25 +24,48 @@ void Callback::onLLMError(LLMError* error, void* usrContext)
 	this->OnError(error->getErrMsg(), error);
 }
 
-void LLMSystem::Init() {}
-LLMSystem::LLMSystem() :maxCache(5), domain("generalv3.5"), url("ws(s)://spark-api.xf-yun.com/v3.5/chat") {}
-void LLMSystem::InitSDK(const char* appID, const char* apiKey, const char* apiSecret)
+static LLMSystem* initer_ptr = nullptr;
+
+void LLMSystem::Init()
 {
-	this->config = SparkChainConfig::builder();
-	config->appID(appID)->apiKey(apiKey)->apiSecret(apiSecret);
-	this->init_result = SparkChain::init(config);
+	auto* llmarch = this->Architecture()->AsDynamicPtr<LLMArchitecture>();
+	if (llmarch != nullptr)
+		this->InitSDK(llmarch->appID.c_str(), llmarch->apiKey.c_str(), llmarch->apiSecret.c_str());
+}
+LLMSystem::LLMSystem() :init_result(0), maxCache(5), domain("generalv3.5"), url("ws(s)://spark-api.xf-yun.com/v3.5/chat") {}
+bool LLMSystem::InitSDK(const char* appID, const char* apiKey, const char* apiSecret)
+{
+	if (initer_ptr == this)
+	{
+		this->UnInitSDK();
+	}
+	if (initer_ptr == nullptr)
+	{
+		auto* config = SparkChainConfig::builder();
+		config->appID(appID)->apiKey(apiKey)->apiSecret(apiSecret);
+		this->init_result = SparkChain::init(config);
+		initer_ptr = this;
+		return this->init_result == 0;
+	}
+	else return false;
 }
 void LLMSystem::UnInitSDK()
 {
 	SparkChain::unInit();
+	initer_ptr = nullptr;
 }
 LLMSystem::LLMSystem(const char* appID, const char* apiKey, const char* apiSecret) :LLMSystem()
 {
 	this->InitSDK(appID, apiKey, apiSecret);
 }
-LLMSystem::~LLMSystem()
+LLMSystem::~LLMSystem() {}
+static void __DeleteLLMSystem(ld::IAnyArchitecture* r)
 {
-	this->UnInitSDK();
+	r->AsDynamicPtr<LLMSystem>()->UnInitSDK();
+};
+ld::IAnyArchitecture::DestroyAction LLMSystem::WithDestroy() const
+{
+	return __DeleteLLMSystem;
 }
 LLMSystem::operator bool() const
 {

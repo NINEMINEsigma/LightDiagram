@@ -137,14 +137,16 @@ namespace ld
         _LF_Inherited(ICanGetModel) Symbol_Link
         _LF_Inherited(ICanGetController)
     {
-
+    public:
+        virtual ~ISystem();
     };
     _LF_C_API(Class)    IModel Symbol_Push
         _LF_Inherited(ICanInitialize) Symbol_Link
         _LF_Inherited(ICanGetArchitecture) Symbol_Link
         _LF_Inherited(ICanSendCommand)
     {
-
+    public:
+        virtual ~IModel();
     };
     _LF_C_API(Class)    IController Symbol_Push
         _LF_Inherited(ICanInitialize) Symbol_Link
@@ -152,7 +154,8 @@ namespace ld
         _LF_Inherited(ICanSendCommand) Symbol_Link
         _LF_Inherited(ICanGetSystem)
     {
-
+    public:
+        virtual ~IController();
     };
     // Must Override
     // -> void OnExecute()
@@ -193,7 +196,7 @@ namespace ld
         /// <returns>If exist, return ptr, otherwise nullptr</returns>
         IAnyArchitecture* ToolGetComponent(const type_info & type) const;
         void ToolTrySetupComponentArchitectureParent(ICanGetArchitecture * ptr);
-        void ToolTryReleaseComponentArchitectureParent(ICanGetArchitecture * ptr);
+        static void ToolTryReleaseComponentArchitectureParent(ICanGetArchitecture * ptr);
     public:
         IArchitecture();
         IArchitecture(const IArchitecture&) = delete;

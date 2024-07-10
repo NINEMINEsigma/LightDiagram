@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include <LightDiagram.h>
+#include <../LLMToolkit/LLMToolkit.h>
 using namespace std;
 using namespace ld;
 
@@ -14,7 +15,7 @@ public:
 	{
 		return [](IAnyArchitecture* r)
 			{
-				console.LogMessage(to_wstring(typeid(*r).name()) + L" is delete");
+				console.LogMessage(to_wstring(typeid(*r).raw_name()) + L" is delete");
 				delete r;
 			};
 	}
@@ -23,9 +24,16 @@ public:
 _LF_C_API(Class) 
 arch Symbol_Push
 _LF_Inherited(IArchitecture) Symbol_Link
+_LF_Inherited(llm::Spark::LLMArchitecture) Symbol_Link
 _LF_Inherited(SMD)
 {
 public:
+	arch()
+	{
+		this->appID = "1555396e";
+		this->apiKey = "5ed9018f67a8c1a2ee5cede10cc405d5";
+		this->apiSecret = "ODUyNDBlNjllNTE4OTQzNzQ1YzVhNWY0";
+	}
 	~arch()
 	{
 		console.LogMessage(L"arch is end life");

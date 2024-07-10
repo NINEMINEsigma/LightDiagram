@@ -37,10 +37,11 @@ int main()
 	cout << ArchitectureInstance<arch>().GetModel(typeid(model))->AsDynamicPtr<model>()->get_id() << endl;
 	console.LogWarning(L"-----start llm-------");
 	{
-		llm::Spark::LLMSystem* sparkLLM = new llm::Spark::LLMSystem(
-			"1555396e",
-			"5ed9018f67a8c1a2ee5cede10cc405d5",
-			"ODUyNDBlNjllNTE4OTQzNzQ1YzVhNWY0");
+		//llm::Spark::LLMSystem* sparkLLM = new llm::Spark::LLMSystem(
+		//	"1555396e",
+		//	"5ed9018f67a8c1a2ee5cede10cc405d5",
+		//	"ODUyNDBlNjllNTE4OTQzNzQ1YzVhNWY0");
+		llm::Spark::LLMSystem* sparkLLM = new llm::Spark::LLMSystem();
 		ld::RegisterOn<arch>(sparkLLM);
 		sparkLLM->SetupModel("generalv3.5", "ws(s)://spark-api.xf-yun.com/v3.5/chat", 5);
 		sparkLLM->callback.OnEnd.AddListener([](const char* str, SparkChain::LLMResult* ptr)
@@ -50,20 +51,27 @@ int main()
 				cout << ld::ConsoleColor::None << str << endl;
 			});
 	}
+	//ArchitectureInstance<arch>().GetSystem(typeid(LLMSystem))->AsDynamicPtr<LLMSystem>()->SyncSend("你现在介绍一下自己.");
+	wstring wqes;
 	string qes;
 	do
 	{
-		cout << "输入想要发送的问题(q to quit):";
-		cin >> qes;
-		if (qes == "q")break;
-		console.LogMessage(L"已发送!");
-		ArchitectureInstance<arch>().GetSystem(typeid(LLMSystem))->AsDynamicPtr<LLMSystem>()->SyncSend(qes);
+		wcout << ("输入想要发送的问题(q to quit):");
+		wchar_t ch;
+		while ((ch=getchar())!='\n')
+		{
+			wqes += ch;
+		}
+		//qes = to_string(wqes);
+		if (wqes == L"q")break;
+		qes = to_string(wqes);
+		wqes.clear();
+		if (qes.size() < 1)continue;
+		wcout << ld::ConsoleColor::Blue << ("已发送!.") << endl;
+		ArchitectureInstance<arch>().GetSystem(typeid(LLMSystem))->AsDynamicPtr<LLMSystem>()->SyncSend((qes));
 	} while (true);
 	console.LogMessage(L"-----release all-----");
 	ArchitectureDestory<arch>();
-	Sleep(1000);
-	ld::LDEvent<int(int,int)> event(add__);
-	event.AddListener(mut__);
-	cout << event.OnInvoke(2, 3)[0] << event.OnInvoke(2, 3)[1];
+	cin.get();
 	return 0;
 }

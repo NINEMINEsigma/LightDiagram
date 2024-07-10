@@ -132,6 +132,10 @@ _LF_C_API(Struct) void_ptr_t
 
 #pragma endregion
 
+class any_class;
+template<typename T> class null_package;
+template<typename T> _LF_C_API(TDLL) null_package<T> make_null_package(any_class* ptr);
+
 _LF_C_API(Class)	any_class
 {
 public:
@@ -189,28 +193,120 @@ public:
 		return nullptr;
 	}
 
-	template<typename T> any_class* IfIam(void(*foo)(T*))
+	//template<typename T> any_class* IfIam(void(*foo)(T*))
+	//{
+	//	T* cat = dynamic_cast<T*>(this);
+	//	if (cat)
+	//		foo(cat);
+	//	return this;
+	//}
+	template<typename T, typename Ret, typename C> any_class* IfIam(Ret(C::* foo)(T*), C* user)
 	{
 		T* cat = dynamic_cast<T*>(this);
 		if (cat)
-			foo(cat);
-		return this;
-	}
-	template<typename T, typename C> any_class* IfIam(void(C::* foo)(T*), C* user = nullptr)
-	{
-		T* cat = dynamic_cast<T*>(this);
-		if (cat)
+		{
 			((*user).*foo)(cat);
+		}
 		return this;
 	}
-	template<typename T, typename R> any_class* IfIam(R foo)
+	template<typename T, typename R> any_class* AsIam(R(foo)(T*))
 	{
 		T* cat = dynamic_cast<T*>(this);
 		if (cat)
 			foo(cat);
 		return this;
+	}
+	template<typename T, typename R> any_class* AsIam(R foo)
+	{
+		T* cat = dynamic_cast<T*>(this);
+		if (cat)
+			foo(cat);
+		return this;
+	}
+
+	template<typename T> null_package<T> As() const
+	{
+		return make_null_package<T>(this);
+	}
+	template<typename T> null_package<T> Is() const
+	{
+		return make_null_package<T>(this);
+	}
+
+	bool Is(const type_info& type) const
+	{
+		return this->GetType() == type;
 	}
 };
+
+template<typename T>
+_LF_C_API(TClass)	null_package final
+{
+	T* ptr = nullptr;
+public:
+	null_package(any_class* ptr) :ptr(dynamic_cast<T*>(ptr)) {}
+	null_package(const null_package& lv) noexcept :ptr(lv.ptr) {}
+	operator bool() const
+	{
+		return ptr != nullptr;
+	}
+	operator T* () const
+	{
+		return ptr;
+	}
+	template<typename Ret,typename... Args> 
+	null_package<T>& Try(std::function<Ret(const T&)> func) const
+	{
+		if (this->ptr)
+		{
+			func(*ptr);
+		}
+		return *this;
+	}
+	template<typename Ret, typename... Args>
+	null_package<T>& Try(std::function<Ret(T&&)> func) const
+	{
+		if (this->ptr)
+		{
+			func(std::move(*ptr));
+			ptr = nullptr;
+		}
+		return *this;
+	}
+	template<typename Ret, typename... Args>
+	null_package<T>& Try(std::function<Ret(T&)> func) const
+	{
+		if (this->ptr)
+		{
+			func(*ptr);
+		}
+		return *this;
+	}
+	template<typename MemberFunc, typename... Args>
+	null_package<T>& Try(MemberFunc invoker,Args... args) const
+	{
+		if (this->ptr)
+		{
+			((*ptr).*invoker)(args...);
+		}
+		return *this;
+	}
+	null_package& operator=(const null_package& right)
+	{
+		this->ptr = right.ptr;
+	}
+	template<typename OtherT>
+	bool operator==(const null_package<OtherT>& right) const
+	{
+		return this->ptr == right.ptr;
+	}
+	T* operator*() const
+	{
+		return ptr;
+	}
+};
+
+#define	null_able	auto
 
 _LF_C_API(Class) copy_enable:_LF_Inherited(any_class)
 {

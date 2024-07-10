@@ -32,7 +32,7 @@ namespace ld
 	{
 		return __DefaultAction;
 	}
-	IAnyArchitecture::BuildupAction IAnyArchitecture::WithDestroy() const
+	IAnyArchitecture::DestroyAction IAnyArchitecture::WithDestroy() const
 	{
 		return __DefaultAction;
 	}
@@ -83,6 +83,9 @@ namespace ld
 
 #pragma endregion
 
+	ISystem::~ISystem() {}
+	IModel::~IModel() {}
+	IController::~IController() {}
 	ICommand::~ICommand() {}
 
 #pragma region IArchitecture
@@ -97,7 +100,7 @@ namespace ld
 		{
 			IAnyArchitecture* cat = i.second;
 			(cat->WithRelease())(cat);
-			cat->IfIam(&IArchitecture::ToolTryReleaseComponentArchitectureParent, this);
+			cat->AsIam(&IArchitecture::ToolTryReleaseComponentArchitectureParent);
 			(cat->WithDestroy())(cat);
 		}
 	}
@@ -189,7 +192,7 @@ namespace ld
 	}
 	void IArchitecture::ToolTryReleaseComponentArchitectureParent(ICanGetArchitecture* ptr)
 	{
-		ptr->set_architecture(this);
+		ptr->set_architecture(nullptr);
 	}
 	IArchitecture* IArchitecture::Register(const type_info& type, IAnyArchitecture* instance)
 	{
@@ -199,12 +202,17 @@ namespace ld
 				this->AddError("Target component already registered");
 			else
 			{
+				if (instance->AsDynamicPtr<ICanGetArchitecture>()&& 
+					instance->AsDynamicPtr<ICanGetArchitecture>()->Architecture())
+				{
+					throw ld::LDException("Target component registered on other architecture");
+				}
 				this->objects_container[type.hash_code()] = instance;
 				this->AddMessage(IArchitecture::string("Target component[slot=") + type.name() + ", real=" +
 					typeid(*instance).name() + "] registered");
 				instance
 					->IfIam(&IArchitecture::ToolTrySetupComponentArchitectureParent,this)
-					->IfIam(__TryInit);
+					->AsIam(__TryInit);
 			}
 		}
 		return this;
@@ -263,7 +271,7 @@ namespace ld
 				typeid(*cat).name() + "] registered");
 			(cat->WithRelease())(cat);
 			this->objects_container.erase(type.hash_code());
-			cat->IfIam(&IArchitecture::ToolTryReleaseComponentArchitectureParent);
+			cat->AsIam(&IArchitecture::ToolTryReleaseComponentArchitectureParent);
 		}
 		return this;
 	}

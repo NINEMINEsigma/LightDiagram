@@ -42,12 +42,12 @@ namespace llm
 			LLMSystem : _LF_Inherited(ld::ISystem)
 		{
 		public:
-			void InitSDK(const char* appID, const char* apiKey, const char* apiSecret);
+			bool InitSDK(const char* appID, const char* apiKey, const char* apiSecret);
 			void UnInitSDK();
 			using string = std::string;
 			LLMSystem();
 			LLMSystem(const char* appID, const char* apiKey, const char* apiSecret);
-			~LLMSystem();
+			virtual ~LLMSystem();
 			LLMSystem(LLMSystem&) = delete;
 			LLMSystem(LLMSystem&&) = delete;
 			virtual void Init() override;
@@ -60,8 +60,17 @@ namespace llm
 			void AsyncSend(const string & message,int user,int wait_clock_time,int wait_max_time);
 			int maxCache;
 			bool async_finish;
-		private:
-			SparkChainConfig* config;
+			IAnyArchitecture::DestroyAction WithDestroy() const override;
+		};
+
+		_LF_C_API(Class)
+			LLMArchitecture : _LF_Inherited(ld::IArchitecture)
+		{
+		public:
+			virtual ~LLMArchitecture();
+			std::string appID;
+			std::string apiKey;
+			std::string apiSecret;
 		};
 
 		/*
