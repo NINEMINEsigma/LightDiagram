@@ -152,18 +152,27 @@ namespace ld
 		return os;
 	}
 
+	class clog_init_helper
+	{
+	public:
+		clog_init_helper()
+		{
+			ld::clog->imbue(std::locale(ld::clog->getloc(), new std::codecvt_utf8<wchar_t, 0x10ffff, std::generate_header>));
+		}
+	};
 
-	std::wostream* clog = new std::wofstream("./line exception.txt");
+	std::ostream* clog = new std::ofstream("./line exception.txt");
+	static clog_init_helper __clog_init_helper;
 
 	bool is_log_message_to_cout = true;
 
-	LDException::LDException(const time_t& ts, const std::wstring& msg)
-		:message(msg),
+	LDException::LDException(const time_t& ts, const std::string& msg) :
+		message(msg),
 		counter(new int(1)),
 		is_release(new bool(false)) {}
 	LDException::LDException() :LDException("unknown") {}
-	LDException::LDException(const string& msg) :LDException(time(nullptr),to_wstring(msg)) {}
-	LDException::LDException(const std::wstring& msg) :LDException(time(nullptr), msg) {}
+	LDException::LDException(const string& msg) :LDException(time(nullptr), msg) {}
+	LDException::LDException(const std::wstring& msg) :LDException(time(nullptr), to_string(msg)) {}
 	LDException::LDException(LDException& ex) noexcept
 		:counter(ex.counter),
 		is_release(ex.is_release),
@@ -187,10 +196,10 @@ namespace ld
 		if (*counter)
 		{
 			if (*is_release)return;
-			(*clog) << L"<break>" << message << L"<!exception is not catch>" << std::endl;
+			(*clog) << "<break>" << message << "<!exception is not catch>" << std::endl;
 			if (is_log_message_to_cout)
 			{
-				std::wcout
+				std::cout
 					<< ConsoleColor::Red
 					<< message
 					<< ConsoleColor::None << std::endl;
@@ -207,10 +216,10 @@ namespace ld
 		if (!*is_release)
 		{
 			*is_release = true;
-			(*clog) << L"<catch>" << message << "L<!exception is catch>" << std::endl;
+			(*clog) << "<catch>" << message << "L<!exception is catch>" << std::endl;
 			if (is_log_message_to_cout)
 			{
-				std::wcout
+				std::cout
 					<< ConsoleColor::Yellow
 					<< message
 					<< ConsoleColor::None << std::endl;
@@ -270,12 +279,7 @@ namespace ld
 			else
 				std::cout << message << std::endl;
 		}
-		(*clog) << u8"<" << to_wstring(label) << u8">" << to_wstring(message) << u8"<!" << to_wstring(tail) << u8">" << std::endl;
-		if (clog->fail())
-		{
-			clog->setstate(std::ios::beg);
-			*clog << L"\nclog is fail in error: " << errno << std::endl;
-		}
+		(*clog) << "<" << (label) << ">" << (message) << "<!" << (tail) << ">" << std::endl;
 		return *this;
 	}
 	const ConsolePro& ConsolePro::LogMessage(const ConsolePro::string& message ) const
@@ -338,12 +342,7 @@ namespace ld
 			else
 				std::wcout << message << std::endl;
 		}
-		(*clog) << u8"<" << label << u8">" << message << u8"<!" << tail << u8">" << std::endl;
-		if (clog->fail())
-		{
-			clog->setstate(std::ios::beg);
-			*clog << L"\nclog is fail in error: " << errno << std::endl;
-		}
+		(*clog) << "<" << to_string(label) << ">" << to_string(message) << "<!" << to_string(tail) << ">" << std::endl;
 		return *this;
 	}
 

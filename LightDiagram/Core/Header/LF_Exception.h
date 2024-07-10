@@ -44,14 +44,14 @@ namespace ld
 
     using string = std::string;
 
-    extern std::wostream* clog;
+    extern std::ostream* clog;
 
     extern bool is_log_message_to_cout;
 
     // Commonly used exception
     _LF_C_API(Class)    LDException:    _LF_Inherited(any_class)
     {
-        LDException(const time_t & ts, const std::wstring & msg);
+        LDException(const time_t & ts, const std::string & msg);
         bool* is_release;
     public:
         LDException();
@@ -62,7 +62,7 @@ namespace ld
         virtual ~LDException();
         void release() const noexcept;
         int* counter;
-        std::wstring message;
+        std::string message;
     };
 
     //  Ease Progress Bar

@@ -13,11 +13,11 @@ Callback::~Callback() {}
 void Callback::onLLMResult(LLMResult* result, void* usrContext)
 {
 	this->all_result += result->getContent();
-	this->OnEnd(all_result.c_str(), result);
+	this->OnEnd(result->getContent(), result);
 }
 void Callback::onLLMEvent(LLMEvent* event, void* usrContext)
 {
-	this->OnProcess(event->getEventMsg(), event);
+	this->OnEvent(event->getEventMsg(), event);
 }
 void Callback::onLLMError(LLMError* error, void* usrContext)
 {
@@ -104,7 +104,7 @@ void LLMSystem::SyncSend(const string& message)
 		SparkChain::LLM::destroy(syncllm);
 }
 
-void LLMSystem::AsyncSend(const string& message, int user, int wait_clock_time, int wait_max_time)
+LLMSystem::AsyncEndCallback LLMSystem::AsyncSend(const string& message, int user)
 {
 	LLMConfig* llmConfig = LLMConfig::builder();
 	llmConfig->domain(this->domain.c_str())->url(this->url.c_str());
@@ -116,7 +116,7 @@ void LLMSystem::AsyncSend(const string& message, int user, int wait_clock_time, 
 	if (asyncllm == nullptr)
 	{
 		this->callback.OnEnd.OnInvoke("fail, please setLLMConfig before", nullptr);
-		return;
+		return AsyncEndCallback([](LLM* llmptr) {}, std::move(asyncllm));
 	}
 	asyncllm->registerLLMCallbacks(&this->callback);
 	this->async_finish = false;
@@ -128,21 +128,10 @@ void LLMSystem::AsyncSend(const string& message, int user, int wait_clock_time, 
 			this->callback.OnError.OnInvoke((string("AsyncSend failed: ") + to_string(ret)).c_str(), nullptr);
 			continue;
 		}
-		std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
-		std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-		std::chrono::milliseconds duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-		while (duration.count() < wait_max_time)
-		{
-#if defined(_WINDOW_)||defined(_LINUX_ON_WINDOW_)
-			Sleep(wait_clock_time);
-#else 
-			sleep(wait_clock_time);
-#endif
-			if (this->async_finish)break;
-			end = std::chrono::steady_clock::now();
-			duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-		}
 	} while (false);
-	if (asyncllm != nullptr)
-		LLM::destroy(asyncllm);
+	return AsyncEndCallback([](LLM* llmptr)
+		{
+			if (llmptr != nullptr)
+				LLM::destroy(llmptr);
+		}, std::move(asyncllm));
 }

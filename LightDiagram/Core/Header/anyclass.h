@@ -304,7 +304,50 @@ public:
 	{
 		return ptr;
 	}
+
+	using tag = T;
+	using decay = generate_full_decay_typen<T>;
 };
+
+template<typename T> _LF_C_API(TDLL) null_package<T> make_null_package(any_class* ptr)
+{
+	return { ptr };
+}
+
+template<typename Func,typename ArgsPackage>
+_LF_C_API(TClass) closures final
+{
+public:
+	std::function<Func> invoker;
+	ArgsPackage args;
+	closures(std::function<Func> func, ArgsPackage && args) :invoker(func), args(args) {}
+	closures(closures&& right) :invoker(std::move(right.func)), args(std::move(right.args)) {}
+	void operator()()
+	{
+		invoker(std::move(args));
+	}
+	void Invoke() const
+	{
+		invoker(std::move(args));
+	}
+};
+template<typename Func>
+_LF_C_API(TClass) closures<Func, void> final
+{
+public:
+	std::function<Func> invoker;
+	closures(std::function<Func> func) :invoker(func) {}
+	closures(closures&& right) :invoker(std::move(right.func)) {}
+	void operator()()
+	{
+		invoker();
+	}
+	void Invoke() const
+	{
+		invoker();
+	}
+};
+
 
 #define	null_able	auto
 

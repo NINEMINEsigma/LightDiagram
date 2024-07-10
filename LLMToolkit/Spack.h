@@ -32,10 +32,10 @@ namespace llm
 			using OnProcessCallbackAction = ld::LDEvent<void(const char*, LLMEvent*)>;
 			using OnErrorCallbackAction = ld::LDEvent<void(const char*, LLMError*)>;
 			OnEndCallbackAction OnEnd;
-			OnProcessCallbackAction OnProcess;
+			OnProcessCallbackAction OnEvent;
 			OnErrorCallbackAction OnError;
-		private:
 			std::string all_result;
+		private:
 		};
 
 		_LF_C_API(Class)
@@ -57,7 +57,8 @@ namespace llm
 			operator bool() const;
 			Callback callback;
 			void SyncSend(const string & message);
-			void AsyncSend(const string & message,int user,int wait_clock_time,int wait_max_time);
+			using AsyncEndCallback = closures<void(SparkChain::LLM*), SparkChain::LLM*>;
+			AsyncEndCallback AsyncSend(const string & message,int user);
 			int maxCache;
 			bool async_finish;
 			IAnyArchitecture::DestroyAction WithDestroy() const override;

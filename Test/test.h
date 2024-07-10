@@ -15,7 +15,7 @@ public:
 	{
 		return [](IAnyArchitecture* r)
 			{
-				console.LogMessage(to_wstring(typeid(*r).raw_name()) + L" is delete");
+				console.LogMessage(typeid(*r).name() + " is delete");
 				delete r;
 			};
 	}
