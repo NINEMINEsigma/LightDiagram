@@ -57,7 +57,11 @@ int main()
 				for (auto& i : out)
 				{
 					cout << i;
+#if defined(_WINDOW_)||defined(_LINUX_ON_WINDOW_)
 					Sleep(1);
+#else
+					sleep(1);
+#endif // 
 				}
 				if (ptr->getStatus() == 2)
 				{
@@ -95,7 +99,11 @@ int main()
 		auto asyncEndCallback = ArchitectureInstance<arch>().GetSystem(typeid(LLMSystem))->AsDynamicPtr<LLMSystem>()->AsyncSend((qes), 1);
 		while (!finish_bool.load())
 		{
+#if defined(_WINDOW_)||defined(_LINUX_ON_WINDOW_)
 			Sleep(500);
+#else
+			sleep(500);
+#endif // 
 		}
 		asyncEndCallback();
 	} while (true);

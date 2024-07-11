@@ -15,7 +15,7 @@ const __uint32_t DEFAULT_EVENT = EPOLLIN | EPOLLET | EPOLLONESHOT;
 const int DEFAULT_EXPIRED_TIME = 2000;              // ms
 const int DEFAULT_KEEP_ALIVE_TIME = 5 * 60 * 1000;  // ms
 
-const std::string html_start_file_path("index.html");
+std::string html_start_file_path("index.html");
 
 char favicon[555] = {
     '\x89', 'P',    'N',    'G',    '\xD',  '\xA',  '\x1A', '\xA',  '\x0',

@@ -5,6 +5,7 @@ include_directories(${PROJECT_SOURCE_DIR}/WebServer/base)
 
 add_executable(WebServer ${WebServer_Cpp_List})
 target_link_libraries(WebServer libserver_base)
+target_link_libraries(WebServer LightDiagram)
 
 add_subdirectory(base)
 

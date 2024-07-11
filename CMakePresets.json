@@ -70,7 +70,7 @@
       "installDir": "${sourceDir}/out/install/${presetName}",
       "cacheVariables": {
         "CMAKE_C_COMPILER": "gcc",
-        "CMAKE_CXX_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++",
         "_USE_DEFINED_CALL_": "true"
       },
       "condition": {

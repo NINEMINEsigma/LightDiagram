@@ -5,8 +5,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 17)
 # Enable C11
 set(C_STANDARD 11)
-#
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /permissive- /Zc /std:c++17 /Zc:__cplusplus") 
+if(DEFINED _WINDOWS OR DEFINED _LINUX_ON_WINDOWS)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /permissive- /std:c++17 /Zc:__cplusplus") 
+elseif(DEFINED _LINUX)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}") 
+endif()
 add_compile_definitions(UNICODE)
 
 message("PROJECT_BINARY_DIR = ${PROJECT_BINARY_DIR}")
@@ -54,7 +57,7 @@ if(DEFINED _LINUX OR DEFINED _LINUX_ON_WINDOWS)
 	include_directories ("${PROJECT_SOURCE_DIR}/WebServer")
 	add_subdirectory ("WebServer")
 endif()
-add_subdirectory("test")
+add_subdirectory("Test")
 
 set(CMAKE_INSTALL_PREFIX "${PROJECT_SOURCE_DIR}/out/")
 

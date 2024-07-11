@@ -261,7 +261,7 @@ namespace ld
 	}
 
 	ConsolePro::ConsolePro()
-		: Message(0), Warning(1), Error(2), FC(ConsoleColor::White), BC(ConsoleBackgroundColor::Black) {}
+		: Message(0), Warning(1), Error(2), FC(ConsoleColor::None), BC(ConsoleBackgroundColor::None) {}
 	ConsolePro::ConsolePro(const ConsolePro& from)
 		: Message(from.Message), Warning(from.Warning), Error(from.Error), FC(from.FC), BC(from.BC) {}
 	ConsolePro::~ConsolePro() {}
