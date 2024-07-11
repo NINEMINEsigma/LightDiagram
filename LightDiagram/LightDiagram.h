@@ -49,10 +49,10 @@
 #include<Core/Header/LF_Exception.h>
 //#include<Core/Header/LF_Container.h>
 
-_LF_C_API(Class) ld_test
+_LF_C_API(OClass) ld_test
 {
 public:
-	ld_test();
+	ld_test() {}
 };
 
 #include<Core/Header/LF_Architecture.h>

@@ -326,7 +326,7 @@ public:
 	{
 		invoker(std::move(args));
 	}
-	void Invoke() const
+	void Invoke()
 	{
 		invoker(std::move(args));
 	}
@@ -342,9 +342,58 @@ public:
 	{
 		invoker();
 	}
-	void Invoke() const
+	void Invoke()
 	{
 		invoker();
+	}
+};
+
+template<typename Func, typename ArgsPackage>
+_LF_C_API(TClass) release_closures final:protected std::shared_ptr<closures<Func, ArgsPackage>>
+{
+	bool is_invoke;
+public:
+	using tag = closures<Func,ArgsPackage>;
+	release_closures(std::function<Func> func, ArgsPackage&& args) :is_invoke(false), std::shared_ptr<closures<Func, ArgsPackage>>(new closures<Func, ArgsPackage>(func, std::move(args))) {}
+	release_closures(release_closures&& right) :is_invoke(right.is_invoke), std::shared_ptr<closures<Func, ArgsPackage>>(std::move(right)) { right.is_invoke = true; }
+	~release_closures()
+	{
+		if (!is_invoke)
+			this->Invoke();
+	}
+	void operator()()
+	{
+		(*this)->Invoke();
+		is_invoke = true;
+	}
+	void Invoke()
+	{
+		(*this)->Invoke();
+		is_invoke = true;
+	}
+};
+template<typename Func>
+_LF_C_API(TClass) release_closures<Func, void> final
+{
+	bool is_invoke;
+public:
+	using tag = closures<Func, void>;
+	release_closures(std::function<Func> func) :is_invoke(false), std::shared_ptr<closures<Func, void>>(new closures<Func, void>(func)) {}
+	release_closures(release_closures&& right) :is_invoke(right.is_invoke), std::shared_ptr<closures<Func, void>>(std::move(right)) { right.is_invoke = true; }
+	~release_closures()
+	{
+		if (!is_invoke)
+			this->Invoke();
+	}
+	void operator()()
+	{
+		(*this)->Invoke();
+		is_invoke = true;
+	}
+	void Invoke()
+	{
+		(*this)->Invoke();
+		is_invoke = true;
 	}
 };
 

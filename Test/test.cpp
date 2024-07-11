@@ -4,21 +4,16 @@
 #include "test.h"
 #include <../LLMToolkit/LLMToolkit.h>
 
-int add__(int a, int b)
-{
-	return a + b;
-}
-int mut__(int a, int b)
-{
-	return a * b;
-}
-
+using namespace ld;
+using namespace std;
 using llm::Spark::LLMSystem;
+
 std::atomic_bool finish_bool(false);
 
 int main()
 {
 	system("chcp 65001");
+	cin.imbue(std::locale(cin.getloc(), new std::codecvt_utf8<wchar_t, 0x10ffff, std::generate_header>));
 	cout << __cplusplus << endl;
 	console.LogMessage("-----env test--------");
 	ld_test test;
@@ -84,24 +79,18 @@ int main()
 		//wqes.clear();
 		qes.clear();
 		cout << "输入想要发送的问题(q to quit):    ";
-		//wchar_t ch;
-		//while ((ch=getchar())!='\n')
-		//{
-		//	wqes += ch;
-		//}
-		//qes = to_string(wqes);
-		char ch;
-		while ((ch = getchar()) != '\n')
-		{
-			qes += ch;
-		}
+		static char buffer[360];
+		cin.getline(buffer, 360);
+		qes = buffer;
+		memset(buffer, 0x00, sizeof(buffer));
 		if (qes == "q")break;
 		if (qes.size() < 1)
 		{
 			console.LogMessage("too short  ");
+			break;
 			continue;
 		}
-		else console.LogMessage(qes + "---send!");
+		else console.LogMessage(qes + "---send!  ");
 		finish_bool.store(false);
 		auto asyncEndCallback = ArchitectureInstance<arch>().GetSystem(typeid(LLMSystem))->AsDynamicPtr<LLMSystem>()->AsyncSend((qes), 1);
 		while (!finish_bool.load())
@@ -112,6 +101,6 @@ int main()
 	} while (true);
 	console.LogMessage("-----release all-----");
 	ArchitectureDestory<arch>();
-	cin.get();
+	std::cin.get();
 	return 0;
 }

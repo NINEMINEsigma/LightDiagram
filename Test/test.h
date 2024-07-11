@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include <LightDiagram.h>
 #include <../LLMToolkit/LLMToolkit.h>
 using namespace std;
@@ -15,7 +15,7 @@ public:
 	{
 		return [](IAnyArchitecture* r)
 			{
-				console.LogMessage(typeid(*r).name() + " is delete");
+				console.LogMessage(string(typeid(*r).name()) + " is delete");
 				delete r;
 			};
 	}
