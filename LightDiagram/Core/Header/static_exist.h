@@ -2,9 +2,7 @@
 
 #define __FILE_STATIC_EXIST
 
-#ifndef _LFramework_Config_
 #include<Core/Header/LF_Config.h>
-#endif
 
 #pragma region Exist (Static)
 
