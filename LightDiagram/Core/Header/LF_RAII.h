@@ -15,78 +15,68 @@ if_type_exist_def(counter_num_indicator);
 
 namespace ld
 {
-	_LF_C_API(OClass) instance_base : _LF_Inherited(any_class)
+	template<typename T> _LF_C_API(Class) instance;
+
+	template<> _LF_C_API(Class) instance<void> Symbol_Push _LF_Inherited(any_class)
 	{
 	private:
-		void* my_shared_ptr;
-		size_t* my_counter;
-		void* operator new(size_t t) = delete;
-		void operator delete(void* ptr) = delete;
-		void try_destroy()
+		size_t* instance_counter;
+	protected:
+		size_t* get_counter()const
 		{
-			if (*my_counter == 0)
+			return this->instance_counter;
+		}
+		size_t* set_counter(size_t * incounter)
+		{
+			size_t* result = this->instance_counter;
+			(*this->instance_counter)--;
+			this->instance_counter = incounter;
+			(*this->instance_counter)++;
+			return result;
+		}
+		size_t* set_counter(nullptr_t)
+		{
+			size_t* result = this->instance_counter;
+			(*this->instance_counter)--;
+			this->instance_counter = nullptr;
+			return result;
+		}
+		virtual void OnCounterEnter0_nologic() {}
+		void OnCounterEnter0()
+		{
+			if (this->instance_counter == 0)
 			{
-				delete my_counter;
-				delete my_shared_ptr;
+				this->OnCounterEnter0_nologic();
 			}
 		}
-		void sub_counter()
+		virtual void release_nocallback()
 		{
-			(*my_counter)--;
-		}
-		void add_counter()
-		{
-			(*my_counter)++;
-		}
-	protected:
-		void set_ptr(void* ptr,size_t* ctr)
-		{
-			this->my_shared_ptr = ptr;
-			sub_counter();
-			this->my_counter = ctr;
-			add_counter();
-		}
-		void* get_ptr() const
-		{
-			return this->my_shared_ptr;
+			this->set_counter(nullptr);
 		}
 	public:
-		instance_base(void * &ptr) :my_shared_ptr(ptr), my_counter(new size_t(1)) { ptr = nullptr; }
-		instance_base(void * &&ptr) :my_shared_ptr(std::move(ptr)), my_counter(new size_t(1)) { ptr = nullptr; }
-		instance_base(instance_base& from)noexcept :my_shared_ptr(from.my_shared_ptr), my_counter(from.my_counter) { (*my_counter)++; }
-		instance_base(instance_base&& from)noexcept :my_shared_ptr(from.my_shared_ptr) { from.my_shared_ptr = nullptr; }
-		virtual ~instance_base()
+		instance() :instance_counter(new size_t(1)) {}
+		instance(instance& from) noexcept:instance_counter(from.instance_counter)
 		{
-			sub_counter();
-			try_destroy();
+			this->instance_counter++;
 		}
-	};
-
-
-	static std::unordered_set <instance_base*> all_instance_base_set;
-
-	template<typename T>
-	_LF_C_API(TClass) instance : _LF_Inherited(instance_base)
-	{
-	private:
-		T* my_shared_ptr;
-		size_t* my_counter;
-		void* operator new(size_t t) = delete;
-		void operator delete(void* ptr) = delete;
-
-	public:
-		instance(T * &ptr) :my_shared_ptr(ptr), my_counter(new size_t(1)) { ptr = nullptr; }
-		instance(T * &&ptr) :my_shared_ptr(std::move(ptr)), my_counter(new size_t(1)) { ptr = nullptr; }
-		instance(instance & from)noexcept :my_shared_ptr(from.my_shared_ptr), my_counter(from.my_counter) { (*my_counter)++; }
-		instance(instance && from)noexcept :my_shared_ptr(from.my_shared_ptr) { from.my_shared_ptr = nullptr; }
+		instance(instance&& from) noexcept :instance_counter(from.instance_counter) {}
 		virtual ~instance()
 		{
-			(*my_counter)--;
-			if (*my_counter == 0)
+			if (*this->instance_counter == 1)
 			{
-				delete my_counter;
-				delete my_shared_ptr;
+				delete this->instance_counter;
+				return;
 			}
+			(*this->instance_counter)--;
+		}
+		size_t ref_count() const
+		{
+			return *this->instance_counter;
+		}
+		virtual void release()
+		{
+			this->release_nocallback();
+			this->OnCounterEnter0();
 		}
 	};
 }

@@ -109,6 +109,10 @@ int main()
 	} while (true);
 	console.LogMessage("-----release all-----");
 	ArchitectureDestory<arch>();
-	std::cin.get();
+#if defined(_WINDOW_)||defined(_LINUX_ON_WINDOW_)
+	Sleep(500);
+#else
+	sleep(500);
+#endif // 
 	return 0;
 }
