@@ -259,7 +259,8 @@ namespace ld
 		}
 		template<size_t index>
 		using result_of_type_list = 
-			typename choose_type < std::is_same_v<void, typename type_decltype<type_list_tag, index>::tag>, void*, typename type_decltype<type_list_tag, index>::tag>::tag;
+			typename choose_type < std::is_same_v<void, typename type_decltype<type_list_tag, index>::tag>, bad_indicator, 
+			typename type_decltype<type_list_tag, index>::tag>::tag;
 		instance(result_of_type_list<0> arg0) :base_type_tag(new baseclass_tag())
 		{
 			this->get_ptr()->operator[](0) = arg0;
@@ -284,16 +285,47 @@ namespace ld
 		}
 		instance(instance& from)noexcept :base_type_tag(from) {}
 		instance(instance&& from)noexcept :base_type_tag(std::move(from)) {}
+	private:
+		template<size_t delete_index> void delete_array_target()
+		{
+			if constexpr (delete_index < sizeof...(Args))
+			{
+				delete static_cast<result_of_type_list<delete_index>>(this->get_ptr()->operator[](delete_index));
+				delete_array_target<delete_index + 1>();
+			}
+		}
+	public:
 		virtual ~instance()
 		{
-
+			if (this->get_count() <= 1)
+			{
+				delete_array_target<0>();
+			}
 		}
+
+		template<typename TargetType> constexpr static int index_result_of_type_list = type_list_tag::is_type_list_contains<TargetType>(0);
 
 		template<size_t index>
 		result_of_type_list<index> get_value_ptr()
 		{
-			return reinterpret_cast<result_of_type_list<index>>(this->get_ptr()->operator[](index));
+			return static_cast<result_of_type_list<index>>(this->get_ptr()->operator[](index));
 		}
+		template<typename TargetType>
+		auto get_value_ptr()
+		{
+			return get_value_ptr<index_result_of_type_list<TargetType>>();
+		}
+		template<size_t index>
+		void set_value_ptr(const result_of_type_list<index>& ptr)
+		{
+			this->get_ptr()->operator[](index) = ptr;
+		}
+		template<typename TargetType>
+		void get_value_ptr(const decltype(get_value_ptr<index_result_of_type_list<TargetType>>())& ptr)
+		{
+			set_value_ptr<index_result_of_type_list<TargetType>>(ptr);
+		}
+
 
 		void swap(my_type_tag& from)noexcept
 		{
@@ -301,15 +333,36 @@ namespace ld
 		}
 		void swap(my_type_tag&& from)noexcept
 		{
+			if (this->get_count() <= 1)
+			{
+				for (size_t i = 0; i < sizeof...(Args); i++)
+				{
+					delete this->get_ptr()->operator[](i);
+				}
+			}
 			base_type_tag::swap(std::move(from));
 		}
 		my_type_tag& operator=(my_type_tag& from) noexcept
 		{
+			if (this->get_count() <= 1)
+			{
+				for (size_t i = 0; i < sizeof...(Args); i++)
+				{
+					delete this->get_ptr()->operator[](i);
+				}
+			}
 			base_type_tag::operator=(from);
 			return *this;
 		}
 		my_type_tag& operator=(my_type_tag&& from) noexcept
 		{
+			if (this->get_count() <= 1)
+			{
+				for (size_t i = 0; i < sizeof...(Args); i++)
+				{
+					delete this->get_ptr()->operator[](i);
+				}
+			}
 			base_type_tag::operator=(std::move(from));
 			return *this;
 		}

@@ -34,7 +34,7 @@ int xxxx()
 {
 	system("chcp 65001");
 	instance<type_list<inter*, void*>> i(new inter(95), nullptr);
-	cout << "value: " << *i.get_value_ptr<0>() << "\n";
+	cout << "value: " << *i.get_value_ptr<inter*>() << "\n";
 	return 0;
 }
 
