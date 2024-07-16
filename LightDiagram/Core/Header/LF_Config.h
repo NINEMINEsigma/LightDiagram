@@ -1403,6 +1403,33 @@ namespace ld
 
 #pragma endregion
 
+#pragma region TempRef
+
+template<typename Type, Type Index> _LF_C_API(Class) ConstexprMode
+{
+public:
+	virtual ~ConstexprMode() {}
+	using tag = Type;
+	constexpr static Type value = Index;
+	constexpr operator Type()
+	{
+		return value;
+	}
+};
+
+template<typename Type, size_t Slot> _LF_C_API(Class) SlotMode
+{
+public:
+	using tag = Type;
+	constexpr static size_t value = Slot;
+};
+
+template<size_t size>
+using ConstexprCount = ConstexprMode<size_t, size>;
+
+#pragma endregion
+
+
 #pragma endregion
 
 #pragma region SAL
