@@ -28,7 +28,7 @@ namespace ld
 		{
 			return this->instance_counter;
 		}
-		size_t* set_counter(size_t *& incounter)
+		size_t* set_counter(size_t * incounter)
 		{
 			size_t* result = this->instance_counter;
 			if (result)
@@ -39,20 +39,13 @@ namespace ld
 			(*this->instance_counter)++;
 			return result;
 		}
-		size_t* set_counter(size_t*&& incounter)
-		{
-			size_t* result = this->instance_counter;
-			if (result)
-			{
-				(*this->instance_counter)--;
-			}
-			this->instance_counter = incounter;
-			return result;
-		}
 		size_t* set_counter(nullptr_t)
 		{
 			size_t* result = this->instance_counter;
-			(*this->instance_counter)--;
+			if (this->instance_counter)
+			{
+				(*this->instance_counter)--;
+			}
 			this->instance_counter = nullptr;
 			return result;
 		}
@@ -63,8 +56,8 @@ namespace ld
 			if (*this->instance_counter == 0)
 			{
 				delete this->instance_counter;
-				this->instance_counter = nullptr;
 			}
+			this->instance_counter = nullptr;
 		}
 	public:
 		void release()
@@ -77,7 +70,10 @@ namespace ld
 		{
 			(*this->instance_counter)++;
 		}
-		instance(instance&& from) noexcept :instance_counter(from.instance_counter) { from.instance_counter = nullptr; }
+		instance(instance&& from) noexcept :instance_counter(from.instance_counter) 
+		{
+			from.instance_counter = nullptr;
+		}
 		virtual ~instance()
 		{
 			if (this->instance_counter)
@@ -90,14 +86,18 @@ namespace ld
 		void swap(instance<void>&from)
 		{
 			size_t* tempcat = this->instance_counter;
-			this->set_counter(from.instance_counter);
-			from.set_counter(tempcat);
+			this->instance_counter = from.instance_counter;
+			from.instance_counter = tempcat;
 		}
-		void swap(instance<void> && from)
+		void swap(instance<void>&& from)
 		{
-			size_t* tempcat = this->instance_counter;
-			this->set_counter(from.instance_counter);
-			from.set_counter(tempcat);
+			size_t* cat = this->instance_counter;
+			this->instance_counter = from.instance_counter;
+			if (cat && *cat == 1)
+			{
+				delete cat;
+			}
+			from.instance_counter = nullptr;
 		}
 		instance<void>& operator=(instance<void>&from) noexcept
 		{
@@ -110,12 +110,7 @@ namespace ld
 		}
 		instance<void>& operator=(instance<void>&& from) noexcept
 		{
-			size_t* cat = this->set_counter(std::move(from.instance_counter));
-			if (cat && *cat == 0)
-			{
-				delete cat;
-			}
-			from.instance_counter = nullptr;
+			this->swap(std::move(from));
 			return  *this;
 		}
 		bool operator==(const instance<void>&from) const noexcept
@@ -131,7 +126,7 @@ namespace ld
 	using instance_base = instance<void>;
 
 	// Referance Counter(has function <get_ptr> and <get_ref>)
-	template<> _LF_C_API(Class) instance<nullptr_t> Symbol_Push _LF_Inherited(instance<void>)
+	template<> _LF_C_API(Class) instance<nullptr_t>: public instance<void>
 	{
 	public:
 		using tag = nullptr_t;
@@ -171,78 +166,156 @@ namespace ld
 	using instance_counter = instance<nullptr_t>;
 
 	//main instance type to be a shared ptr
-	template<typename Tag> _LF_C_API(TClass) instance final: public instance<void>
+	template<typename Tag> _LF_C_API(TClass) instance : public instance<void>
 	{
-		Tag* instance_ptr;
-	protected:
-#pragma region instance_ptr Property
-		Tag* get_ptr()const
-		{
-			return this->instance_ptr;
-		}
-		Tag* set_ptr(Tag * inptr)
-		{
-			Tag* result = this->instance_ptr;
-			this->instance_ptr = inptr;
-			return result;
-		}
-#pragma endregion
+		Tag * instance_ptr;
 	public:
-		instance(Tag * ptr) :instance_ptr(ptr), instance<void>() {}
-		//instance() :instance<Tag>(nullptr) {}
-		instance(instance & from) noexcept :instance_ptr(from.instance_ptr), instance<void>(from) { }
-		instance(instance && from) noexcept : instance_ptr(from.instance_ptr), instance<void>(std::move(from)) {}
+		instance(Tag* ptr) :instance_ptr(ptr), instance<void>() {}
+		instance(instance& from) noexcept:instance_ptr(from.instance_ptr), instance<void>(from) {}
+		instance(instance&& from) noexcept:instance_ptr(from.instance_ptr), instance<void>(std::move(from))
+		{
+			from.instance_ptr = nullptr;
+		}
 		virtual ~instance()
 		{
 			if (this->get_count() <= 1)
 			{
-				delete this->instance_ptr;
+				delete instance_ptr;
 			}
 		}
-
-		Tag* get_ptr() noexcept
+		Tag* get_ptr() const noexcept
 		{
 			return instance_ptr;
 		}
-		instance<Tag>& operator=(instance<Tag>&from) noexcept
+		void swap(instance<Tag>& from)noexcept
 		{
-			if (this->get_count() <= 1) 
-			{
-				delete this->instance_ptr;
-				this->instance_ptr = nullptr;
-			}
-			this->set_ptr(from.instance_ptr);
-			instance<void>::operator=(from);
-			return *this;
+			instance<void>::swap(from);
+			Tag* cat = this->instance_ptr;
+			this->instance_ptr = from.instance_ptr;
+			from.instance_ptr = cat;
 		}
-		instance<Tag>& operator=(instance<Tag> && from) noexcept
+		void swap(instance<Tag>&& from)noexcept
+		{
+			instance<void>::swap(std::move(from));
+			this->instance_ptr = from.instance_ptr;
+			from.instance_ptr = nullptr;
+		}
+		instance<Tag>& operator=(instance<Tag>& from) noexcept
 		{
 			if (this->get_count() <= 1)
 			{
 				delete this->instance_ptr;
-				this->instance_ptr = nullptr;
 			}
-			this->set_ptr(std::move(from.instance_ptr));
-			from.set_ptr(nullptr);
+			instance<void>::operator=(from);
+			this->instance_ptr = from.instance_ptr;
+			return *this;
+		}
+		instance<Tag>& operator=(instance<Tag>&& from) noexcept
+		{
+			if (this->get_count() <= 1)
+			{
+				delete this->instance_ptr;
+			}
 			instance<void>::operator=(std::move(from));
+			this->instance_ptr = from.instance_ptr;
+			from.instance_ptr = nullptr;
+			return *this;
+		}
+		instance<Tag>& operator=(Tag*&& from) noexcept
+		{
+			if (this->get_count() <= 1)
+			{
+				delete this->instance_ptr;
+			}
+			instance<void>::release();
+			this->instance_ptr = from;
 			return *this;
 		}
 		bool operator==(const instance<Tag>& from) const noexcept
 		{
 			return instance<void>::operator==(from);
 		}
-		void swap(instance<Tag>& from)noexcept
+		bool operator==(nullptr_t) const noexcept
 		{
-			instance<void>::swap(from);
-			Tag* tempptr = this->instance_ptr;
-			this->set_ptr(from.instance_ptr);
-			from.set_ptr(tempptr);
+			return this->instance_ptr == nullptr;
 		}
-		void swap(instance<Tag>&& from)noexcept
+	};
+
+	template<typename... Args> using type_list_instance_baseclass = std::array<void*, sizeof...(Args)>;
+	// long arguments package, and need all value is ptr
+	template<typename... Args> _LF_C_API(TClass) instance<type_list<Args...>>  : public instance<type_list_instance_baseclass<Args...>>
+	{
+	public:
+		using type_list_tag = type_list<Args...>;
+		using baseclass_tag = type_list_instance_baseclass<Args...>;
+		using my_type_tag = instance;
+		using base_type_tag = instance<type_list_instance_baseclass<Args...>>;
+		instance(void* args[sizeof...(Args)]) :base_type_tag(new baseclass_tag())
 		{
-			this->set_ptr(std::move(from.instance_ptr));
-			from.instance_ptr = nullptr;
-			instance<void>::swap(std::move(from));
+			for (size_t i = 0; i < sizeof...(Args); i++)
+			{
+				this->get_ptr()->operator[](i) = args[i];
+			}
+		}
+		template<size_t index>
+		using result_of_type_list = 
+			typename choose_type < std::is_same_v<void, typename type_decltype<type_list_tag, index>::tag>, void*, typename type_decltype<type_list_tag, index>::tag>::tag;
+		instance(result_of_type_list<0> arg0) :base_type_tag(new baseclass_tag())
+		{
+			this->get_ptr()->operator[](0) = arg0;
+		}
+		instance(result_of_type_list<0> arg0, result_of_type_list<1> arg1) :base_type_tag(new baseclass_tag())
+		{
+			this->get_ptr()->operator[](0) = arg0;
+			this->get_ptr()->operator[](1) = arg1;
+		}
+		instance(result_of_type_list<0> arg0, result_of_type_list<1> arg1, result_of_type_list<2> arg2) :base_type_tag(new baseclass_tag())
+		{
+			this->get_ptr()->operator[](0) = arg0;
+			this->get_ptr()->operator[](1) = arg1;
+			this->get_ptr()->operator[](2) = arg2;
+		}
+		instance(result_of_type_list<0> arg0, result_of_type_list<1> arg1, result_of_type_list<2> arg2, result_of_type_list<3> arg3) :base_type_tag(new baseclass_tag())
+		{
+			this->get_ptr()->operator[](0) = arg0;
+			this->get_ptr()->operator[](1) = arg1;
+			this->get_ptr()->operator[](2) = arg2;
+			this->get_ptr()->operator[](3) = arg3;
+		}
+		instance(instance& from)noexcept :base_type_tag(from) {}
+		instance(instance&& from)noexcept :base_type_tag(std::move(from)) {}
+		virtual ~instance()
+		{
+
+		}
+
+		template<size_t index>
+		result_of_type_list<index> get_value_ptr()
+		{
+			return reinterpret_cast<result_of_type_list<index>>(this->get_ptr()->operator[](index));
+		}
+
+		void swap(my_type_tag& from)noexcept
+		{
+			base_type_tag::swap(from);
+		}
+		void swap(my_type_tag&& from)noexcept
+		{
+			base_type_tag::swap(std::move(from));
+		}
+		my_type_tag& operator=(my_type_tag& from) noexcept
+		{
+			base_type_tag::operator=(from);
+			return *this;
+		}
+		my_type_tag& operator=(my_type_tag&& from) noexcept
+		{
+			base_type_tag::operator=(std::move(from));
+			return *this;
+		}
+		bool operator==(const my_type_tag& from) const noexcept
+		{
+			return base_type_tag::operator==(from);
 		}
 	};
 
@@ -250,7 +323,7 @@ namespace ld
 	template<size_t Max> _LF_C_API(Class) instance<ConstexprCount<Max>> Symbol_Push _LF_Inherited(instance<nullptr_t>)
 	{
 	private:
-		void CheckStatus() const throw(LDException)
+		void CheckStatus() const
 		{
 			if (this->get_count() >= Max)
 				throw ld::LDException("over count");
@@ -277,9 +350,10 @@ namespace ld
 			instance<nullptr_t>::operator=(std::move(from));
 			return *this;
 		}
-		bool operator==(const instance<ConstexprCount<Max>>&from) const noexcept
+		template<size_t OtherMax>
+		constexpr bool operator==(const instance<ConstexprCount<OtherMax>>&from) const noexcept
 		{
-			return instance<nullptr_t>::operator==(from);
+			return Max == OtherMax;
 		}
 	};
 

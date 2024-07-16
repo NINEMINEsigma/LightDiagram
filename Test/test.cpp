@@ -33,18 +33,13 @@ void tlog(instance<inter> i)
 int xxxx()
 {
 	system("chcp 65001");
-	instance<inter> i(new inter(95));
-	tlog(i);
-	cout << "count: " << i.get_count() << " address: " << &i << " ptr: " << i.get_ptr() << " value: " << *i.get_ptr() << "\n";
-	tlog(std::move(i));
-	i = new inter(80);
-	cout << "count: " << i.get_count() << " address: " << &i << " ptr: " << i.get_ptr() << " value: " << *i.get_ptr() << "\n";
-	tlog(i);
-	cout << "count: " << i.get_count() << " address: " << &i << " ptr: " << i.get_ptr() << " value: " << *i.get_ptr() << "\n";
+	instance<type_list<inter*, void*>> i(new inter(95), nullptr);
+	cout << "value: " << *i.get_value_ptr<0>() << "\n";
 	return 0;
 }
 
 int main()
 {
 	xxxx();
+	instance<inter> i(new inter(1));
 }

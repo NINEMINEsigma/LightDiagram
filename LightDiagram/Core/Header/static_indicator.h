@@ -15,7 +15,16 @@ _LF_C_API(OStruct) name##_indicator																	\
 template< typename indicator>																		\
 constexpr bool is_##name##_indicator_v = std::is_same_v<indicator, name##_indicator>
 
-_LFramework_Indicator_Def(bad, void, false);
+struct bad_indicator 
+{
+	operator void* () const noexcept
+	{
+		return nullptr;
+	}
+	using tag = void; 
+	constexpr static bool value = false;
+}; 
+template< typename indicator> constexpr bool is_bad_indicator_v = std::is_same_v<indicator, bad_indicator>;
 _LFramework_Indicator_Def(empty, void, false);
 _LFramework_Indicator_Def(void, void, false);
 _LFramework_Indicator_Def(unknown, void, false);
