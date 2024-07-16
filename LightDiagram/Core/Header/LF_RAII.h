@@ -13,6 +13,10 @@ if_type_exist_def(owner_indicator);
 if_type_exist_def(counter_indicator);
 if_type_exist_def(counter_num_indicator);
 
+//*
+//	On this page, each <set>function returns the old value before the change if it returns
+//*
+
 namespace ld
 {
 	template<typename T> _LF_C_API(Class) instance;
@@ -122,7 +126,7 @@ namespace ld
 			return this->instance_counter == from.instance_counter;
 		}
 	};
-
+	// Base referance counter
 	using instance_base = instance<void>;
 
 	// Referance Counter(has function <get_ptr> and <get_ref>)
@@ -162,7 +166,7 @@ namespace ld
 			return instance<void>::operator==(from);
 		}
 	};
-
+	// Base referance counter(has some function)
 	using instance_counter = instance<nullptr_t>;
 
 	//main instance type to be a shared ptr
@@ -371,8 +375,12 @@ namespace ld
 			return base_type_tag::operator==(from);
 		}
 	};
+	// pseudo class, all argument type add pointer to ptr-type
+	template<typename... Args> using instance_pseudo_class = instance<type_list<std::add_pointer_t<Args>...>>;
+	// long arguments package, and need all value is ptr
+	template<typename... Args> using instance_args_package = instance<type_list<Args...>>;
 
-	//limited-ref-count shared ptr
+	// limited-ref-count shared ptr
 	template<size_t Max> _LF_C_API(Class) instance<ConstexprCount<Max>> Symbol_Push _LF_Inherited(instance<nullptr_t>)
 	{
 	private:
@@ -396,6 +404,7 @@ namespace ld
 		instance<Tag>& operator=(instance<Tag>&from) noexcept
 		{
 			instance<nullptr_t>::operator=(from);
+			CheckStatus();
 			return *this;
 		}
 		instance<Tag>& operator=(instance<Tag> && from) noexcept
@@ -409,56 +418,74 @@ namespace ld
 			return Max == OtherMax;
 		}
 	};
-
+	// limited-ref-count shared ptr, throw bad when over count
 	template<size_t Max> using instance_limit = instance<ConstexprCount<Max>>;
-	/*
-	template<typename Tag, size_t SlotID> _LF_C_API(Class) instance<SlotMode<Tag, SlotID>> Symbol_Push _LF_Inherited(any_class)
+	
+	// memeory alloc buffer, for temp or long time
+	// bug warning, the delete-constructor is not triggered
+	template<size_t BufferSize, size_t SlotID> _LF_C_API(Class) instance<long_tag_indicator<long_tag_indicator<void, BufferSize>, SlotID>>
 	{
-		static instance* hoster;
-		static Tag* single_ptr;
+		static void* buffer_ptr;
+		static void* lock_ptr;
 	public:
-		instance(Tag * ptr)
+		constexpr static size_t capacity = BufferSize;
+		constexpr static size_t uid = SlotID;
+		instance(void* source, size_t length)
 		{
-			delete instance::single_ptr;
-			instance::single_ptr = ptr;
-			instance::hoster = this;
+			static_assert(length <= instance::capacity, "The capacity is not sufficient to accommodate the target object");
+			if (instance::lock_ptr == nullptr)
+			{
+				instance::buffer_ptr = malloc(instance::capacity);
+			}
+			else
+			{
+				::memset(instance::buffer_ptr, 0x00, instance::capacity);
+			}
+			instance::lock_ptr = this;
+			::memmove(instance::buffer_ptr, source, length);
+		}
+		template<typename TargetType>
+		instance(TargetType* source) :instance(source, sizeof(TargetType)) {}
+		instance(nullptr_t)
+		{
+			if (instance::lock_ptr != nullptr)
+			{
+				delete instance::buffer_ptr;
+				instance::buffer_ptr = nullptr;
+			}
+			instance::lock_ptr = this;
 		}
 		instance() {}
-		instance(instance && from) noexcept
-		{
-			if (instance::hoster == &from)
-				instance::hoster = this;
-		}
 		virtual ~instance()
 		{
-			if (this == instance::hoster)
-				delete instance::single_ptr;
+			if (instance::lock_ptr == this)
+			{
+				delete instance::buffer_ptr;
+				instance::buffer_ptr = nullptr;
+				instance::lock_ptr = nullptr;
+			}
 		}
 
-		Tag* ref_ptr() noexcept
+		static void* get_ptr();
+		template<typename TargetType> TargetType& like()
 		{
-			return instance::single_ptr;
-		}
-		Tag& ref_ins() noexcept
-		{
-			return *instance::single_ptr;
-		}
-		instance<Tag>& operator=(instance<Tag> && from)  noexcept
-		{
-			if (instance::hoster == &from)
-				instance::hoster = this;
-			return *this;
-		}
-		template<typename AnyTag, size_t AnyID>
-		constexpr bool operator==(const instance<SlotMode<AnyTag, AnyID>>&from) const noexcept
-		{
-			return std:; is_same_v<AnyTag, Tag>&& AnyID == SlotID;
+			if (instance::lock_ptr == this && instance::buffer_ptr == nullptr)
+			{
+				instance::buffer_ptr = malloc(instance::capacity);
+				//new(buffer_ptr) TargetType();
+			}
+			return *static_cast<TargetType*>(instance::buffer_ptr);
 		}
 	};
+	// memeory alloc buffer, for temp or long time
+	template<size_t BufferSize, size_t SlotID> using instance_memory_buffer = instance<long_tag_indicator<long_tag_indicator<void, BufferSize>, SlotID>>;
+	template<size_t BufferSize, size_t SlotID> void* instance<long_tag_indicator<long_tag_indicator<void, BufferSize>, SlotID>>::get_ptr()
+	{
+		return instance::buffer_ptr;
+	}
+	template<size_t BufferSize, size_t SlotID> void* instance<long_tag_indicator<long_tag_indicator<void, BufferSize>, SlotID>>::buffer_ptr = nullptr;
+	template<size_t BufferSize, size_t SlotID> void* instance<long_tag_indicator<long_tag_indicator<void, BufferSize>, SlotID>>::lock_ptr = nullptr;
 
-	template<typename Tag, size_t SlotID> Tag* instance<SlotMode<Tag, SlotID>>::single_ptr = nullptr;
-	template<typename Tag, size_t SlotID> instance<SlotMode<Tag, SlotID>>* instance<SlotMode<Tag, SlotID>>::hoster = nullptr;
-	template<typename Tag, size_t SlotID>  using instance_static = instance<SlotMode<Tag, SlotID>>;*/
 }
 
 #endif // !__FILE_LF_RAII

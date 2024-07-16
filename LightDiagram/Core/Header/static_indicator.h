@@ -185,4 +185,15 @@ template<typename type_list_type, bool _IsF = true> const string_indicator::tag&
 
 #pragma endregion
 
+#pragma region long_tag_indicator
+
+template<typename FullTagType,size_t UID>
+_LF_C_API(TClass) long_tag_indicator
+{
+	using tag = FullTagType;
+	constexpr static size_t value = UID;
+};
+
+#pragma endregion
+
 #endif // !__FILE_STATIC_INDICATOR

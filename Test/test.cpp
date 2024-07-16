@@ -8,7 +8,7 @@ using llm::Spark::LLMSystem;
 
 std::atomic_bool finish_bool(false);
 
-struct inter
+struct inter :_LF_Inherited(any_class)
 {
 	inter(int v) :value(v)
 	{
@@ -30,16 +30,22 @@ void tlog(instance<inter> i)
 	cout << "count: " << i.get_count() << " address: " << &i << " ptr: " << i.get_ptr() << " value: " << *i.get_ptr() << "\n";
 }
 
-int xxxx()
+void xxxx()
 {
-	system("chcp 65001");
-	instance<type_list<inter*, void*>> i(new inter(95), nullptr);
-	cout << "value: " << *i.get_value_ptr<inter*>() << "\n";
-	return 0;
+	instance_memory_buffer<sizeof(inter), 0> temp;
+	cout << temp.like<inter>().value << "\n";
+	temp.like<inter>().value = 1999;
 }
 
 int main()
 {
+	system("chcp 65001");
+	instance_memory_buffer<sizeof(inter), 0> temp(nullptr);
+	temp.like<inter>().value = 95;
+	fvar_info finfo = make_field_info(inter, value);
+	cout << temp.like<inter>().value << "\n";
+	finfo.set_rv(&temp.like<inter>(), 2024);
+	cout << temp.like<inter>().value << "\n";
 	xxxx();
-	instance<inter> i(new inter(1));
+	cout << temp.like<inter>().value << "\n";
 }
