@@ -197,6 +197,7 @@ namespace ld
 		{
 			if (*is_release)return;
 			(*clog) << "<break>" << message << "<!exception is not catch>" << std::endl;
+#ifdef _DEBUG
 			if (is_log_message_to_cout)
 			{
 				std::cout
@@ -204,6 +205,7 @@ namespace ld
 					<< message
 					<< ConsoleColor::None << std::endl;
 			}
+#endif // _DEBUG
 		}
 		else
 		{
@@ -217,6 +219,7 @@ namespace ld
 		{
 			*is_release = true;
 			(*clog) << "<catch>" << message << "L<!exception is catch>" << std::endl;
+#ifdef _DEBUG
 			if (is_log_message_to_cout)
 			{
 				std::cout
@@ -224,6 +227,7 @@ namespace ld
 					<< message
 					<< ConsoleColor::None << std::endl;
 			}
+#endif // _DEBUG
 		}
 	}
 
