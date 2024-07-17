@@ -610,4 +610,33 @@ LDType_Traits
 
 #pragma endregion
 
+#pragma region extension_func_traits
+
+template<typename FullType>struct extension_func_traits
+{
+	using tag = bad_indicator(FullType);
+	constexpr static bool value = false;
+};
+
+template<typename ThisType, typename ResultType, typename... Args>
+struct extension_func_traits<type_list<ThisType,ResultType(Args...)>>
+{
+	using tag = ResultType(ThisType, Args...);
+	constexpr static bool value = true;
+};
+template<typename ThisType, typename ResultType,class Belong, typename... Args>
+struct extension_func_traits<type_list<ThisType, ResultType(Belong::*)(Args...)>>
+{
+	using tag = ResultType(Belong::*)(ThisType, Args...);
+	constexpr static bool value = true;
+};
+template<typename ThisType, typename ResultType, class Belong, typename... Args>
+struct extension_func_traits<type_list<ThisType, ResultType(Belong::*)(Args...) const>>
+{
+	using tag = ResultType(Belong::*)(ThisType, Args...) const;
+	constexpr static bool value = true;
+};
+
+#pragma endregion
+
 #endif // !__FILE_STATIC_TRAITS

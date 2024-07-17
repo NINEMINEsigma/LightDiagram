@@ -255,7 +255,8 @@ public:
 			current_value = 0;
 		}
 	}
-	class_component_indicatior(const tag& first) :current_value(first) {}
+	template<typename LvTag>
+	class_component_indicatior(LvTag&& first) :current_value(first) {}
 };
 template<typename _First, typename... Args> _LF_C_API(TClass) class_component_indicatior<_First,Args...> Symbol_Endl
 {
@@ -303,7 +304,8 @@ public:
 			current_value = 0;
 		}
 	}
-	class_component_indicatior(const tag & first, const Args&... args) :current_value(first), next_container(args...) {}
+	template<typename LvTag,typename... LvArgs>
+	class_component_indicatior(LvTag&& first, LvArgs&&... args) :current_value(first), next_container(args...) {}
 };
 
 #pragma endregion

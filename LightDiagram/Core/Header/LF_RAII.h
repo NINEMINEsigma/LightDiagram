@@ -644,17 +644,35 @@ namespace ld
 		using module_list = type_list<Modules...>;
 		using func_list = type_list<Functions...>;
 		using field_list = type_list<Fields...>;
-	private:
-		template<typename FuncExtension> using extension_func = typename function_info<FuncExtension>::trait::extension_func;
-		using func_container = class_component_indicatior<const extension_func<Functions>&...>;
+	public:
+		using func_container = class_component_indicatior<std::function<typename extension_func_traits<type_list<instance*, Functions>>::tag>...>;
 		using field_container = class_component_indicatior<Fields...>;
 	public:
 		func_container _m_funcs;
 		field_container _m_fields;
-		template<class... _FuncArgs> instance(const _FuncArgs&... _funcs_args) :_m_funcs(_funcs_args...), _m_fields() {}
+		instance(std::function<typename extension_func_traits<type_list<instance*, Functions>>::tag>... _funcs_args) : _m_funcs(_funcs_args...), _m_fields() {}
 		instance(instance&) = delete;
 		instance(instance&&) = delete;
 		virtual ~instance() {}
+
+		template<size_t index, typename... Args>// decltype(std::declval<instance>()._m_funcs.get_value<index>()(nullptr)) 
+		auto&& invoke(Args&&... args)
+		{
+			if constexpr (std::is_same_v<void, decltype(this->_m_funcs.get_value<index>().operator()(this, args...))>)
+				this->_m_funcs.get_value<index>().operator()(this, args...);
+			else
+				return this->_m_funcs.get_value<index>().operator()(this, args...);
+		}
+		template<size_t index>
+		auto& get_value()
+		{
+			return this->_m_fields.get_value<index>();
+		}
+		template<size_t index,typename _T>
+		void set_value(_T&& right)
+		{
+			 this->_m_fields.set_value<index>(std::forward<_T>(right));
+		}
 	};
 	template<typename ModulesList, typename FunctionsList, typename FieldsList > using meta_instance = instance<type_list<class_indicator, ModulesList, FunctionsList, FieldsList>>;
 }
