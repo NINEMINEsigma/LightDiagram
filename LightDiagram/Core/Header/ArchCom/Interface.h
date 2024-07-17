@@ -292,7 +292,7 @@ namespace ld
         static IArchitecture** ToolGetArchitecture(const type_info& type);
     };
 
-    IArchitecture* _LF_C_API(DLL) ArchitectureInstance(const type_info& type, _In_ IArchitecture* ptr);
+    IArchitecture* _LF_C_API(DLL) ArchitectureInstance(const type_info& type, IArchitecture* ptr);
     IArchitecture* _LF_C_API(DLL) ArchitectureInstance(const type_info& type);
     void _LF_C_API(DLL)  ArchitectureDestory(const type_info& type);
 }

@@ -169,14 +169,14 @@ namespace ld
 	// Base referance counter(has some function)
 	using instance_counter = instance<nullptr_t>;
 
-	//main instance type to be a shared ptr
+	//main instance template type to be a shared ptr
 	template<typename Tag> _LF_C_API(TClass) instance : public instance<void>
 	{
 		Tag * instance_ptr;
 	public:
 		instance(Tag* ptr) :instance_ptr(ptr), instance<void>() {}
-		instance(instance& from) noexcept:instance_ptr(from.instance_ptr), instance<void>(from) {}
-		instance(instance&& from) noexcept:instance_ptr(from.instance_ptr), instance<void>(std::move(from))
+		instance(instance& from) noexcept :instance_ptr(from.instance_ptr), instance<void>(from) {}
+		instance(instance&& from) noexcept :instance_ptr(from.instance_ptr), instance<void>(std::move(from))
 		{
 			from.instance_ptr = nullptr;
 		}
@@ -242,6 +242,81 @@ namespace ld
 		bool operator==(nullptr_t) const noexcept
 		{
 			return this->instance_ptr == nullptr;
+		}
+
+		//reboxing operator
+		//warning: delete-constructor may not be called correctly
+		template<typename OtherTag>
+		bool reboxing(instance<OtherTag>& right)
+		{
+			if constexpr (std::is_base_of_v<Tag, OtherTag>)
+			{
+				if (this->get_count() <= 1)
+				{
+					delete this->instance_ptr;
+				}
+				instance<void>::operator=(from);
+				this->instance_ptr = right.get_ptr();
+				return true;
+			}
+			else if constexpr (std::is_base_of_v<OtherTag, Tag>)
+			{
+				if (dynamic_cast<OtherTag*>(right.get_ptr()) == nullptr)return false;
+				if (this->get_count() <= 1)
+				{
+					delete this->instance_ptr;
+				}
+				instance<void>::operator=(from);
+				this->instance_ptr = dynamic_cast<OtherTag*>(right.get_ptr());
+				return true;
+			}
+			else return false;
+		}
+		//reboxing operator
+		//warning: delete-constructor may not be called correctly
+		template<typename OtherTag>
+		bool reboxing(instance<OtherTag>&& right)
+		{
+			if constexpr (std::is_base_of_v<Tag, OtherTag>)
+			{
+				if (this->get_count() <= 1)
+				{
+					delete this->instance_ptr;
+				}
+				instance<void>::operator=(std::move(from));
+				this->instance_ptr = right.get_ptr();
+				return true;
+			}
+			else if constexpr (std::is_base_of_v<OtherTag, Tag>)
+			{
+				if (dynamic_cast<OtherTag*>(right.get_ptr()) == nullptr)return false;
+				if (this->get_count() <= 1)
+				{
+					delete this->instance_ptr;
+				}
+				instance<void>::operator=(std::move(from));
+				this->instance_ptr = dynamic_cast<OtherTag*>(right.get_ptr());
+				return true;
+			}
+			else return false;
+		}
+		//reboxing operator
+		//warning: delete-constructor may not be called correctly
+		//return right
+		template<typename OtherTag>
+		instance<OtherTag>& operator<<(instance<OtherTag>& right)
+		{
+			this->reboxing(right);
+			return right;
+		}
+		//reboxing operator
+		//warning: delete-constructor may not be called correctly
+		//return itself
+		template<typename OtherTag>
+		instance& operator<<(instance<OtherTag>&& right)
+		{
+			this->reboxing(std::move(right));
+			return *this;
 		}
 	};
 
@@ -422,70 +497,143 @@ namespace ld
 	template<size_t Max> using instance_limit = instance<ConstexprCount<Max>>;
 	
 	// memeory alloc buffer, for temp or long time
-	// bug warning, the delete-constructor is not triggered
-	template<size_t BufferSize, size_t SlotID> _LF_C_API(Class) instance<long_tag_indicator<long_tag_indicator<void, BufferSize>, SlotID>>
+	// bug warning, the delete-constructor is not triggered on this type's delete-constructor
+	// and buffer capacity is BufferSize+1 !!!
+	template<size_t BufferSize, size_t SlotID> _LF_C_API(Class) instance<long_tag_indicator<long_tag_indicator<void_indicator, BufferSize>, SlotID>> Symbol_Endl
 	{
 		static void* buffer_ptr;
 		static void* lock_ptr;
 	public:
-		constexpr static size_t capacity = BufferSize;
+		constexpr static size_t capacity = BufferSize + 1;
 		constexpr static size_t uid = SlotID;
-		instance(void* source, size_t length)
+		using args_package_indicator = long_tag_indicator<long_tag_indicator<void_indicator, BufferSize>, SlotID>;
+		//generate buffer, it will alloc memory or clear old buffer
+		bool create()
 		{
-			static_assert(length <= instance::capacity, "The capacity is not sufficient to accommodate the target object");
 			if (instance::lock_ptr == nullptr)
 			{
 				instance::buffer_ptr = malloc(instance::capacity);
+				instance::lock_ptr = this;
 			}
-			else
+			else if (instance::lock_ptr == this)
 			{
 				::memset(instance::buffer_ptr, 0x00, instance::capacity);
 			}
-			instance::lock_ptr = this;
-			::memmove(instance::buffer_ptr, source, length);
+			else return false;
+			return true;
 		}
-		template<typename TargetType>
-		instance(TargetType* source) :instance(source, sizeof(TargetType)) {}
+		//generate buffer and copy from source
+		instance(void_indicator, void* source, size_t length)
+		{
+			if (length <= instance::capacity)
+			{
+				if (create() && source)
+					::memmove(&static_cast<char*>(instance::buffer_ptr)[1], source, length + 1);
+			}
+			else
+			{
+				throw ld::LDException("The capacity is not sufficient to accommodate the target object");
+			}
+		}
+		//generate buffer but not create instance of target
 		instance(nullptr_t)
 		{
-			if (instance::lock_ptr != nullptr)
-			{
-				delete instance::buffer_ptr;
-				instance::buffer_ptr = nullptr;
-			}
-			instance::lock_ptr = this;
+			if (instance::lock_ptr != nullptr) instance::lock_ptr = this;
+			create();
 		}
+		//able to refer memory buffer
 		instance() {}
-		virtual ~instance()
+		//release buffer, it will free memory
+		bool release() const
 		{
 			if (instance::lock_ptr == this)
 			{
-				delete instance::buffer_ptr;
+				::free(instance::buffer_ptr);
 				instance::buffer_ptr = nullptr;
 				instance::lock_ptr = nullptr;
+				return true;
 			}
+			return false;
+		}
+		virtual ~instance()
+		{
+			release();
 		}
 
+		void* get_buffer() const
+		{
+			return &static_cast<char*>(instance::buffer_ptr)[1];
+		}
+		void* get_address_with_offset(size_t offset)
+		{
+			return &static_cast<char*>(instance::buffer_ptr)[1 + offset];
+		}
+		template<typename TargetType>
+		TargetType* get_address_like_array(size_t offset)
+		{
+			return reinterpret_cast<TargetType*>(&static_cast<char*>(instance::buffer_ptr)[1 + sizeof(TargetType) * offset]);
+		}
+		//generate buffer then move target data bitset or create instance of target
+		template<typename TargetType, typename... Args> instance(TargetType* source, const Args&... args) :instance(void_indicator{}, source, sizeof(TargetType))
+		{
+			static_assert(sizeof(TargetType) <= instance::capacity, "The capacity is not sufficient to accommodate the target object");
+			if (source == nullptr)
+			{
+				new(get_buffer()) TargetType(args...);
+			}
+		}
 		static void* get_ptr();
 		template<typename TargetType> TargetType& like()
 		{
-			if (instance::lock_ptr == this && instance::buffer_ptr == nullptr)
+			return *static_cast<TargetType*>(this->get_buffer());
+		}
+
+		//create target and lock on single buffer
+		template<typename TargetType,typename... Args> TargetType& create_target(const Args&... args)
+		{
+			if (instance::lock_ptr == this)
 			{
-				instance::buffer_ptr = malloc(instance::capacity);
-				//new(buffer_ptr) TargetType();
+				create();
+				return *new(this->get_buffer()) TargetType(args...);
 			}
-			return *static_cast<TargetType*>(instance::buffer_ptr);
+			else throw ld::LDException("muti-source buffer use create");
+		}
+		//release target and lock on single buffer
+		template<class TargetType> void release_target(size_t offset=0)
+		{
+			if (instance::lock_ptr == this)
+			{
+				if (instance::buffer_ptr != nullptr)
+				{
+					this->get_address_like_array<TargetType>(offset)->~TargetType();
+				}
+			}
+			else throw ld::LDException("muti-source buffer use release");
 		}
 	};
 	// memeory alloc buffer, for temp or long time
-	template<size_t BufferSize, size_t SlotID> using instance_memory_buffer = instance<long_tag_indicator<long_tag_indicator<void, BufferSize>, SlotID>>;
-	template<size_t BufferSize, size_t SlotID> void* instance<long_tag_indicator<long_tag_indicator<void, BufferSize>, SlotID>>::get_ptr()
+	// bug warning, the delete-constructor is not triggered on this type's delete-constructor
+	// and buffer capacity is BufferSize+1 !!!
+	template<size_t BufferSize, size_t SlotID> using instance_memory_buffer = instance<long_tag_indicator<long_tag_indicator<void_indicator, BufferSize>, SlotID>>;
+	template<size_t BufferSize, size_t SlotID> void* instance<long_tag_indicator<long_tag_indicator<void_indicator, BufferSize>, SlotID>>::get_ptr()
 	{
 		return instance::buffer_ptr;
 	}
-	template<size_t BufferSize, size_t SlotID> void* instance<long_tag_indicator<long_tag_indicator<void, BufferSize>, SlotID>>::buffer_ptr = nullptr;
-	template<size_t BufferSize, size_t SlotID> void* instance<long_tag_indicator<long_tag_indicator<void, BufferSize>, SlotID>>::lock_ptr = nullptr;
+	template<size_t BufferSize, size_t SlotID> void* instance<long_tag_indicator<long_tag_indicator<void_indicator, BufferSize>, SlotID>>::buffer_ptr = nullptr;
+	template<size_t BufferSize, size_t SlotID> void* instance<long_tag_indicator<long_tag_indicator<void_indicator, BufferSize>, SlotID>>::lock_ptr = nullptr;
 
+	// file stream by instance impt
+	template<typename... Args> _LF_C_API(Class) instance<type_list<io_tag_indicator, Args...>>  Symbol_Push _LF_Inherited(instance<void>)
+	{
+	public:
+		//TODO
+	};
+	// file (a)stream by instance impt
+	template<typename... Args> using instance_astream = instance<type_list<io_tag_indicator, string_indicator, Args...>>;
+	// file wstream by instance impt
+	template<typename... Args> using instance_wstream = instance<type_list<io_tag_indicator, wstring_indicator, Args...>>;
+	// file stream by instance impt
+	template<typename... Args> using instance_stream_t = instance < type_list < io_tag_indicator, Args... >>;
 }
 
 #endif // !__FILE_LF_RAII

@@ -42,6 +42,10 @@ public:
 	{
 		console.LogMessage(L"arch generate successful");
 	}
+	IAnyArchitecture::DestroyAction WithDestroy() const override
+	{
+		return SMD::WithDestroy();
+	}
 };
 
 class command :_LF_Inherited(ICommand) Symbol_Link
@@ -58,6 +62,10 @@ public:
 			{
 				console.LogMessage(L"command has release successful");
 			};
+	}
+	IAnyArchitecture::DestroyAction WithDestroy() const override
+	{
+		return SMD::WithDestroy();
 	}
 };
 
@@ -90,6 +98,10 @@ public:
 			{
 				console.LogMessage(L"controller has release successful");
 			};
+	}
+	IAnyArchitecture::DestroyAction WithDestroy() const override
+	{
+		return SMD::WithDestroy();
 	}
 };
 

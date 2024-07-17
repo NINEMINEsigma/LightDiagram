@@ -32,20 +32,18 @@ void tlog(instance<inter> i)
 
 void xxxx()
 {
-	instance_memory_buffer<sizeof(inter), 0> temp;
-	cout << temp.like<inter>().value << "\n";
-	temp.like<inter>().value = 1999;
+	instance_memory_buffer<sizeof(inter)*2, 0> temp;
+	cout << temp.get_address_like_array<inter>(0)->value << "\n";
+	cout << temp.get_address_like_array<inter>(1)->value << "\n";
 }
 
 int main()
 {
 	system("chcp 65001");
-	instance_memory_buffer<sizeof(inter), 0> temp(nullptr);
-	temp.like<inter>().value = 95;
-	fvar_info finfo = make_field_info(inter, value);
-	cout << temp.like<inter>().value << "\n";
-	finfo.set_rv(&temp.like<inter>(), 2024);
-	cout << temp.like<inter>().value << "\n";
+	instance_memory_buffer<sizeof(inter)*2, 0> temp(nullptr);
+	new(temp.get_address_like_array<inter>(0)) inter(1);
+	new(temp.get_address_like_array<inter>(1)) inter(2);
 	xxxx();
-	cout << temp.like<inter>().value << "\n";
+	temp.release_target<inter>(0);
+	temp.release_target<inter>(1);
 }

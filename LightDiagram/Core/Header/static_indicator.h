@@ -39,8 +39,10 @@ _LFramework_Indicator_Def(unconst, void, false);
 _LFramework_Indicator_Def(template_fill, void, false);
 _LFramework_Indicator_Def(key, void, true);
 _LFramework_Indicator_Def(string, std::string, true);
+_LFramework_Indicator_Def(wstring, std::wstring, true);
 _LFramework_Indicator_Def(class, void, true);
 _LFramework_Indicator_Def(struct, void, true);
+_LFramework_Indicator_Def(io_tag, void, true);
 
 #define __Global_Space
 
@@ -185,12 +187,14 @@ template<typename type_list_type, bool _IsF = true> const string_indicator::tag&
 
 #pragma endregion
 
-#pragma region long_tag_indicator
+#pragma region x_tag_indicator
 
-template<typename FullTagType,size_t UID>
-_LF_C_API(TClass) long_tag_indicator
+template<typename NextType, size_t UID> _LF_C_API(TStruct) long_tag_indicator;
+
+template<typename NextType, size_t UID>
+_LF_C_API(TStruct) long_tag_indicator
 {
-	using tag = FullTagType;
+	using tag = NextType;
 	constexpr static size_t value = UID;
 };
 

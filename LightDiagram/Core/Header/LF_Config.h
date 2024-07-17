@@ -1338,6 +1338,7 @@ _LFramework_Config_API_Struct ___utype{ size_t ignore; __LFramework_T(Type) cons
 #define _LFK_DEF(name)	_LFramework_Kit_API_##name##_Define
 #define Symbol_Push :
 #define Symbol_Link ,
+#define Symbol_Endl
 
 //*
 //  This allows you to declare a field's Property Binder
