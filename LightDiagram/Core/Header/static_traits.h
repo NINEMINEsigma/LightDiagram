@@ -46,6 +46,8 @@ function_traits
 	using call = unknown_indicator;
 	using consting = unconst_indicator;
 	using typen = LDType_Bad_Indicator;
+
+	template<class ThisType> using extension_func = function_traits<ThisType>;
 };
 
 /*
@@ -63,6 +65,8 @@ template<typename Ret, typename... Args> _LF_C_API(OStruct) function_traits<Ret(
 	using call = _cdecl_indicator;
 	using consting = unconst_indicator;
 	using typen = LDType<tag>;
+
+	template<class ThisType> using extension_func = function_traits<Ret(ThisType*, Args...)>;
 };
 
 /*
@@ -80,6 +84,8 @@ template<typename Ret> _LF_C_API(OStruct) function_traits<Ret(void)>
 	using call = _cdecl_indicator;
 	using consting = unconst_indicator;
 	using typen = LDType<tag>;
+
+	template<class ThisType> using extension_func = function_traits<Ret(ThisType*)>;
 };
 
 
@@ -98,6 +104,8 @@ template<typename Ret, typename C, typename... Args> _LF_C_API(OStruct) function
 	using call = _cdecl_indicator;
 	using consting = const_indicator;
 	using typen = LDType<tag>;
+
+	template<class ThisType> using extension_func = function_traits<Ret(C::*)(ThisType*, Args...) const>;
 };
 
 /*
@@ -115,6 +123,8 @@ template<typename Ret, typename C > _LF_C_API(OStruct) function_traits<Ret(C::*)
 	using call = _cdecl_indicator;
 	using consting = const_indicator;
 	using typen = LDType<tag>;
+
+	template<class ThisType> using extension_func = function_traits<Ret(C::*)(ThisType*) const>;
 };
 
 /*
@@ -132,6 +142,8 @@ template<typename Ret, typename C, typename... Args> _LF_C_API(OStruct) function
 	using call = _cdecl_indicator;
 	using consting = unconst_indicator;
 	using typen = LDType<tag>;
+
+	template<class ThisType> using extension_func = function_traits<Ret(C::*)(ThisType*, Args...)>;
 };
 
 /*
@@ -149,6 +161,8 @@ template<typename Ret, typename C> _LF_C_API(OStruct) function_traits<Ret(C::*)(
 	using call = _cdecl_indicator;
 	using consting = unconst_indicator;
 	using typen = LDType<tag>;
+
+	template<class ThisType> using extension_func = function_traits<Ret(C::*)(ThisType*)>;
 };
 
 /*

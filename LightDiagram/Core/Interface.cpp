@@ -325,6 +325,7 @@ namespace ld
 			IArchitecture* arch = *IArchitecture::ToolGetArchitecture(type);
 			arch->Init();
 			arch->AddMessage("Architecture Instance Generated");
+			return arch;
 		}
 		else if (ptr == nullptr)
 		{

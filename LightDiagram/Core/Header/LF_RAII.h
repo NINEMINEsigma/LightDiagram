@@ -247,7 +247,7 @@ namespace ld
 		//reboxing operator
 		//warning: delete-constructor may not be called correctly
 		template<typename OtherTag>
-		bool reboxing(instance<OtherTag>& right)
+		bool reboxing(instance<OtherTag>& from)
 		{
 			if constexpr (std::is_base_of_v<Tag, OtherTag>)
 			{
@@ -256,18 +256,18 @@ namespace ld
 					delete this->instance_ptr;
 				}
 				instance<void>::operator=(from);
-				this->instance_ptr = right.get_ptr();
+				this->instance_ptr = from.get_ptr();
 				return true;
 			}
 			else if constexpr (std::is_base_of_v<OtherTag, Tag>)
 			{
-				if (dynamic_cast<OtherTag*>(right.get_ptr()) == nullptr)return false;
+				if (dynamic_cast<OtherTag*>(from.get_ptr()) == nullptr)return false;
 				if (this->get_count() <= 1)
 				{
 					delete this->instance_ptr;
 				}
 				instance<void>::operator=(from);
-				this->instance_ptr = dynamic_cast<OtherTag*>(right.get_ptr());
+				this->instance_ptr = dynamic_cast<OtherTag*>(from.get_ptr());
 				return true;
 			}
 			else return false;
@@ -275,7 +275,7 @@ namespace ld
 		//reboxing operator
 		//warning: delete-constructor may not be called correctly
 		template<typename OtherTag>
-		bool reboxing(instance<OtherTag>&& right)
+		bool reboxing(instance<OtherTag>&& from)
 		{
 			if constexpr (std::is_base_of_v<Tag, OtherTag>)
 			{
@@ -284,38 +284,38 @@ namespace ld
 					delete this->instance_ptr;
 				}
 				instance<void>::operator=(std::move(from));
-				this->instance_ptr = right.get_ptr();
+				this->instance_ptr = from.get_ptr();
 				return true;
 			}
 			else if constexpr (std::is_base_of_v<OtherTag, Tag>)
 			{
-				if (dynamic_cast<OtherTag*>(right.get_ptr()) == nullptr)return false;
+				if (dynamic_cast<OtherTag*>(from.get_ptr()) == nullptr)return false;
 				if (this->get_count() <= 1)
 				{
 					delete this->instance_ptr;
 				}
 				instance<void>::operator=(std::move(from));
-				this->instance_ptr = dynamic_cast<OtherTag*>(right.get_ptr());
+				this->instance_ptr = dynamic_cast<OtherTag*>(from.get_ptr());
 				return true;
 			}
 			else return false;
 		}
 		//reboxing operator
 		//warning: delete-constructor may not be called correctly
-		//return right
+		//return from
 		template<typename OtherTag>
-		instance<OtherTag>& operator<<(instance<OtherTag>& right)
+		instance<OtherTag>& operator<<(instance<OtherTag>& from)
 		{
-			this->reboxing(right);
-			return right;
+			this->reboxing(from);
+			return from;
 		}
 		//reboxing operator
 		//warning: delete-constructor may not be called correctly
 		//return itself
 		template<typename OtherTag>
-		instance& operator<<(instance<OtherTag>&& right)
+		instance& operator<<(instance<OtherTag>&& from)
 		{
-			this->reboxing(std::move(right));
+			this->reboxing(std::move(from));
 			return *this;
 		}
 	};
@@ -456,7 +456,7 @@ namespace ld
 	template<typename... Args> using instance_args_package = instance<type_list<Args...>>;
 
 	// limited-ref-count shared ptr
-	template<size_t Max> _LF_C_API(Class) instance<ConstexprCount<Max>> Symbol_Push _LF_Inherited(instance<nullptr_t>)
+	template<size_t Max> _LF_C_API(TClass) instance<ConstexprCount<Max>> Symbol_Push _LF_Inherited(instance<nullptr_t>)
 	{
 	private:
 		void CheckStatus() const
@@ -499,7 +499,7 @@ namespace ld
 	// memeory alloc buffer, for temp or long time
 	// bug warning, the delete-constructor is not triggered on this type's delete-constructor
 	// and buffer capacity is BufferSize+1 !!!
-	template<size_t BufferSize, size_t SlotID> _LF_C_API(Class) instance<long_tag_indicator<long_tag_indicator<void_indicator, BufferSize>, SlotID>> Symbol_Endl
+	template<size_t BufferSize, size_t SlotID> _LF_C_API(TClass) instance<long_tag_indicator<long_tag_indicator<void_indicator, BufferSize>, SlotID>> Symbol_Endl
 	{
 		static void* buffer_ptr;
 		static void* lock_ptr;
@@ -623,7 +623,7 @@ namespace ld
 	template<size_t BufferSize, size_t SlotID> void* instance<long_tag_indicator<long_tag_indicator<void_indicator, BufferSize>, SlotID>>::lock_ptr = nullptr;
 
 	// file stream by instance impt
-	template<typename... Args> _LF_C_API(Class) instance<type_list<io_tag_indicator, Args...>>  Symbol_Push _LF_Inherited(instance<void>)
+	template<typename... Args> _LF_C_API(TClass) instance<type_list<io_tag_indicator, Args...>>  Symbol_Push _LF_Inherited(instance<void>)
 	{
 	public:
 		//TODO
@@ -634,6 +634,29 @@ namespace ld
 	template<typename... Args> using instance_wstream = instance<type_list<io_tag_indicator, wstring_indicator, Args...>>;
 	// file stream by instance impt
 	template<typename... Args> using instance_stream_t = instance < type_list < io_tag_indicator, Args... >>;
+
+
+	template<typename... Modules, typename... Functions, typename... Fields> _LF_C_API(TClass)
+		instance<type_list<class_indicator, type_list<Modules...>, type_list<Functions...>, type_list<Fields...>>>
+	{
+	public:
+		using base_tag = type_list<type_list<type_list<Modules...>, type_list<Functions...>, type_list<Fields...>>>;
+		using module_list = type_list<Modules...>;
+		using func_list = type_list<Functions...>;
+		using field_list = type_list<Fields...>;
+	private:
+		template<typename FuncExtension> using extension_func = typename function_info<FuncExtension>::trait::extension_func;
+		using func_container = class_component_indicatior<const extension_func<Functions>&...>;
+		using field_container = class_component_indicatior<Fields...>;
+	public:
+		func_container _m_funcs;
+		field_container _m_fields;
+		template<class... _FuncArgs> instance(const _FuncArgs&... _funcs_args) :_m_funcs(_funcs_args...), _m_fields() {}
+		instance(instance&) = delete;
+		instance(instance&&) = delete;
+		virtual ~instance() {}
+	};
+	template<typename ModulesList, typename FunctionsList, typename FieldsList > using meta_instance = instance<type_list<class_indicator, ModulesList, FunctionsList, FieldsList>>;
 }
 
 #endif // !__FILE_LF_RAII

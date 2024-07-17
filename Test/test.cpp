@@ -25,25 +25,15 @@ struct inter :_LF_Inherited(any_class)
 	}
 };
 
-void tlog(instance<inter> i)
+using test_type = meta_instance<type_list<void>, type_list<int(*)(void)>, type_list<int>>;
+int __get(test_type* _this)
 {
-	cout << "count: " << i.get_count() << " address: " << &i << " ptr: " << i.get_ptr() << " value: " << *i.get_ptr() << "\n";
-}
-
-void xxxx()
-{
-	instance_memory_buffer<sizeof(inter)*2, 0> temp;
-	cout << temp.get_address_like_array<inter>(0)->value << "\n";
-	cout << temp.get_address_like_array<inter>(1)->value << "\n";
+	return _this->_m_fields.get_value<0>();
 }
 
 int main()
 {
 	system("chcp 65001");
-	instance_memory_buffer<sizeof(inter)*2, 0> temp(nullptr);
-	new(temp.get_address_like_array<inter>(0)) inter(1);
-	new(temp.get_address_like_array<inter>(1)) inter(2);
-	xxxx();
-	temp.release_target<inter>(0);
-	temp.release_target<inter>(1);
+	test_type testx(&__get);
+	cout << testx._m_funcs.get_value<0>().invoke(nullptr);
 }

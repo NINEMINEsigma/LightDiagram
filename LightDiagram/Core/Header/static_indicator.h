@@ -43,6 +43,7 @@ _LFramework_Indicator_Def(wstring, std::wstring, true);
 _LFramework_Indicator_Def(class, void, true);
 _LFramework_Indicator_Def(struct, void, true);
 _LFramework_Indicator_Def(io_tag, void, true);
+_LFramework_Indicator_Def(weak, void, true);
 
 #define __Global_Space
 
@@ -199,5 +200,113 @@ _LF_C_API(TStruct) long_tag_indicator
 };
 
 #pragma endregion
+
+#pragma region muti_argpackage_indicator
+
+template<typename T> _LF_C_API(TClass) multi_argpackage_indicator
+{
+public:
+	using tag = T;
+	constexpr static bool value = true;
+	using list = multi_argpackage_indicator<T>;
+	template<int index> using find_type = typename choose_type<index == 0, tag, bad_indicator>::tag;
+};
+template<typename... Args> _LF_C_API(TClass) multi_argpackage_indicator<type_list<Args...>>
+{
+public:
+	using tag = type_list<Args...>;
+	constexpr static bool value = true;
+	using list = type_list<Args...>;
+	template<int index> using find_type = multi_argpackage_indicator<typename type_decltype<list, index>::tag>;
+};
+
+#pragma endregion
+
+#pragma region class_component_indicatior
+
+template<typename... Args> _LF_C_API(TClass) class_component_indicatior;
+template<typename _Last> _LF_C_API(TClass) class_component_indicatior<_Last> Symbol_Endl
+{
+public:
+	using tag = _Last;
+	constexpr static bool value = false;
+	constexpr static size_t length = 1;
+private:
+	tag current_value;
+public:
+	template<size_t index> const tag& get_value() const
+	{
+		static_assert(index == 0, "over range");
+		return this->current_value;
+	}
+	template<size_t index,typename _T> void set_value(_T&& from)
+	{
+		static_assert(index == 0, "over range");
+		this->current_value = std::forward<_T>(from);
+	}
+	class_component_indicatior()
+	{
+		if constexpr (std::is_pointer_v<tag>)
+		{
+			current_value = nullptr;
+		}
+		else if constexpr (std::is_arithmetic_v<tag>)
+		{
+			current_value = 0;
+		}
+	}
+	class_component_indicatior(const tag& first) :current_value(first) {}
+};
+template<typename _First, typename... Args> _LF_C_API(TClass) class_component_indicatior<_First,Args...> Symbol_Endl
+{
+public:
+	using tag = _First;
+	constexpr static bool value = true;
+	constexpr static size_t length = sizeof...(Args);
+private:
+	tag current_value;
+	class_component_indicatior<Args...> next_container;
+public:
+	template<size_t index> const auto& get_value() const
+	{
+		if constexpr (index == 0)
+		{
+			return this->current_value;
+		}
+		else
+		{
+			return next_container.get_value<index - 1>();
+		}
+	}
+	//template<size_t index> using type_on_container =
+	//	std::remove_const_t<
+	//	std::remove_cv_t<decltype(std::declval<class_component_indicatior>().get_value<index>())>>;
+	template<size_t index, typename _T> void set_value(_T && from)
+	{
+		if constexpr (index == 0)
+		{
+			this->current_value = std::forward<_T>(from);
+		}
+		else
+		{
+			next_container.set_value<index - 1>(std::forward<_T>(from));
+		}
+	}
+	class_component_indicatior()
+	{
+		if constexpr (std::is_pointer_v<tag>)
+		{
+			current_value = nullptr;
+		}
+		else if constexpr (std::is_arithmetic_v<tag>)
+		{
+			current_value = 0;
+		}
+	}
+	class_component_indicatior(const tag & first, const Args&... args) :current_value(first), next_container(args...) {}
+};
+
+#pragma endregion
+
 
 #endif // !__FILE_STATIC_INDICATOR

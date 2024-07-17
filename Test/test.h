@@ -118,10 +118,7 @@ public:
 	_LFramework_API_BindingTo(id, Ref);
 	IAnyArchitecture::ReleaseAction WithRelease() const override
 	{
-		return [](IAnyArchitecture* r)
-			{
-				console.LogMessage(L"model has release successful");
-			};
+		return SMD::WithDestroy();
 	}
 };
 
@@ -138,9 +135,6 @@ public:
 	_LFramework_API_BindingTo(id, Ref);
 	IAnyArchitecture::ReleaseAction WithRelease() const override
 	{
-		return [](IAnyArchitecture* r)
-			{
-				console.LogMessage(L"system has release successful");
-			};
+		return SMD::WithDestroy();
 	}
 };
