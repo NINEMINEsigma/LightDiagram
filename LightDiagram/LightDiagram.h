@@ -48,7 +48,7 @@
 #include<Core/Header/LF_Cache.h>
 #include<Core/Header/LF_Exception.h>
 #include<Core/Header/LF_RAII.h>
-//#include<Core/Header/LF_Container.h>
+#include<Core/Header/LF_Container.h>
 
 _LF_C_API(OClass) ld_test
 {
