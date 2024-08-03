@@ -9,14 +9,15 @@ using namespace ld::container;
 int main()
 {
 	int a[10] = { 99,99 };
-	ld::container::accurate::stack<int> s(a);
-	while (s.push())
+	ld::accu_container_instance<int,ld::container::accurate::arrayX<int>> s(10);
+	int c = 0;
+	for (auto& i : *s.get_ptr())
 	{
-		*(int*)s.pick() = s.get_size();
-	} 
-	for(auto item : s)
-	{
-		std::cout << item << "\n";
+		i = c;
+		c++;
 	}
-	return 0;
+	for (auto& i : *s.get_ptr())
+	{
+		std::cout << i << "\n";
+	}
 }

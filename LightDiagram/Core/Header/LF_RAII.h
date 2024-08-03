@@ -637,7 +637,7 @@ namespace ld
 
 
 	template<typename... Modules, typename... Functions, typename... Fields> _LF_C_API(TClass)
-		instance<type_list<class_indicator, type_list<Modules...>, type_list<Functions...>, type_list<Fields...>>>
+		instance<type_list<class_indicator, type_list<Modules...>, type_list<Functions...>, type_list<Fields...>>> Symbol_Endl
 	{
 	public:
 		using base_tag = type_list<type_list<type_list<Modules...>, type_list<Functions...>, type_list<Fields...>>>;
@@ -653,6 +653,8 @@ namespace ld
 		instance(std::function<typename extension_func_traits<type_list<instance*, Functions>>::tag>... _funcs_args) : _m_funcs(_funcs_args...), _m_fields() {}
 		instance(instance&) = delete;
 		instance(instance&&) = delete;
+		instance operator=(instance&) = delete;
+		instance operator=(instance&&) = delete;
 		virtual ~instance() {}
 
 		template<size_t index, typename... Args>// decltype(std::declval<instance>()._m_funcs.get_value<index>()(nullptr)) 
@@ -675,6 +677,36 @@ namespace ld
 		}
 	};
 	template<typename ModulesList, typename FunctionsList, typename FieldsList > using meta_instance = instance<type_list<class_indicator, ModulesList, FunctionsList, FieldsList>>;
+
+	template<typename VoidContainerType> _LF_C_API(TClass)
+		instance<type_list<container_indicator, void_indicator, VoidContainerType>> Symbol_Push _LF_Inherited(instance<VoidContainerType>)
+	{
+		instance(void* head, void* tail, size_t unit_size) :instance<VoidContainerType>(new VoidContainerType(head, tail, unit_size)) {}
+	public:
+		instance(void* head, size_t length, size_t unit_size) :instance(head, (void*)((size_t)head + length * unit_size), unit_size) {}
+		instance(size_t length, size_t unit_size) :instance(::malloc(sizeof(char) * length * unit_size), length, unit_size) {}
+		virtual ~instance()
+		{
+			::free(this->get_ptr()->get_head());
+		}
+	};
+	template<typename AccTy,class AccContainerType> _LF_C_API(TClass)
+		instance<type_list<container_indicator, AccTy, AccContainerType>> Symbol_Push _LF_Inherited(instance<AccContainerType>)
+	{
+	public:
+		constexpr static size_t unit_size = sizeof(AccTy);
+	private:
+		instance(AccTy * head, AccTy * tail) :instance<AccContainerType>(new AccContainerType(head, tail)) {}
+	public:
+		instance(void* head, size_t length) :instance((AccTy*)head, (AccTy*)((size_t)head + length * unit_size)) {}
+		instance(size_t length) :instance(::malloc(sizeof(char) * length * unit_size), length) {}
+		virtual ~instance()
+		{
+			::free(this->get_ptr()->get_head());
+		}
+	};
+	template<typename VoidContainerType> using void_container_instance = instance<type_list<container_indicator, void_indicator, VoidContainerType>>;
+	template<typename AccTy, typename AccContainerType> using accu_container_instance = instance<type_list<container_indicator, AccTy, AccContainerType>>;
 }
 
 #endif // !__FILE_LF_RAII

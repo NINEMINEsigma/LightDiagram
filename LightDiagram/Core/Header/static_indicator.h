@@ -46,6 +46,7 @@ _LFramework_Indicator_Def(io_tag, void, true);
 _LFramework_Indicator_Def(weak, void, true);
 _LFramework_Indicator_Def(true, void, true);
 _LFramework_Indicator_Def(false, void, false);
+_LFramework_Indicator_Def(container, void, true);
 
 #define __Global_Space
 
