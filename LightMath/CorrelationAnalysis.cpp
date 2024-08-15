@@ -8,24 +8,20 @@ namespace ld
 {
 	namespace math
 	{
-		void TestMathLinking()
-		{
-			std::cout << "test is ok" << std::endl;
-		}
-
-		//计算相关系数
 		Number Pearson(const vector<Number>& A, const vector<Number>& B, long Length)
 		{
-			//初始化-求和
+#ifdef _DEBUG
+			if (A.size() != B.size())
+				throw Error_Aligned;
+#endif // _DEBUG
+
 			Number
 				sumA(std::accumulate(A.begin(), A.end(), 0.0)),
 				sumB(std::accumulate(B.begin(), B.end(), 0.0));
-			//初始化-求平均
 			Number
 				aveA(sumA / Number(Length)),
 				aveB(sumB / Number(Length));
 
-			//计算相关系数
 			Number R1(0), R2(0), R3(0);
 			for (long i = 0; i < Length; i++)
 			{

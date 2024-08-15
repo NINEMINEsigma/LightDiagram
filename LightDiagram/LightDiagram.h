@@ -22,6 +22,8 @@
 //	__REF_EASYX Defined is to include easyx headers
 //*
 
+#define NOMINMAX
+
 #ifndef __FILE_LIGHTDIAGRAM
 
 #define __FILE_LIGHTDIAGRAM
