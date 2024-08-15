@@ -34,3 +34,5 @@ install(TARGETS LLMToolKit
         RUNTIME DESTINATION ${Install_Path}/bin
         LIBRARY DESTINATION ${Install_Path}/lib
         ARCHIVE DESTINATION ${Install_Path}/lib/static)
+
+message("CMAKE_CXX_STANDARD(LLM) = ${CMAKE_CXX_STANDARD}" )

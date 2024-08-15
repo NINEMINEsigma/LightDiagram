@@ -70,4 +70,8 @@ public:
 
 #include <Utility/FileSystem.h>
 
+#if defined(_WINDOW_)
+#include
+#endif
+
 #endif // !__FILE_LIGHTDIAGRAM

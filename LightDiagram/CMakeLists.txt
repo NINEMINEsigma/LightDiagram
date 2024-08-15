@@ -39,6 +39,35 @@ else()
     endif()
 endif()
 
+set(OpenXLSX_NO_SYSTEM_PATHS ON)
+find_package(OpenXLSX)
+if(OpenXLSX_FOUND)
+    add_compile_definitions(__REF_OpenXLSX)
+    include_directories(${OpenXLSX_INCLUDE_DIR})
+    MESSAGE( STATUS "OpenXLSX_INCLUDE_DIR = ${OpenXLSX_INCLUDE_DIR}.")
+    MESSAGE( STATUS "OpenXLSX_LIB_VERSION = ${OpenXLSX_LIB_VERSION}.")
+    message("OpenXLSX setting successfully")
+else()
+    if(_WINDOWS)
+        include_directories("${PROJECT_SOURCE_DIR}/LightDiagram/Utility/OpenXLSX/Window/include/OpenXLSX")
+        
+        #=======================================================================================================================
+        # EXTERNAL LIBRARIES
+        #   Define external libraries used by OpenXLSX. The libraries (Zippy, PugiXML, and NoWide) are header-only, so
+        #   INTERFACE libraries should be defined.
+        #=======================================================================================================================
+        
+        if (OPENXLSX_ENABLE_NOWIDE)
+            include_directories("${PROJECT_SOURCE_DIR}/LightDiagram/Utility/OpenXLSX/Window/include/OpenXLSX/external/nowide/")
+        endif()
+        include_directories("${PROJECT_SOURCE_DIR}/LightDiagram/Utility/OpenXLSX/Window/include/OpenXLSX/external/zippy/")
+        include_directories("${PROJECT_SOURCE_DIR}/LightDiagram/Utility/OpenXLSX/Window/include/OpenXLSX/external/pugixml/")
+        message("OpenXLSX setting successfully(by utility)")
+    else()
+        message("OpenXLSX setting failed")
+    endif()
+endif()
+
 include_directories     ("${PROJECT_SOURCE_DIR}/LightDiagram"                   "${PROJECT_SOURCE_DIR}/LightDiagram/Utility")
 include_directories     ("${PROJECT_SOURCE_DIR}/LightDiagram/Core/Header"       "${PROJECT_SOURCE_DIR}/LightDiagram/Core")
 include_directories     ("${PROJECT_SOURCE_DIR}/LightDiagram/Extension/Header"  "${PROJECT_SOURCE_DIR}/LightDiagram/Extension")
@@ -59,6 +88,14 @@ endif()
 if(Boost_FOUND)
     target_link_libraries (LightDiagram ${Boost_LIBRARIES})
     message( STATUS "Boost_LIBRARIES = ${Boost_LIBRARIES}")
+endif()
+
+if(OpenXLSX_FOUND)
+
+else()
+    if(_WINDOWS)
+        target_link_libraries(LightDiagram "${PROJECT_SOURCE_DIR}/LightDiagram/Utility/OpenXLSX/Window/lib/OpenXLSXd.lib")
+    endif()
 endif()
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
