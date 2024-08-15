@@ -1,6 +1,10 @@
 # Make Setting
 cmake_minimum_required (VERSION 3.12)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(ENABLE_OPEN_XLSX ON)
+set(ENABLE_LLM_TOOLKIT ON)
+set(ENABLE_LIGHT_MATH ON)
+set(ENABLE_TEST ON)
 # Enable C++17
 set(CMAKE_CXX_STANDARD 17)
 # Enable C11
@@ -49,16 +53,27 @@ project ("LightDiagram")
 set (LightDiagram_VERSION_MAJOR 1)
 set (LightDiagram_VERSION_MINOR 0)
 
+# Sub Project(buf from third-party)
+if(ENABLE_OPEN_XLSX)
+add_compile_definitions(__REF_OPEN_XLSX)
+add_subdirectory ("OpenXLSX")
+endif()
 # Sub Project
 include_directories ("${PROJECT_SOURCE_DIR}/LightDiagram")
 add_subdirectory ("LightDiagram")
-add_subdirectory ("LLMToolkit")
+if(ENABLE_LLM_TOOLKIT)
+	add_subdirectory ("LLMToolkit")
+endif()
 if(DEFINED _LINUX OR DEFINED _LINUX_ON_WINDOWS)
 	include_directories ("${PROJECT_SOURCE_DIR}/WebServer")
 	add_subdirectory ("WebServer")
 endif()
-add_subdirectory("LightMath")
-add_subdirectory("Test")
+if(ENABLE_LIGHT_MATH)
+	add_subdirectory("LightMath")
+endif()
+if(ENABLE_TEST)
+	add_subdirectory("Test")
+endif()
 
 set(CMAKE_INSTALL_PREFIX "${PROJECT_SOURCE_DIR}/out/")
 

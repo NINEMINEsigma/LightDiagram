@@ -1,6 +1,8 @@
 
 //#include "test.h"
+#include<OpenXLSX.hpp>
 #include<LightDiagram.h>
+#include<../LightMath/CorrelationAnalysis.h>
 
 using namespace ld;
 //using namespace std;
@@ -24,4 +26,5 @@ int main()
 	{
 		std::cout << i << "\n";
 	}
+	math::TestMathLinking();
 }

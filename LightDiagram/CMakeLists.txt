@@ -39,38 +39,10 @@ else()
     endif()
 endif()
 
-set(OpenXLSX_NO_SYSTEM_PATHS ON)
-find_package(OpenXLSX)
-if(OpenXLSX_FOUND)
-    add_compile_definitions(__REF_OpenXLSX)
-    include_directories(${OpenXLSX_INCLUDE_DIR})
-    MESSAGE( STATUS "OpenXLSX_INCLUDE_DIR = ${OpenXLSX_INCLUDE_DIR}.")
-    MESSAGE( STATUS "OpenXLSX_LIB_VERSION = ${OpenXLSX_LIB_VERSION}.")
-    message("OpenXLSX setting successfully")
-else()
-    if(_WINDOWS)
-        include_directories("${PROJECT_SOURCE_DIR}/LightDiagram/Utility/OpenXLSX/Window/include/OpenXLSX")
-        
-        #=======================================================================================================================
-        # EXTERNAL LIBRARIES
-        #   Define external libraries used by OpenXLSX. The libraries (Zippy, PugiXML, and NoWide) are header-only, so
-        #   INTERFACE libraries should be defined.
-        #=======================================================================================================================
-        
-        if (OPENXLSX_ENABLE_NOWIDE)
-            include_directories("${PROJECT_SOURCE_DIR}/LightDiagram/Utility/OpenXLSX/Window/include/OpenXLSX/external/nowide/")
-        endif()
-        include_directories("${PROJECT_SOURCE_DIR}/LightDiagram/Utility/OpenXLSX/Window/include/OpenXLSX/external/zippy/")
-        include_directories("${PROJECT_SOURCE_DIR}/LightDiagram/Utility/OpenXLSX/Window/include/OpenXLSX/external/pugixml/")
-        message("OpenXLSX setting successfully(by utility)")
-    else()
-        message("OpenXLSX setting failed")
-    endif()
+include_directories     ("${PROJECT_SOURCE_DIR}/LightDiagram" "${PROJECT_SOURCE_DIR}/LightDiagram/Core/Header" "${PROJECT_SOURCE_DIR}/LightDiagram/Core")
+if(ENABLE_OPEN_XLSX)
+message( STATUS "OpenXLSX part = ${PROJECT_SOURCE_DIR}/OpenXLSX")
 endif()
-
-include_directories     ("${PROJECT_SOURCE_DIR}/LightDiagram"                   "${PROJECT_SOURCE_DIR}/LightDiagram/Utility")
-include_directories     ("${PROJECT_SOURCE_DIR}/LightDiagram/Core/Header"       "${PROJECT_SOURCE_DIR}/LightDiagram/Core")
-include_directories     ("${PROJECT_SOURCE_DIR}/LightDiagram/Extension/Header"  "${PROJECT_SOURCE_DIR}/LightDiagram/Extension")
 aux_source_directory    (. Main_Cpp_List)
 aux_source_directory    (./Core Core_Cpp_List)
 aux_source_directory    (./Extension Extension_Cpp_List)
@@ -78,7 +50,6 @@ message( STATUS "main part cpp = ${Main_Cpp_List}")
 message( STATUS "core part cpp = ${Core_Cpp_List}")
 message( STATUS "extension part cpp = ${Extension_Cpp_List}")
 add_library (LightDiagram ${Main_Cpp_List} ${Core_Cpp_List} ${Extension_Cpp_List} ${Utility_Cpp_List})
-
 if(MPI_FOUND)
     target_link_libraries(LightDiagram ${MPI_C_LIBRARIES})
     set_property(TARGET LightDiagram PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
@@ -90,20 +61,15 @@ if(Boost_FOUND)
     message( STATUS "Boost_LIBRARIES = ${Boost_LIBRARIES}")
 endif()
 
-if(OpenXLSX_FOUND)
-
-else()
-    if(_WINDOWS)
-        target_link_libraries(LightDiagram "${PROJECT_SOURCE_DIR}/LightDiagram/Utility/OpenXLSX/Window/lib/OpenXLSXd.lib")
-    endif()
-endif()
-
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET LightDiagram PROPERTY CXX_STANDARD 17)
 endif()
 
-#install(TARGETS LightDiagram)
-#install(TARGETS ${head_files} DESTINATION  ${CMAKE_BINARY_DIR}/Lib)
+file(GLOB LightDiagram_Header_List ${PROJECT_SOURCE_DIR}/LightDiagram/Core/Header/*.h)
+file(GLOB LightDiagram_ArchCom_Header_List ${PROJECT_SOURCE_DIR}/LightDiagram/Core/Header/ArchCom/*.h)
+install(FILES ${LightDiagram_Header_List} DESTINATION  ${Install_Path}/include/Core/Header)
+install(FILES ${LightDiagram_ArchCom_Header_List} DESTINATION  ${Install_Path}/include/Core/Header/ArchCom)
+install(FILES ${PROJECT_SOURCE_DIR}/LightDiagram/LightDiagram.h DESTINATION ${Install_Path}/include/)
 install(TARGETS LightDiagram 
         RUNTIME DESTINATION ${Install_Path}/bin
         LIBRARY DESTINATION ${Install_Path}/lib

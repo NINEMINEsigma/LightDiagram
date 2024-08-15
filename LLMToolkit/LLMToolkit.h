@@ -7,6 +7,6 @@
 //*
 
 #include <LightDiagram.h>
-#include <../LLMToolkit/Spack.h>
+#include<Spack.h>
 
 #endif // !__FILE_LLMTOOLKIT

@@ -58,20 +58,4 @@ public:
 
 #include<Core/Header/LF_Architecture.h>
 
-//*
-//	Extension
-//*
-
-#include<Extension/Header/KitSocket.h>
-
-//*
-//	Utility
-//*
-
-#include <Utility/FileSystem.h>
-
-#if defined(_WINDOW_)
-#include
-#endif
-
 #endif // !__FILE_LIGHTDIAGRAM

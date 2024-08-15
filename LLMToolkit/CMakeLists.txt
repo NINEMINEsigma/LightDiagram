@@ -1,14 +1,17 @@
 ﻿message(STATUS "LLMToolKit aux source -> ${Platform_Name}")
 message(STATUS "LLMToolKit src source -> ${PROJECT_SOURCE_DIR}")
 include_directories(".")
-include_directories("${PROJECT_SOURCE_DIR}/LLMToolKit/${Platform_Name}/Spark/3.5/v1.1/include")
 
+#Spack
+set(Spack_Part_Path "${Platform_Name}/Spark/3.5/v1.1")
+set(Spack_Part_Dir "${PROJECT_SOURCE_DIR}/LLMToolKit/${Spack_Part_Path}")
+include_directories(${Spack_Part_Dir}/include)
 if (DEFINED _LINUX_ON_WINDOWS)
-	include_directories("${PROJECT_SOURCE_DIR}/LLMToolKit/${Platform_Name}/Spack/3.5/v1.1/libs/${_LINUX_ON_WINDOWS}")
+	include_directories("${Spack_Part_Dir}/libs/${_LINUX_ON_WINDOWS}")
 elseif (DEFINED _WINDOWS)
-	include_directories("${PROJECT_SOURCE_DIR}/LLMToolKit/${Platform_Name}/Spack/3.5/v1.1/libs/${_WINDOWS}")
+	include_directories("${Spack_Part_Dir}/libs/${_WINDOWS}")
 elseif(DEFINED _LINUX)
-	include_directories("${PROJECT_SOURCE_DIR}/LLMToolKit/${Platform_Name}/Spack/3.5/v1.1/lib")
+	include_directories("${Spack_Part_Dir}/lib")
 endif()
 
 aux_source_directory	(. LLMToolKit_Cpp_List)
@@ -28,11 +31,15 @@ elseif(DEFINED _LINUX)
 	target_link_libraries(LLMToolKit SparkLib)
 endif()
 
-#install(TARGETS LightDiagram)
-#install(TARGETS ${head_files} DESTINATION  ${CMAKE_BINARY_DIR}/Lib)
+message("CMAKE_CXX_STANDARD(LLM) = ${CMAKE_CXX_STANDARD}" )
+
+#Spack
+file(GLOB LLMToolKit_Spack_Header_List ${Spack_Part_Dir}/include/*.h)
+install(FILES ${LLMToolKit_Spack_Header_List} DESTINATION ${Install_Path}/include/${Spack_Part_Path})
+#ToolKit
+file(GLOB LLMToolKit_Header_List ${PROJECT_SOURCE_DIR}/LLMToolKit/*.h)
+install(FILES ${LLMToolKit_Header_List} DESTINATION ${Install_Path}/include/)
 install(TARGETS LLMToolKit 
         RUNTIME DESTINATION ${Install_Path}/bin
         LIBRARY DESTINATION ${Install_Path}/lib
         ARCHIVE DESTINATION ${Install_Path}/lib/static)
-
-message("CMAKE_CXX_STANDARD(LLM) = ${CMAKE_CXX_STANDARD}" )

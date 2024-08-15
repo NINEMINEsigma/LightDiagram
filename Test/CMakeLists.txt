@@ -5,6 +5,8 @@ add_executable(demo_test ${Test_Cpp_List})
 
 target_link_libraries(demo_test LightDiagram)
 target_link_libraries(demo_test LLMToolKit)
+target_link_libraries(demo_test OpenXLSX::OpenXLSX)
+target_link_libraries(demo_test LightMath)
 
 install(TARGETS demo_test)
 
