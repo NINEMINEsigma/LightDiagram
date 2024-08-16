@@ -28,8 +28,13 @@ namespace ld
 		r = S / M.
 		S = 6Σ(d_x-d_y)^2.
 		M = n(n^2 - 1).
+		The implementation of this function takes a very simple hierarchical difference strategy
+		and abandons the principle of averaging the same values.
+		Therefore, when the repetition value exceeds 10%, the implementation of this function should
+		be abandoned.When the value is repeated and is lower than this value, this function provides
+		both high performance and a large degree of accuracy
 		*/
-		Number Spearman(const vector<Number>& x, const vector<Number>& y);
+		Number Spearman(const std::vector<Number>& x, const std::vector<Number>& y);
 	}
 }
 

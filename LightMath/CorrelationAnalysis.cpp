@@ -46,7 +46,7 @@ namespace ld
 			for (int i = 0; i < n; ++i)
 			{
 				ranks_x.push_back({ x[i],i });
-				ranks_x.push_back({ y[i],i });
+				ranks_y.push_back({ y[i],i });
 			}
 
 			sort(ranks_x.begin(), ranks_x.end());
