@@ -1,8 +1,27 @@
 ﻿
+set(Boost_NO_SYSTEM_PATHS ON) 
+set(BOOST_ROOT "E:/boost_1_85_0")
+find_package(Boost)
+if(Boost_FOUND)
+	#add_compile_definitions(__REF_BOOST)
+    include_directories(${Boost_INCLUDE_DIR})
+    MESSAGE( STATUS "Boost_INCLUDE_DIR = ${Boost_INCLUDE_DIR}.")
+    MESSAGE( STATUS "Boost_LIB_VERSION = ${Boost_LIB_VERSION}.")
+    message("Boost setting successfully")
+else()
+    message("Boost setting failed and ${Boost_Preset_Dir} not find")
+endif()
+
+include_directories(../LightMath)
+
 aux_source_directory	(. Test_Cpp_List)
 message( STATUS "test part cpp = ${Test_Cpp_List}")
 add_executable(demo_test ${Test_Cpp_List})
 
+if(Boost_FOUND)
+    target_link_libraries (demo_test ${Boost_LIBRARIES})
+    message( STATUS "Boost_LIBRARIES = ${Boost_LIBRARIES}")
+endif()
 target_link_libraries(demo_test LightDiagram)
 target_link_libraries(demo_test LLMToolKit)
 target_link_libraries(demo_test OpenXLSX::OpenXLSX)

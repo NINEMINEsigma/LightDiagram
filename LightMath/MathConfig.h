@@ -1,5 +1,11 @@
-#include<math.h>
-#include<LightDiagram.h>
+#ifndef __FILE_MATHCONFIG
+#define __FILE_MATHCONFIG
+
+#include <math.h>
+#include <boost/math/special_functions.hpp>
+#include <boost/math/interpolators/cardinal_cubic_b_spline.hpp>
+
+#include <LightDiagram.h>
 
 namespace ld
 {
@@ -16,20 +22,9 @@ namespace ld
 		constexpr const char* Error_Aligned = "The size cannot be aligned";
 		constexpr const char* Error_Empty = "The data cannot be empty";
 
-		//Indicator Function is return ture when x > Y_i otherwise false
-
-		// Cumulative Distribution Function
-		Number cdf(const Number& x, const std::vector<Number>& sortedData)
-		{
-			Number n = sortedData.size();
-			Number rank = std::distance(sortedData.begin(), std::lower_bound(sortedData.begin(), sortedData.end(), x)) + 1;
-			return (rank - 0.5) / n;
-		}
-
-		Number normal_cdf(Number x, Number mu, Number sigma)
-		{
-			return 0.5 * (1 + erf((x - mu) / (sigma * sqrt(2))));
-		}
 	}
 }
+
+#endif // !__FILE_MATHCONFIG
+
 

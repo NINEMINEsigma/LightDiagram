@@ -185,6 +185,11 @@ using namespace boost::placeholders;
 
 #endif // __REF_BOOST
 
+#ifdef __REF_BOOST_MATH
+
+#endif // __REF_BOOST_MATH
+
+
 #pragma endregion
 
 #pragma region bits/stdc++

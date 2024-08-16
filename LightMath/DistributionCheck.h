@@ -1,38 +1,36 @@
+#ifndef __FILE_DISTRIBUTIONCHECK
+#define __FILE_DISTRIBUTIONCHECK
+
 #include<MathConfig.h>
+#include<boost/math/distributions.hpp>
 
 namespace ld
 {
 	namespace math
 	{
-		constexpr Number SingleTailedTestBound = 1.15;
-		constexpr Number TwoTailedTestBound = 1.36;
+        template <typename Dist>
+        bool _LF_C_API(Func) is_distribution(const std::vector<Number>& data, const Dist& dist, Number alpha)
+        {
+            Number test_statistic = 0.0;
+            for (auto& value : data)
+            {
+                test_statistic += boost::math::pdf(dist, value);
+            }
 
-		//Kolmogorov-Smirnov Test for Normal- Distributed,
-		//It is recommended for sample sizes of more than 2000
-		//Suppose the data is ordered
-		bool KSTest_Sorted(const std::vector<Number>& sortedData, Number alpha = 0.05, Number test_bound = TwoTailedTestBound);
-		//Kolmogorov-Smirnov Test for Normal- Distributed
-		//It is recommended for sample sizes of more than 2000
-		//Assume the data isn't sorted
-		bool KSTest(const std::vector<Number>& data, Number alpha = 0.05, Number test_bound = TwoTailedTestBound);
+            // You can use a p-value to determine if the data follows the distribution
+            Number p_value = 1 - boost::math::cdf(dist, test_statistic);
 
-		//Kolmogorov-Smirnov Test for two sample,
-		//It is recommended for sample sizes of more than 2000
-		//Suppose the data is ordered
-		bool KSTest_Sorted(const vector<Number>& sortedSample1, const vector<Number>& sortedSample2, Number alpha, Number test_bound);
-		//Kolmogorov-Smirnov Test for two sample,
-		//It is recommended for sample sizes of more than 2000
-		//Assume the data isn't sorted
-		bool KSTest(const vector<Number>& sortedSample1, const vector<Number>& sortedSample2, Number alpha, Number test_bound);
+            // You can decide on a threshold for the p-value, e.g. 0.05
+            return p_value > alpha;
+        }
+        bool is_normal_distribution(const std::vector<Number>& data, const Number& mean, const Number& std_dev, bool isSingleTail = true, const Number& alpha = 0.05);
+        bool is_uniform_distribution(const std::vector<Number>& data, const Number& a, const Number& b, bool isSingleTail = true, const Number& alpha = 0.05);
+        bool is_exponential_distribution(const std::vector<Number>& data, const Number& lambda, bool isSingleTail = true, const Number& alpha = 0.05);
+        bool kolmogorov_smirnov_test(const std::vector<Number>& data1, const std::vector<Number>& data2, bool isSingleTail = true, const Number& alpha = 0.05);
 
-		//Lilliefors test for Normal- Distributed,
-		//It is recommended for sample sizes of more than 2000
-		//Suppose the data is ordered
-		bool KSLTest_Sorted(const std::vector<Number>& sortedData, Number alpha, Number test_bound);
-		//Lilliefors test for Normal- Distributed,
-		//It is recommended for sample sizes of more than 2000
-		//Assume the data isn't sorted
-		bool KSLTest(const std::vector<Number>& sortedData, Number alpha, Number test_bound);
 	}
 }
+
+#endif // !__FILE_DISTRIBUTIONCHECK
+
 

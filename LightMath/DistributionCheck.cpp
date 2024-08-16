@@ -4,94 +4,97 @@ using namespace std;
 
 namespace ld
 {
-	namespace math
-	{
-        bool KSTest_Sorted(const vector<Number>& sortedData, Number alpha, Number test_bound)
+    namespace math
+    {
+        /*
+           正态分布（Normal）：boost::math::normal。
+           均匀分布（Uniform）：boost::math::uniform。
+           指数分布（Exponential）：boost::math::exponential。
+           贝塔分布（Beta）：boost::math::beta。
+           伽玛分布（Gamma）：boost::math::gamma。
+           威布分布（Weibull）：boost::math::weibull。
+           贝拉分布（Binomial）：boost::math::binomial。
+           多项分布（Multinomial）：boost::math::multinomial。
+           泊松分布（Poisson）：boost::math::poisson。
+           几何分布（Geometric）：boost::math::geometric。
+        */
+
+        bool is_normal_distribution(const vector<Number>& data, const Number& mean, const Number& std_dev, bool isSingleTail, const Number& alpha)
         {
-            if (sortedData.empty())
+            if (data.size() == 0)
                 throw Error_Empty;
 
-            Number n = sortedData.size();
-            Number d = 0.0;
-
-            for (auto& x : sortedData)
+            // 计算卡方值
+            Number chi_squared(0);
+            for (auto& value : data)
             {
-                Number F = cdf(x, sortedData);
-                Number f = x / n;
-                d = max(d, abs(F - f));
+                chi_squared += (value - mean) * (value - mean) / (std_dev * std_dev);
             }
+            chi_squared /= data.size();
 
-            Number D = test_bound / std::sqrt(n);
+            // 计算p值
+            Number p_value = 2 * (1 - boost::math::cdf(boost::math::normal_distribution<Number>(mean, std_dev), chi_squared));
 
-            return d <= D * (1 - alpha);
-        }
-		bool KSTest(const vector<Number>& data, Number alpha, Number test_bound)
-        {
-            vector<Number> sortedData = data;
-            std::sort(sortedData.begin(), sortedData.end());
-            return KSTest_Sorted(sortedData, alpha, test_bound);
+            // 判断是否满足正态分布
+            return p_value > 1 - alpha * (isSingleTail ? 1 : 0.5);
         }
 
-        bool KSTest_Sorted(const vector<Number>& sortedSample1, const vector<Number>& sortedSample2, Number alpha, Number test_bound)
+        bool is_uniform_distribution(const vector<Number>& data, const Number& a, const Number& b, bool isSingleTail, const Number& alpha)
         {
-            if (sortedSample1.empty() || sortedSample2.empty())
+            if (data.size() == 0)
                 throw Error_Empty;
 
-            Number n1 = sortedSample1.size();
-            Number n2 = sortedSample2.size();
-            Number d = 0.0;
+            boost::math::uniform_distribution<double> uniform(a, b);
 
-            for (size_t i = 0; i < n1; ++i) 
+            Number test_statistic(0.0);
+            for (auto& value : data)
             {
-                Number F = cdf(sortedSample1[i], sortedSample1);
-                Number f = sortedSample1[i] / n1;
-                d = std::max(d, std::abs(F - f));
+                test_statistic += boost::math::pdf(uniform, value);
             }
 
-            for (size_t i = 0; i < n2; ++i) 
-            {
-                Number F = cdf(sortedSample2[i], sortedSample2);
-                Number f = sortedSample2[i] / n2;
-                d = std::max(d, std::abs(F - f));
-            }
+            Number p_value = 2 * (1 - boost::math::cdf(uniform, test_statistic));
 
-            double D = test_bound / std::sqrt(n1 + n2);
-
-            return d <= D * (1 - alpha);
-        }
-        bool KSTest(const vector<Number>& sample1, const vector<Number>& sample2, Number alpha, Number test_bound)
-        {
-            vector<Number> sortedData = sample1;
-            std::sort(sortedData.begin(), sortedData.end());
-            vector<Number> sortedData2 = sample2;
-            std::sort(sortedData2.begin(), sortedData2.end());
-            return KSTest_Sorted(sortedData, sortedData2, alpha, test_bound);
+            return p_value > 1 - alpha * (isSingleTail ? 1 : 0.5);
         }
 
-        bool KSLTest_Sorted(const std::vector<Number>& sortedData, Number alpha, Number test_bound)
+        bool is_exponential_distribution(const vector<Number>& data, const Number& lambda, bool isSingleTail, const Number& alpha)
         {
-            if (sortedData.empty())
+            if (data.size() == 0)
                 throw Error_Empty;
 
-            Number n = sortedData.size();
-            Number d = 0.0;
+            boost::math::exponential_distribution<Number> exponential(lambda);
 
-            for (auto& x : sortedData)
+            Number test_statistic(0.0);
+            for (auto& value : data)
             {
-                Number F = cdf(x, sortedData);
-                Number f = x / n;
-                d = max(d, abs(F - f));
+                test_statistic += boost::math::pdf(exponential, value);
             }
-            Number D = test_bound / sqrt(n);
 
-            return d <= D * (1 - alpha);
+            Number p_value = 2 * (1 - boost::math::cdf(exponential, test_statistic));
+
+            return p_value > 1 - alpha * (isSingleTail ? 1 : 0.5);
         }
-        bool KSLTest(const vector<Number>& data, Number alpha, Number test_bound)
+
+        bool kolmogorov_smirnov_test(const vector<Number>& data1, const vector<Number>& data2, bool isSingleTail, const Number& alpha)
         {
-            vector<Number> sortedData = data;
-            std::sort(sortedData.begin(), sortedData.end());
-            return KSLTest_Sorted(sortedData, alpha, test_bound);
+            if (data1.size() == 0 || data2.size() == 0)
+                throw Error_Empty;
+
+            vector<Number> data(data1.size() + data2.size());
+            std::merge(data1.begin(), data1.end(), data2.begin(), data2.end(), data.begin());
+            std::sort(data.begin(), data.end());
+
+            Number maxdiff(0);
+            for (auto& value : data)
+            {
+                maxdiff = ::max(maxdiff, std::abs(boost::math::cdf(data1, value) - boost::math::cdf(data2, value)));
+            }
+
+            Number p_value = 2 * (1 - boost::math::cdf(data, maxdiff));
+
+            return p_value > 1 - alpha * (isSingleTail ? 1 : 0.5);
         }
-	}
+
+    }
 }
 
