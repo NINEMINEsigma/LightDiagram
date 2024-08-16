@@ -1,4 +1,4 @@
-#include <Spack.h>
+#include <Spark.h>
 
 using namespace SparkChain;
 using namespace std;

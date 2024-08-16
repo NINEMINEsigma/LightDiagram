@@ -1,6 +1,7 @@
 #pragma once
 #include <LightDiagram.h>
 #include <../LLMToolkit/LLMToolkit.h>
+
 using namespace std;
 using namespace ld;
 

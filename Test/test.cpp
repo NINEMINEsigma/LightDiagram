@@ -1,64 +1,47 @@
+//#define __REF_BOOST
+#include<test.h>
+#include<cstring>
 
-//#include "test.h"
-//#define __REF_BOOST;
-
-#include <boost\math\distributions\normal.hpp>
-#include <random>
-#include <math.h>
-#include<OpenXLSX.hpp>
-#include<LightDiagram.h>
-#include<MathConfig.h>
-#include<DistributionCheck.h>
-#include<CorrelationAnalysis.h>
-
-using namespace ld::math;
+using namespace ld;
 using namespace std;
+using namespace llm::Spark;
 
-// 计算两个向量之间的相关性
-double correlation(const vector<double>& x, const vector<double>& y)
+bool stats = false;
+
+string s2s(const char* str)
 {
-    double sum_xy = 0.0;
-    double sum_x = 0.0;
-    double sum_y = 0.0;
-    double n = x.size();
-
-    for (int i = 0; i < n; ++i) {
-        sum_xy += x[i] * y[i];
-        sum_x += x[i];
-        sum_y += y[i];
-    }
-
-    return (n * sum_xy - sum_x * sum_y) / (sqrt(n * sum_x * sum_y) + 1e-10);
+	DWORD dBufSize = MultiByteToWideChar(CP_ACP, 0, str, strlen(str), NULL, 0);
+	wchar_t* wdBuf = new wchar_t[dBufSize + 1];
+	wmemset(wdBuf, 0, dBufSize);
+	MultiByteToWideChar(CP_ACP, 0, str, strlen(str), wdBuf, dBufSize);
+	std::wstring wresult(wdBuf);
+	delete[] wdBuf;
+	dBufSize = WideCharToMultiByte(CP_UTF8, 0, wresult.c_str(), -1, NULL, 0, NULL, FALSE);
+	char* dBuf = new char[dBufSize + 1];
+	memset(dBuf, 0, dBufSize);
+	WideCharToMultiByte(CP_UTF8, 0, wresult.c_str(), -1, dBuf, dBufSize, NULL, FALSE);
+	std::string result(dBuf);
+	delete[] dBuf;
+	return result;
 }
 
-// 计算斯皮尔曼秩相关系数
-double spearman_rank_correlation(const vector<double>& x, const vector<double>& y)
+int main()
 {
-    vector<pair<double, double>> data;
-    for (int i = 0; i < x.size(); ++i) {
-        data.push_back({ x[i], y[i] });
-    }
+	//system("chcp 65001");
+	auto llm = new LLMSystem();
+	llm->callback.OnEnd.AddListener([](const char* str, SparkChain::LLMResult* re)
+		{
+			stats = re->getStatus() == 2;
+			cout << s2s(str);
+		});
+	auto arch_ptr = ArchitectureInstance<arch>().RegisterSystem(typeid(LLMSystem), llm);
+	string input = s2s("window控制台使用的是什么编码,为什么能显示中文但是输入中文会变成乱码");
+	cout << input;
+	llm->AsyncSend(input,0);
+	while (false==stats)
+	{
 
-    sort(data.begin(), data.end());
-
-    vector<double> ranks_x(x.size());
-    vector<double> ranks_y(y.size());
-
-    int rank = 1;
-    for (int i = 0; i < x.size(); ++i) {
-        ranks_x[i] = rank++;
-        ranks_y[i] = rank++;
-    }
-
-    return correlation(ranks_x, ranks_y);
-}
-
-int main() {
-    vector<double> x = { 1, 2, 3, 4, 5 };
-    vector<double> y = { 1, 2, 5, 5, 5 };
-
-    double correlation = spearman_rank_correlation(x, y);
-    cout << "Spearman rank correlation: " << correlation << endl;
-    correlation = ld::math::Spearman(x, y);
-    cout << "Spearman rank correlation: " << correlation << endl;
+	}
+	ArchitectureDestory<arch>();
+	cout << endl;
 }

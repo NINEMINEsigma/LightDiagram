@@ -1575,10 +1575,10 @@ inline std::wstring to_wstring(const std::string& input)
 inline std::string to_string(const std::wstring& input)
 {
 #if defined(_LINUX_ON_WINDOW_)||defined(_WINDOW_)
-	DWORD dBufSize = WideCharToMultiByte(CP_OEMCP, 0, input.c_str(), -1, NULL, 0, NULL, FALSE);
+	DWORD dBufSize = WideCharToMultiByte(CP_UTF8, 0, input.c_str(), -1, NULL, 0, NULL, FALSE);
 	char* dBuf = new char[dBufSize + 1];
 	memset(dBuf, 0, dBufSize);
-	WideCharToMultiByte(CP_OEMCP, 0, input.c_str(), -1, dBuf, dBufSize, NULL, FALSE);
+	WideCharToMultiByte(CP_UTF8, 0, input.c_str(), -1, dBuf, dBufSize, NULL, FALSE);
 	std::string result(dBuf);
 	delete[] dBuf;
 	return result;
@@ -1588,6 +1588,38 @@ inline std::string to_string(const std::wstring& input)
 	return converter.to_bytes(input);
 #endif
 }
+
+inline bool isGBK(unsigned char* data, int len) 
+{
+	int i = 0;
+	while (i < len) 
+	{
+		if (data[i] <= 0x7f) {
+			//编码小于等于127,只有一个字节的编码，兼容ASCII
+			i++;
+			continue;
+		}
+		else 
+		{
+			//大于127的使用双字节编码
+			if (data[i] >= 0x81 &&
+				data[i] <= 0xfe &&
+				data[i + 1] >= 0x40 &&
+				data[i + 1] <= 0xfe &&
+				data[i + 1] != 0xf7)
+			{
+				i += 2;
+				continue;
+			}
+			else
+			{
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
 
 #pragma endregion
 

@@ -1,8 +1,13 @@
 #ifndef __FILE_SPACK
 #define __FILE_SPACK
-#include <LightDiagram.h>
-#include<sparkchain.h>
-#include<sc_llm.h>
+#include<LightDiagram.h>
+#if defined(_WINDOW_)||defined(_LINUX_ON_WINDOW_)
+#include <../LLMToolkit/Windows/Spark/3.5/v1.1/include/sparkchain.h>
+#include <../LLMToolkit/Windows/Spark/3.5/v1.1/include/sc_llm.h>
+#else
+#include <../LLMToolkit/Linux/Spark/3.5/v1.1/include/sparkchain.h>
+#include <../LLMToolkit/Linux/Spark/3.5/v1.1/include/sc_llm.h>
+#endif
 
 namespace llm
 {
