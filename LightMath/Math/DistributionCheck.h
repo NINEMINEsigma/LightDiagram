@@ -1,7 +1,7 @@
 #ifndef __FILE_DISTRIBUTIONCHECK
 #define __FILE_DISTRIBUTIONCHECK
 
-#include<Math/MathConfig.hpp>
+#include<Math/MathConfig.h>
 #include<boost/math/distributions.hpp>
 
 namespace ld
@@ -23,10 +23,10 @@ namespace ld
             // You can decide on a threshold for the p-value, e.g. 0.05
             return p_value > alpha;
         }
-        bool is_normal_distribution(const std::vector<Number>& data, const Number& mean, const Number& std_dev, bool isSingleTail = true, const Number& alpha = 0.05);
-        bool is_uniform_distribution(const std::vector<Number>& data, const Number& a, const Number& b, bool isSingleTail = true, const Number& alpha = 0.05);
-        bool is_exponential_distribution(const std::vector<Number>& data, const Number& lambda, bool isSingleTail = true, const Number& alpha = 0.05);
-        bool kolmogorov_smirnov_test(const std::vector<Number>& data1, const std::vector<Number>& data2, bool isSingleTail = true, const Number& alpha = 0.05);
+        bool _LF_C_API(Func) is_normal_distribution(const std::vector<Number>& data, const Number& mean, const Number& std_dev, bool isSingleTail = true, const Number& alpha = 0.05);
+        bool _LF_C_API(Func) is_uniform_distribution(const std::vector<Number>& data, const Number& a, const Number& b, bool isSingleTail = true, const Number& alpha = 0.05);
+        bool _LF_C_API(Func) is_exponential_distribution(const std::vector<Number>& data, const Number& lambda, bool isSingleTail = true, const Number& alpha = 0.05);
+        bool _LF_C_API(Func) kolmogorov_smirnov_test(const std::vector<Number>& data1, const std::vector<Number>& data2, bool isSingleTail = true, const Number& alpha = 0.05);
 
 	}
 }

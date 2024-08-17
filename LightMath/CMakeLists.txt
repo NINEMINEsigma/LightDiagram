@@ -1,7 +1,7 @@
 include_directories(.)
 include_directories(./Math)
 include_directories(./Eigen)
-aux_source_directory	(. Math_Cpp_List)
+aux_source_directory	(./Math Math_Cpp_List)
 message( STATUS "math part cpp = ${Math_Cpp_List}")
 
 find_package(Boost)

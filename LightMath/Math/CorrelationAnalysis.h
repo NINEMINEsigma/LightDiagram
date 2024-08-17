@@ -1,7 +1,7 @@
 #ifndef __FILE_CORRELATION_ANALYSIS
 #define __FILE_CORRELATION_ANALYSIS
 
-#include<Math/MathConfig.hpp>
+#include<Math/MathConfig.h>
 #include<boost/math/statistics/linear_regression.hpp>
 
 namespace ld
@@ -21,8 +21,8 @@ namespace ld
 		 the square root, we can get the degree to which the strength of the relationship 
 		 between each element changes relative to the mean value.
 		 */
-		Number Pearson(const std::vector<Number>& sorted_data1,const std::vector<Number>& sorted_data2, long Length);
-		Number Pearson_T_value(const Number& r, const Integer& n);
+		Number _LF_C_API(Func) Pearson(const std::vector<Number>& sorted_data1,const std::vector<Number>& sorted_data2, long Length);
+		Number _LF_C_API(Func) Pearson_T_value(const Number& r, const Integer& n);
 
 		/*
 		r = S / M.
@@ -34,7 +34,19 @@ namespace ld
 		S = 6Σ(d_x-d_y)^2.
 		M = n(n^2 - 1).
 		*/
-		Number Spearman(const std::vector<Number>& x, const std::vector<Number>& y);
+		Number _LF_C_API(Func) Spearman(const std::vector<Number>& x, const std::vector<Number>& y);
+
+		std::pair<Eigen::VectorXd, Eigen::MatrixXd> _LF_C_API(Func) PCA(const Eigen::MatrixXd& mat);
+		std::pair<Eigen::VectorXd, Eigen::MatrixXd> _LF_C_API(Func) PCA(const std::vector<std::vector<Number>>& normalizeData);
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="mat">可用于ld::math::PCA的矩阵</param>
+		/// <param name="alpha">关键重要水平</param>
+		/// <param name="uppen">是否能够允许越过alpha</param>
+		/// <returns>累计贡献率[特征值,特征向量]</returns>
+		std::map<Number, std::pair<Number, std::vector<Number>>> DimensionalityReduction_PCA(const Eigen::MatrixXd& mat, const Number& alpha = 0.85, const bool& uppen = true);
 	}
 }
 
