@@ -1,4 +1,4 @@
-#include<Core/ArchCom/Interface.h>
+#include<Core/Interface.h>
 
 namespace ld
 {

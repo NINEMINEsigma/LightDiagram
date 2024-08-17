@@ -37,8 +37,9 @@ message("CMAKE_CXX_STANDARD(LLM) = ${CMAKE_CXX_STANDARD}" )
 file(GLOB LLMToolKit_Spack_Header_List ${Spack_Part_Dir}/include/*.h)
 install(FILES ${LLMToolKit_Spack_Header_List} DESTINATION ${Install_Path}/include/${Spack_Part_Path})
 #ToolKit
-file(GLOB LLMToolKit_Header_List ${PROJECT_SOURCE_DIR}/LLMToolKit/*.h)
-install(FILES ${LLMToolKit_Header_List} DESTINATION ${Install_Path}/include/)
+file(GLOB LLMToolKit_Header_List ${PROJECT_SOURCE_DIR}/LLMToolKit/LLM/*.h)
+install(FILES ${LLMToolKit_Header_List} DESTINATION ${Install_Path}/include/LLM/)
+install(FILES ${PROJECT_SOURCE_DIR}/LLMToolKit/LLMToolKit.h DESTINATION ${Install_Path}/include/)
 install(TARGETS LLMToolKit 
         RUNTIME DESTINATION ${Install_Path}/bin
         LIBRARY DESTINATION ${Install_Path}/lib

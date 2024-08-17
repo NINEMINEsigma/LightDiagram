@@ -1,7 +1,7 @@
 #ifndef __FILE_ANY_CLASS
 #define __FILE_ANY_CLASS
 
-#include<Core/Header/LF_Config.h>
+#include<Core/LF_Config.h>
 
 #pragma region is_base_of_template
 

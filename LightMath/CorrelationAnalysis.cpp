@@ -71,6 +71,7 @@ namespace ld
 	}
 
 	//PCA
+    /*
 	namespace math
 	{
         // 计算均值
@@ -180,4 +181,5 @@ namespace ld
             return pcaResults;
         }
 	}
+    */
 }

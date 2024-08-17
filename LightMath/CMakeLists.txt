@@ -23,6 +23,7 @@ endif()
 
 file(GLOB LightMath_Header_List ${PROJECT_SOURCE_DIR}/LightMath/Math/*.h)
 install(FILES ${LightMath_Header_List} DESTINATION ${Install_Path}/include/Math)
+install(FILES ${PROJECT_SOURCE_DIR}/LightMath/LightMath.h DESTINATION ${Install_Path}/include)
 install(TARGETS LightMath 
         RUNTIME DESTINATION ${Install_Path}/bin
         LIBRARY DESTINATION ${Install_Path}/lib

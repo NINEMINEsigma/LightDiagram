@@ -7,6 +7,6 @@
 //*
 
 #include <LightDiagram.h>
-#include <Spark.h>
+#include <LLM/Spark.h>
 
 #endif // !__FILE_LLMTOOLKIT
