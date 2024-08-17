@@ -1,5 +1,6 @@
 include_directories(.)
 include_directories(./Math)
+include_directories(./Eigen)
 aux_source_directory	(. Math_Cpp_List)
 message( STATUS "math part cpp = ${Math_Cpp_List}")
 
@@ -14,7 +15,6 @@ if(Boost_FOUND)
 add_library(LightMath ${Math_Cpp_List})
 
 target_link_libraries(LightMath LightDiagram)
-target_link_libraries(LightMath OpenXLSX::OpenXLSX)
 
 if(Boost_FOUND)
     target_link_libraries (LightMath ${Boost_LIBRARIES})

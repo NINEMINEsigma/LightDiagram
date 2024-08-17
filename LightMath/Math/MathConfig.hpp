@@ -5,6 +5,9 @@
 #include <boost/math/special_functions.hpp>
 #include <boost/math/interpolators/cardinal_cubic_b_spline.hpp>
 
+#include <Eigen/Eigen>
+#include <Eigen/Eigenvalues>
+
 #include <LightDiagram.h>
 
 namespace ld
