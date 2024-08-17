@@ -2,8 +2,8 @@
 
 #define __FILE_LF_CACHE
 
-#include<Core/Header/LF_Config.h>
-#include<Core/Header/anyclass.h>
+#include<Core/LF_Config.h>
+#include<Core/anyclass.h>
 
 namespace ld
 {

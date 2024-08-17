@@ -1,4 +1,4 @@
-#include<Core/Header/LF_Architecture.h>
+#include<Core/LF_Architecture.h>
 
 namespace ld
 {

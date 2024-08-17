@@ -1,7 +1,7 @@
 #ifndef __FILE_DISTRIBUTIONCHECK
 #define __FILE_DISTRIBUTIONCHECK
 
-#include<MathConfig.h>
+#include<Math/MathConfig.hpp>
 #include<boost/math/distributions.hpp>
 
 namespace ld

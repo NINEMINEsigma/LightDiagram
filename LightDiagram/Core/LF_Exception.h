@@ -1,9 +1,9 @@
 #ifndef __FILE_LF_EXCEPTION
 #define __FILE_LF_EXCEPTION
 
-#include<Core/Header/LF_Config.h>
-#include<Core/Header/anyclass.h>
-#include<Core/Header/static_indicator.h>
+#include<Core/LF_Config.h>
+#include<Core/anyclass.h>
+#include<Core/static_indicator.h>
 
 namespace ld
 {

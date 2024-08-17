@@ -2,8 +2,8 @@
 
 #define __FILE_ARCH_INTERFACE
 
-#include<Core/Header/anyclass.h>
-#include<Core/Header/LF_Exception.h>
+#include<Core/anyclass.h>
+#include<Core/LF_Exception.h>
 
 #define _LFramework_API_BindingTo(name,type) _LFramework_API_PropertyBindToField##type ( name )
 

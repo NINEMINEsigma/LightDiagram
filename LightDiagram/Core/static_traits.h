@@ -1,10 +1,10 @@
 #ifndef __FILE_STATIC_TRAITS
 #define __FILE_STATIC_TRAITS
 
-#include<Core/Header/anyclass.h>
-#include<Core/Header/static_indicator.h>
-#include<Core/Header/static_exist.h>
-#include<Core/Header/LF_Type.h>
+#include<Core/anyclass.h>
+#include<Core/static_indicator.h>
+#include<Core/static_exist.h>
+#include<Core/LF_Type.h>
 
 #pragma region Traits (Static)
 

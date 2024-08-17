@@ -1,12 +1,12 @@
 #ifndef __FILE_LF_RAII
 #define __FILE_LF_RAII
 
-#include <Core/Header/LF_Config.h>
-#include <Core/Header/anyclass.h>
-#include <Core/Header/static_traits.h>
-#include <Core/Header/static_indicator.h>
-#include <Core/Header/static_exist.h>
-#include <Core/Header/LF_Exception.h>
+#include <Core/LF_Config.h>
+#include <Core/anyclass.h>
+#include <Core/static_traits.h>
+#include <Core/static_indicator.h>
+#include <Core/static_exist.h>
+#include <Core/LF_Exception.h>
 
 if_type_exist_def(pointer_indicator);
 if_type_exist_def(owner_indicator);

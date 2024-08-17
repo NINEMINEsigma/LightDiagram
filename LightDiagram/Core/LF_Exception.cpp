@@ -1,4 +1,4 @@
-#include<Core/Header/LF_Exception.h>
+#include<Core/LF_Exception.h>
 
 namespace ld
 {

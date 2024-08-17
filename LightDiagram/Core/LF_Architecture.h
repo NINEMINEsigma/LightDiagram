@@ -7,11 +7,11 @@
 //	with a simplified version of Alpadiagram
 //*
 
-#include<Core/Header/LF_Config.h>
-#include<Core/Header/static_traits.h>
-#include<Core/Header/LF_Exception.h>
+#include<Core/LF_Config.h>
+#include<Core/static_traits.h>
+#include<Core/LF_Exception.h>
 
-#include<Core/Header/ArchCom/Interface.h>
+#include<Core/Interface.h>
 
 namespace ld
 {

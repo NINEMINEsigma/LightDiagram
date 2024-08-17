@@ -1,4 +1,4 @@
-#include<DistributionCheck.h>
+#include<Math/DistributionCheck.h>
 
 using namespace std;
 

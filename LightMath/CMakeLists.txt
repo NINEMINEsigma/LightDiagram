@@ -1,4 +1,5 @@
 include_directories(.)
+include_directories(./Math)
 aux_source_directory	(. Math_Cpp_List)
 message( STATUS "math part cpp = ${Math_Cpp_List}")
 
@@ -20,8 +21,8 @@ if(Boost_FOUND)
     message( STATUS "Boost_LIBRARIES = ${Boost_LIBRARIES}")
 endif()
 
-file(GLOB LightMath_Header_List ${PROJECT_SOURCE_DIR}/LightMath/*.h)
-install(FILES ${LightMath_Header_List} DESTINATION ${Install_Path}/include/)
+file(GLOB LightMath_Header_List ${PROJECT_SOURCE_DIR}/LightMath/Math/*.h)
+install(FILES ${LightMath_Header_List} DESTINATION ${Install_Path}/include/Math)
 install(TARGETS LightMath 
         RUNTIME DESTINATION ${Install_Path}/bin
         LIBRARY DESTINATION ${Install_Path}/lib

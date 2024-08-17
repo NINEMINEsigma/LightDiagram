@@ -5,7 +5,7 @@
 // on window(with linux)
 #if defined(_LINUX_ON_WINDOW_)
 
-#include <Core/Header/LF_Config.h>
+#include <Core/LF_Config.h>
 
 #include <mutex>
 

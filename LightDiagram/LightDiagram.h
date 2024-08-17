@@ -33,24 +33,24 @@
 //*
 
 #if defined(_LINUX_ON_WINDOW_)||defined(_WINDOW_)
-#include<Core/Header/beepkit.h>
+#include<Core/beepkit.h>
 #endif
 
 //*
 //	Header
 //*
 
-#include<Core/Header/some_features.h>
-#include<Core/Header/LF_Config.h>
+#include<Core/some_features.h>
+#include<Core/LF_Config.h>
 #if defined(_LINUX_ON_WINDOW_)
-#include <Core/Header/uni_utility.h>
+#include <Core/uni_utility.h>
 #endif
-#include<Core/Header/LF_Type.h>
-#include<Core/Header/anyclass.h>
-#include<Core/Header/LF_Cache.h>
-#include<Core/Header/LF_Exception.h>
-#include<Core/Header/LF_RAII.h>
-#include<Core/Header/LF_Container.h>
+#include<Core/LF_Type.h>
+#include<Core/anyclass.h>
+#include<Core/LF_Cache.h>
+#include<Core/LF_Exception.h>
+#include<Core/LF_RAII.h>
+#include<Core/LF_Container.h>
 
 _LF_C_API(OClass) ld_test
 {
@@ -58,6 +58,6 @@ public:
 	ld_test() {}
 };
 
-#include<Core/Header/LF_Architecture.h>
+#include<Core/LF_Architecture.h>
 
 #endif // !__FILE_LIGHTDIAGRAM
