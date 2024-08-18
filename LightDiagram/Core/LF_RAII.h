@@ -74,7 +74,7 @@ namespace ld
 		{
 			(*this->instance_counter)++;
 		}
-		instance(instance&& from) noexcept :instance_counter(from.instance_counter) 
+		instance(instance && from) noexcept :instance_counter(from.instance_counter)
 		{
 			from.instance_counter = nullptr;
 		}
@@ -93,7 +93,7 @@ namespace ld
 			this->instance_counter = from.instance_counter;
 			from.instance_counter = tempcat;
 		}
-		void swap(instance<void>&& from)
+		void swap(instance<void> && from)
 		{
 			size_t* cat = this->instance_counter;
 			this->instance_counter = from.instance_counter;
@@ -112,7 +112,7 @@ namespace ld
 			}
 			return *this;
 		}
-		instance<void>& operator=(instance<void>&& from) noexcept
+		instance<void>& operator=(instance<void> && from) noexcept
 		{
 			this->swap(std::move(from));
 			return  *this;
@@ -121,7 +121,7 @@ namespace ld
 		{
 			return *this->instance_counter == *from.instance_counter;
 		}
-		bool is_same(const instance<void>& from) const noexcept
+		bool is_same(const instance<void>&from) const noexcept
 		{
 			return this->instance_counter == from.instance_counter;
 		}
@@ -136,189 +136,38 @@ namespace ld
 		using tag = nullptr_t;
 		instance() :instance<void>() {}
 		instance(void* anyptr) :instance<void>() {}
-		instance(instance & from) noexcept :instance<void>(from) {}
-		instance(instance && from) noexcept :instance<void>(std::move(from)) {}
+		instance(instance& from) noexcept :instance<void>(from) {}
+		instance(instance&& from) noexcept :instance<void>(std::move(from)) {}
 		virtual ~instance() {}
 		void* get_ptr() const noexcept
 		{
 			return nullptr;
 		}
-		void swap(instance<nullptr_t>&from)noexcept
+		void swap(instance<nullptr_t>& from)noexcept
 		{
 			instance<void>::swap(from);
 		}
-		void swap(instance<nullptr_t> && from)noexcept
+		void swap(instance<nullptr_t>&& from)noexcept
 		{
 			instance<void>::swap(std::move(from));
 		}
-		instance<nullptr_t>& operator=(instance<nullptr_t>&from) noexcept
+		instance<nullptr_t>& operator=(instance<nullptr_t>& from) noexcept
 		{
 			instance<void>::operator=(from);
 			return *this;
 		}
-		instance<nullptr_t>& operator=(instance<nullptr_t>&&from) noexcept
+		instance<nullptr_t>& operator=(instance<nullptr_t>&& from) noexcept
 		{
 			instance<void>::operator=(std::move(from));
 			return *this;
 		}
-		bool operator==(const instance<nullptr_t>&from) const noexcept
+		bool operator==(const instance<nullptr_t>& from) const noexcept
 		{
 			return instance<void>::operator==(from);
 		}
 	};
 	// Base referance counter(has some function)
 	using instance_counter = instance<nullptr_t>;
-
-	//main instance template type to be a shared ptr
-	template<typename Tag> _LF_C_API(TClass) instance : public instance<void>
-	{
-		Tag * instance_ptr;
-	public:
-		instance(Tag* ptr) :instance_ptr(ptr), instance<void>() {}
-		instance(instance& from) noexcept :instance_ptr(from.instance_ptr), instance<void>(from) {}
-		instance(instance&& from) noexcept :instance_ptr(from.instance_ptr), instance<void>(std::move(from))
-		{
-			from.instance_ptr = nullptr;
-		}
-		virtual ~instance()
-		{
-			if (this->get_count() <= 1)
-			{
-				delete instance_ptr;
-			}
-		}
-		Tag* get_ptr() const noexcept
-		{
-			return instance_ptr;
-		}
-		void swap(instance<Tag>& from)noexcept
-		{
-			instance<void>::swap(from);
-			Tag* cat = this->instance_ptr;
-			this->instance_ptr = from.instance_ptr;
-			from.instance_ptr = cat;
-		}
-		void swap(instance<Tag>&& from)noexcept
-		{
-			instance<void>::swap(std::move(from));
-			this->instance_ptr = from.instance_ptr;
-			from.instance_ptr = nullptr;
-		}
-		instance<Tag>& operator=(instance<Tag>& from) noexcept
-		{
-			if (this->get_count() <= 1)
-			{
-				delete this->instance_ptr;
-			}
-			instance<void>::operator=(from);
-			this->instance_ptr = from.instance_ptr;
-			return *this;
-		}
-		instance<Tag>& operator=(instance<Tag>&& from) noexcept
-		{
-			if (this->get_count() <= 1)
-			{
-				delete this->instance_ptr;
-			}
-			instance<void>::operator=(std::move(from));
-			this->instance_ptr = from.instance_ptr;
-			from.instance_ptr = nullptr;
-			return *this;
-		}
-		instance<Tag>& operator=(Tag*&& from) noexcept
-		{
-			if (this->get_count() <= 1)
-			{
-				delete this->instance_ptr;
-			}
-			instance<void>::release();
-			this->instance_ptr = from;
-			return *this;
-		}
-		bool operator==(const instance<Tag>& from) const noexcept
-		{
-			return instance<void>::operator==(from);
-		}
-		bool operator==(nullptr_t) const noexcept
-		{
-			return this->instance_ptr == nullptr;
-		}
-
-		//reboxing operator
-		//warning: delete-constructor may not be called correctly
-		template<typename OtherTag>
-		bool reboxing(instance<OtherTag>& from)
-		{
-			if constexpr (std::is_base_of_v<Tag, OtherTag>)
-			{
-				if (this->get_count() <= 1)
-				{
-					delete this->instance_ptr;
-				}
-				instance<void>::operator=(from);
-				this->instance_ptr = from.get_ptr();
-				return true;
-			}
-			else if constexpr (std::is_base_of_v<OtherTag, Tag>)
-			{
-				if (dynamic_cast<OtherTag*>(from.get_ptr()) == nullptr)return false;
-				if (this->get_count() <= 1)
-				{
-					delete this->instance_ptr;
-				}
-				instance<void>::operator=(from);
-				this->instance_ptr = dynamic_cast<OtherTag*>(from.get_ptr());
-				return true;
-			}
-			else return false;
-		}
-		//reboxing operator
-		//warning: delete-constructor may not be called correctly
-		template<typename OtherTag>
-		bool reboxing(instance<OtherTag>&& from)
-		{
-			if constexpr (std::is_base_of_v<Tag, OtherTag>)
-			{
-				if (this->get_count() <= 1)
-				{
-					delete this->instance_ptr;
-				}
-				instance<void>::operator=(std::move(from));
-				this->instance_ptr = from.get_ptr();
-				return true;
-			}
-			else if constexpr (std::is_base_of_v<OtherTag, Tag>)
-			{
-				if (dynamic_cast<OtherTag*>(from.get_ptr()) == nullptr)return false;
-				if (this->get_count() <= 1)
-				{
-					delete this->instance_ptr;
-				}
-				instance<void>::operator=(std::move(from));
-				this->instance_ptr = dynamic_cast<OtherTag*>(from.get_ptr());
-				return true;
-			}
-			else return false;
-		}
-		//reboxing operator
-		//warning: delete-constructor may not be called correctly
-		//return from
-		template<typename OtherTag>
-		instance<OtherTag>& operator<<(instance<OtherTag>& from)
-		{
-			this->reboxing(from);
-			return from;
-		}
-		//reboxing operator
-		//warning: delete-constructor may not be called correctly
-		//return itself
-		template<typename OtherTag>
-		instance& operator<<(instance<OtherTag>&& from)
-		{
-			this->reboxing(std::move(from));
-			return *this;
-		}
-	};
 
 	template<typename... Args> using type_list_instance_baseclass = std::array<void*, sizeof...(Args)>;
 	// long arguments package, and need all value is ptr
@@ -337,8 +186,8 @@ namespace ld
 			}
 		}
 		template<size_t index>
-		using result_of_type_list = 
-			typename choose_type < std::is_same_v<void, typename type_decltype<type_list_tag, index>::tag>, bad_indicator, 
+		using result_of_type_list =
+			typename choose_type < std::is_same_v<void, typename type_decltype<type_list_tag, index>::tag>, bad_indicator,
 			typename type_decltype<type_list_tag, index>::tag>::tag;
 		instance(result_of_type_list<0> arg0) :base_type_tag(new baseclass_tag())
 		{
@@ -495,7 +344,7 @@ namespace ld
 	};
 	// limited-ref-count shared ptr, throw bad when over count
 	template<size_t Max> using instance_limit = instance<ConstexprCount<Max>>;
-	
+
 	// memeory alloc buffer, for temp or long time
 	// bug warning, the delete-constructor is not triggered on this type's delete-constructor
 	// and buffer capacity is BufferSize+1 !!!
@@ -599,7 +448,7 @@ namespace ld
 			else throw ld::LDException("muti-source buffer use create");
 		}
 		//release target and lock on single buffer
-		template<class TargetType> void release_target(size_t offset=0)
+		template<class TargetType> void release_target(size_t offset = 0)
 		{
 			if (instance::lock_ptr == this)
 			{
@@ -690,7 +539,7 @@ namespace ld
 			::free(this->get_ptr()->get_head());
 		}
 	};
-	template<typename AccTy,class AccContainerType> _LF_C_API(TClass)
+	template<typename AccTy, class AccContainerType> _LF_C_API(TClass)
 		instance<type_list<container_indicator, AccTy, AccContainerType>> Symbol_Push _LF_Inherited(instance<AccContainerType>)
 	{
 	public:
@@ -707,6 +556,313 @@ namespace ld
 	};
 	template<typename VoidContainerType> using void_container_instance = instance<type_list<container_indicator, void_indicator, VoidContainerType>>;
 	template<typename AccTy, typename AccContainerType> using accu_container_instance = instance<type_list<container_indicator, AccTy, AccContainerType>>;
+
+	//file reader of setup split char
+	template<typename _CharTy, size_t splitChar, size_t splitLineChar>
+	_LF_C_API(TClass) instance<type_list<io_tag_indicator, long_tag_indicator<_CharTy, splitChar>, long_tag_indicator<_CharTy, splitLineChar>>>
+		Symbol_Push _LF_Inherited(instance<std::vector<std::vector<std::basic_string<_CharTy>>>>) Symbol_Endl
+	{
+	public:
+		using string = std::basic_string<_CharTy>;
+		using first_layer = std::vector<std::vector<std::basic_string<_CharTy>>>;
+		using second_layer = std::vector<std::basic_string<_CharTy>>;
+		using inside_layer = std::basic_string<_CharTy>;
+		using inside_char = _CharTy;
+		instance(const string_indicator::tag & path) :instance<first_layer>(new first_layer())
+		{
+			//open file, in|binary
+			std::ifstream in_file(path, std::ios::in | std::ios::binary);
+
+			_CharTy val;
+			string current_str;
+			auto& container = *this->get_ptr();
+			container.push_back(second_layer());
+			size_t row_count = 0;
+			while (in_file.read(reinterpret_cast<char*>(&val), sizeof(_CharTy)))
+			{
+				if ((size_t)val == (size_t)splitChar)
+				{
+					container[row_count].push_back(current_str);
+					current_str.clear();
+				}
+				else if ((size_t)val == (size_t)splitLineChar)
+				{
+					if (current_str.empty() == false)
+					{
+#ifdef _WINDOW_
+						if ((size_t)'\r' == (size_t)*current_str.rbegin())
+							current_str.erase(--current_str.end());
+						container[row_count].push_back(current_str);
+#else
+						container[row_count].push_back(current_str);
+#endif // _WINDOW_
+
+						current_str.clear();
+					}
+					row_count++;
+					container.push_back(second_layer());
+				}
+				else
+				{
+					current_str.push_back(val);
+				}
+				if (in_file.eof())break;
+			}
+			if (current_str.empty() == false)
+			{
+				container[row_count].push_back(current_str);
+				current_str.clear();
+			}
+
+			in_file.close();
+		}
+		instance(instance && from) noexcept :instance<first_layer>(std::move(from)) {}
+		instance& operator=(instance&& from) noexcept
+		{
+			instance<first_layer>::operator=(std::move(from));
+		}
+		instance(instance & from) noexcept : instance<first_layer>(from) {}
+		instance& operator=(instance& from) noexcept
+		{
+			instance<first_layer>::operator=(from);
+		}
+		~instance() {}
+
+		inline auto begin() const noexcept
+		{
+			return this->get_ptr()->begin();
+		}
+		inline auto end() const noexcept
+		{
+			return this->get_ptr()->end();
+		}
+		inline auto rbegin() const noexcept
+		{
+			return this->get_ptr()->rbegin();
+		}
+		inline auto rend() const noexcept
+		{
+			return this->get_ptr()->rend();
+		}
+		inline auto cbegin() const noexcept
+		{
+			return this->get_ptr()->cbegin();
+		}
+		inline auto cend() const noexcept
+		{
+			return this->get_ptr()->cend();
+		}
+
+		second_layer& row(size_t index) const
+		{
+			return (*this->get_ptr())[index];
+		}
+		size_t row_count() const
+		{
+			return this->get_ptr()->size();
+		}
+		inside_layer& cell(size_t row_index, size_t col_index) const
+		{
+			return this->row(row_index)[col_index];
+		}
+
+		template<typename _ReTy>
+		auto get_cell_value(size_t row_index, size_t col_index) const
+		{
+			inside_layer& str = cell(row_index, col_index);
+
+			if constexpr (std::is_floating_point_v<_ReTy>)
+				return std::atof(str.c_str());
+			else if constexpr (std::is_integral_v<_ReTy>)
+				return std::atoi(str.c_str());
+			else if constexpr (std::is_same_v<const char*, _ReTy>)
+				return str.c_str();
+			else if constexpr (std::is_same_v<inside_layer, _ReTy>)
+				return str;
+			else
+			{
+				static_assert(std::is_same_v<decltype(std::declval<instance>().get_cell_value(0, 0)), void >= = false, "not support for this type");
+				return;
+			}
+		}
+
+		void set_cell_value(size_t row_index, size_t col_index, const inside_layer& str)
+		{
+			this->row(row_index)[col_index] = str;
+		}
+	private:
+
+	};
+
+	using csv_instance = instance<type_list<io_tag_indicator, long_tag_indicator<char, ','>, long_tag_indicator<char, '\n'>>>;
+	using csv_w_instance = instance<type_list<io_tag_indicator, long_tag_indicator<wchar_t, ','>, long_tag_indicator<wchar_t, '\n'>>>;
+
+	//config/setting reader and setup global
+	template<>
+	_LF_C_API(TClass) instance<type_list<io_tag_indicator, config_indicator, char>>
+		Symbol_Push _LF_Inherited(instance<config_map>) Symbol_Endl
+	{
+	public:
+		instance(int argc, char** argv):instance<config_map>(new config_map())
+		{
+			config_map& config = *this->get_ptr();
+			for (int i = 0; i < argc; i++)
+			{
+				//TODO
+			}
+		}
+	};
+
+	//main instance template type to be a shared ptr
+	template<typename Tag> _LF_C_API(TClass) instance : public instance<void>
+	{
+		Tag * instance_ptr;
+	public:
+		instance(Tag* ptr) :instance_ptr(ptr), instance<void>() {}
+		instance(instance& from) noexcept :instance_ptr(from.instance_ptr), instance<void>(from) {}
+		instance(instance&& from) noexcept :instance_ptr(from.instance_ptr), instance<void>(std::move(from))
+		{
+			from.instance_ptr = nullptr;
+		}
+		virtual ~instance()
+		{
+			if (this->get_count() <= 1)
+			{
+				delete instance_ptr;
+			}
+		}
+		Tag* get_ptr() const noexcept
+		{
+			return instance_ptr;
+		}
+		void swap(instance<Tag>& from)noexcept
+		{
+			instance<void>::swap(from);
+			Tag* cat = this->instance_ptr;
+			this->instance_ptr = from.instance_ptr;
+			from.instance_ptr = cat;
+		}
+		void swap(instance<Tag>&& from)noexcept
+		{
+			instance<void>::swap(std::move(from));
+			this->instance_ptr = from.instance_ptr;
+			from.instance_ptr = nullptr;
+		}
+		instance<Tag>& operator=(instance<Tag>& from) noexcept
+		{
+			if (this->get_count() <= 1)
+			{
+				delete this->instance_ptr;
+			}
+			instance<void>::operator=(from);
+			this->instance_ptr = from.instance_ptr;
+			return *this;
+		}
+		instance<Tag>& operator=(instance<Tag>&& from) noexcept
+		{
+			if (this->get_count() <= 1)
+			{
+				delete this->instance_ptr;
+			}
+			instance<void>::operator=(std::move(from));
+			this->instance_ptr = from.instance_ptr;
+			from.instance_ptr = nullptr;
+			return *this;
+		}
+		instance<Tag>& operator=(Tag*&& from) noexcept
+		{
+			if (this->get_count() <= 1)
+			{
+				delete this->instance_ptr;
+			}
+			instance<void>::release();
+			this->instance_ptr = from;
+			return *this;
+		}
+		bool operator==(const instance<Tag>& from) const noexcept
+		{
+			return instance<void>::operator==(from);
+		}
+		bool operator==(nullptr_t) const noexcept
+		{
+			return this->instance_ptr == nullptr;
+		}
+
+		//reboxing operator
+		//warning: delete-constructor may not be called correctly
+		template<typename OtherTag>
+		bool reboxing(instance<OtherTag>& from)
+		{
+			if constexpr (std::is_base_of_v<Tag, OtherTag>)
+			{
+				if (this->get_count() <= 1)
+				{
+					delete this->instance_ptr;
+				}
+				instance<void>::operator=(from);
+				this->instance_ptr = from.get_ptr();
+				return true;
+			}
+			else if constexpr (std::is_base_of_v<OtherTag, Tag>)
+			{
+				if (dynamic_cast<OtherTag*>(from.get_ptr()) == nullptr)return false;
+				if (this->get_count() <= 1)
+				{
+					delete this->instance_ptr;
+				}
+				instance<void>::operator=(from);
+				this->instance_ptr = dynamic_cast<OtherTag*>(from.get_ptr());
+				return true;
+			}
+			else return false;
+		}
+		//reboxing operator
+		//warning: delete-constructor may not be called correctly
+		template<typename OtherTag>
+		bool reboxing(instance<OtherTag>&& from)
+		{
+			if constexpr (std::is_base_of_v<Tag, OtherTag>)
+			{
+				if (this->get_count() <= 1)
+				{
+					delete this->instance_ptr;
+				}
+				instance<void>::operator=(std::move(from));
+				this->instance_ptr = from.get_ptr();
+				return true;
+			}
+			else if constexpr (std::is_base_of_v<OtherTag, Tag>)
+			{
+				if (dynamic_cast<OtherTag*>(from.get_ptr()) == nullptr)return false;
+				if (this->get_count() <= 1)
+				{
+					delete this->instance_ptr;
+				}
+				instance<void>::operator=(std::move(from));
+				this->instance_ptr = dynamic_cast<OtherTag*>(from.get_ptr());
+				return true;
+			}
+			else return false;
+		}
+		//reboxing operator
+		//warning: delete-constructor may not be called correctly
+		//return from
+		template<typename OtherTag>
+		instance<OtherTag>& operator<<(instance<OtherTag>& from)
+		{
+			this->reboxing(from);
+			return from;
+		}
+		//reboxing operator
+		//warning: delete-constructor may not be called correctly
+		//return itself
+		template<typename OtherTag>
+		instance& operator<<(instance<OtherTag>&& from)
+		{
+			this->reboxing(std::move(from));
+			return *this;
+		}
+	};
 }
 
 #endif // !__FILE_LF_RAII

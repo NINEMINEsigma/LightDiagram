@@ -428,5 +428,7 @@ private:
 };
 using noncopyable = copy_disable;
 
+using config_map = std::map<std::string, std::string>;
+
 #endif // !__FILE_ANY_CLASS
 
