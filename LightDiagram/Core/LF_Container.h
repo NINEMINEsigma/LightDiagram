@@ -43,6 +43,24 @@ namespace ld
 	constexpr static bool is_container_v=con;	\
 	constexpr static bool is_template_v=tem;	\
 
+	template<typename _Ty> std::vector<std::vector<_Ty>> transposeVxV(const std::vector<std::vector<_Ty>>& from)
+	{
+		if (from.size() == 0)return{};
+		std::vector<std::vector<_Ty>> result(from[0].size());
+		for (size_t i = 0, e = from[0].size(); i < e; i++)
+		{
+			result[i] = std::vector<_Ty>(from.size());
+		}
+		for (size_t i = 0, e = from.size(); i < e; i++)
+		{
+			for (size_t j = 0, ej = from[i].size(); j < ej; j++)
+			{
+				result[j][i] = from[i][j];
+			}
+		}
+		return result;
+	}
+
 	//Stack
 	namespace container
 	{
