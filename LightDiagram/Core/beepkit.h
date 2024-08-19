@@ -1,4 +1,4 @@
-#ifndef __FILE_BEEP_KIT
+﻿#ifndef __FILE_BEEP_KIT
 
 #define __FILE_BEEP_KIT
 

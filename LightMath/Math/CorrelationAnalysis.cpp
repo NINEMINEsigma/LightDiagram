@@ -40,7 +40,7 @@ namespace ld
 		{
 			if (x.size() != y.size())
 				throw Error_Aligned;
-			int n = x.size();
+			int n = (int)x.size();
 
 			vector<pair<Number, int>> ranks_x;
 			vector<pair<Number, int>> ranks_y;

@@ -770,11 +770,13 @@ namespace ld
 		instance& operator=(instance&& from) noexcept
 		{
 			instance<first_layer>::operator=(std::move(from));
+			return *this;
 		}
 		instance(instance & from) noexcept : instance<first_layer>(from) {}
 		instance& operator=(instance& from) noexcept
 		{
 			instance<first_layer>::operator=(from);
+			return *this;
 		}
 		~instance() {}
 
@@ -853,15 +855,73 @@ namespace ld
 		Symbol_Push _LF_Inherited(instance<config_map>) Symbol_Endl
 	{
 	public:
-		instance(int argc, char** argv):instance<config_map>(new config_map())
+		instance() :instance<config_map>(new config_map()) {}
+		instance(int argc, char** argv):instance()
+		{
+			read_config(argc, argv);
+		}
+		instance(instance&& from) noexcept :instance<config_map>(std::move(from)) {}
+		instance& operator=(instance&& from) noexcept
+		{
+			instance<config_map>::operator=(std::move(from));
+			return *this;
+		}
+		instance(instance& from) noexcept :instance<config_map>(from) {}
+		instance& operator=(instance& from) noexcept
+		{
+			instance<config_map>::operator=(from);
+			return *this;
+		}
+		virtual ~instance() {}
+
+		void read_config(int argc, char** argv)
 		{
 			config_map& config = *this->get_ptr();
 			for (int i = 0; i < argc; i++)
 			{
-				//TODO
+				std::string str(argv[argc]);
+				size_t spl = str.find_first_of('=');
+				if (spl != std::string::npos)
+					config[str.substr(0, spl)] = str.substr(spl + 1, str.size() - spl - 1);
+				else
+					config[str] = "";
 			}
 		}
+		template<typename _IOS>
+		void read_config(_IOS& ost, std::function<std::pair<std::string, std::string>(const std::string&)> format)
+		{
+			while (ost.eof() == false)
+			{
+				char str_line[255];
+				ost.getline(str_line, 255);
+				this->get_ptr()->insert(format(str_line));
+			}
+		}
+		template<typename _IOS>
+		void write_config(_IOS& ost, std::function<std::string(const std::string&, const std::string&)> format) const
+		{
+			if (this->get_ptr()->size() == 0)
+			{
+				ost << format("__contains", "empty") << "\n";
+				return;
+			}
+			for (auto& i : *this->get_ptr())
+			{
+				ost << format(i.first, i.second) << "\n";
+			}
+		}
+
+		bool contains(const std::string& key) const
+		{
+			return (*this->get_ptr()).count(key) > 0;
+		}
+		std::string& get_value(const std::string& key) const
+		{
+			return (*this->get_ptr())[key];
+		}
 	};
+
+	using config_instance = instance<type_list<io_tag_indicator, config_indicator, char>>;
 }
 
 #endif // !__FILE_LF_RAII

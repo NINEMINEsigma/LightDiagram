@@ -1559,7 +1559,7 @@ using ConstexprCount = ConstexprMode<size_t, size>;
 inline std::wstring to_wstring(const std::string& input)
 {
 #if defined(_LINUX_ON_WINDOW_)||defined(_WINDOW_)
-	DWORD dBufSize = MultiByteToWideChar(CP_ACP, 0, input.c_str(), input.size(), NULL, 0);
+	DWORD dBufSize = MultiByteToWideChar(CP_ACP, 0, input.c_str(), (int)input.size(), NULL, 0);
 	wchar_t* dBuf = new wchar_t[dBufSize + 1];
 	wmemset(dBuf, 0, dBufSize);
 	MultiByteToWideChar(CP_ACP, 0, input.c_str(), input.size(), dBuf, dBufSize);
