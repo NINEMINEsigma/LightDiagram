@@ -32,7 +32,7 @@ namespace ld
 			public:
 				std::pair<VertexNode, EdgeInsideLayer> operator[](size_t index)
 				{
-					return std::make_pair < vertexs[index], edges[index]);
+					return std::make_pair(vertexs[index], edges[index]);
 				}
 				EdgeInsideLayer operator[](typename VertexVector::iterator index)
 				{
@@ -40,8 +40,8 @@ namespace ld
 				}
 				std::pair<typename VertexVector::iterator, typename EdgeMatrix::iterator> add_vertex(VertexNode vertex, EdgeInsideLayer edgeslayer)
 				{
-					vertexs.insert(vertexs.end(), vertex);
-					edges.insert(edges.end(), edgeslayer);
+					vertexs.insert(vertexs.end(),std::move(vertex));
+					edges.insert(edges.end(), std::move(edgeslayer));
 					return std::make_pair(--vertexs.end(), --edges.end());
 				}
 			};
