@@ -1,5 +1,6 @@
 # Make Setting
 cmake_minimum_required (VERSION 3.12)
+list(APPEND CMAKE_PREFIX_PATH "C:/Boost")
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(ENABLE_OPEN_XLSX ON)
 set(ENABLE_LLM_TOOLKIT ON)

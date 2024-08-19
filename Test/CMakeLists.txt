@@ -1,7 +1,7 @@
 ﻿
 set(Boost_NO_SYSTEM_PATHS ON) 
-set(BOOST_ROOT "E:/boost_1_85_0")
-find_package(Boost COMPONENTS)
+set(BOOST_ROOT "C:/Boost")
+find_package(Boost 1.85.0 EXACT)
 if(Boost_FOUND)
 	#add_compile_definitions(__REF_BOOST)
     include_directories(${Boost_INCLUDE_DIR})

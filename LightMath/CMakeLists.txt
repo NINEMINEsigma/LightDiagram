@@ -4,7 +4,9 @@ include_directories(./Eigen)
 aux_source_directory	(./Math Math_Cpp_List)
 message( STATUS "math part cpp = ${Math_Cpp_List}")
 
-find_package(Boost)
+set(Boost_NO_SYSTEM_PATHS ON) 
+set(BOOST_ROOT "C:/Boost")
+find_package(Boost 1.85.0 EXACT)
 if(Boost_FOUND)
 	add_compile_definitions(__REF_BOOST_MATH)
     include_directories(${Boost_INCLUDE_DIR})
@@ -24,7 +26,7 @@ endif()
 file(GLOB LightMath_Header_List ${PROJECT_SOURCE_DIR}/LightMath/Math/*.h)
 install(FILES ${LightMath_Header_List} DESTINATION ${Install_Path}/include/Math)
 install(FILES ${PROJECT_SOURCE_DIR}/LightMath/LightMath.h DESTINATION ${Install_Path}/include)
-install(DIRECTORY ${PROJECT_SOURCE_DIR}/LightMath/Eigen DESTINATION ${Install_Path}/include/Eigen)
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/LightMath/Eigen DESTINATION ${Install_Path}/include/)
 install(TARGETS LightMath 
         RUNTIME DESTINATION ${Install_Path}/bin
         LIBRARY DESTINATION ${Install_Path}/lib
