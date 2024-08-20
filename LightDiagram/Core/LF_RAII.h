@@ -8,11 +8,6 @@
 #include <Core/static_exist.h>
 #include <Core/LF_Exception.h>
 
-if_type_exist_def(pointer_indicator);
-if_type_exist_def(owner_indicator);
-if_type_exist_def(counter_indicator);
-if_type_exist_def(counter_num_indicator);
-
 //*
 //	On this page, each <set>function returns the old value before the change if it returns
 //*
@@ -226,7 +221,7 @@ namespace ld
 			from.instance_ptr = nullptr;
 			return *this;
 		}
-		instance<Tag>& operator=(Tag*&& from) noexcept
+		instance<Tag>& operator=(Tag* from) noexcept
 		{
 			if (this->get_count() <= 1)
 			{
@@ -243,6 +238,22 @@ namespace ld
 		bool operator==(nullptr_t) const noexcept
 		{
 			return this->instance_ptr == nullptr;
+		}
+		bool equals(const instance<Tag>& from) const noexcept
+		{
+			return instance<void>::operator==(from);
+		}
+		bool equals(nullptr_t) const noexcept
+		{
+			return this->instance_ptr == nullptr;
+		}
+		bool equals(Tag* from) const noexcept
+		{
+			return this->instance_ptr == from;
+		}
+		bool equals(const Tag& from) const noexcept
+		{
+			return *this->instance_ptr == from;
 		}
 
 		//reboxing operator
@@ -679,6 +690,7 @@ namespace ld
 	};
 	template<typename ModulesList, typename FunctionsList, typename FieldsList > using meta_instance = instance<type_list<class_indicator, ModulesList, FunctionsList, FieldsList>>;
 
+	//array memory buffer
 	template<typename VoidContainerType> _LF_C_API(TClass)
 		instance<type_list<container_indicator, void_indicator, VoidContainerType>> Symbol_Push _LF_Inherited(instance<VoidContainerType>)
 	{
@@ -691,6 +703,7 @@ namespace ld
 			::free(this->get_ptr()->get_head());
 		}
 	};
+	//array target type buffer
 	template<typename AccTy, class AccContainerType> _LF_C_API(TClass)
 		instance<type_list<container_indicator, AccTy, AccContainerType>> Symbol_Push _LF_Inherited(instance<AccContainerType>)
 	{
@@ -720,11 +733,9 @@ namespace ld
 		using second_layer = std::vector<std::basic_string<_CharTy>>;
 		using inside_layer = std::basic_string<_CharTy>;
 		using inside_char = _CharTy;
-		instance(const string_indicator::tag & path) :instance<first_layer>(new first_layer())
-		{
-			//open file, in|binary
-			std::ifstream in_file(path, std::ios::in | std::ios::binary);
 
+		void read(std::ifstream & in_file)
+		{
 			_CharTy val;
 			string current_str;
 			auto& container = *this->get_ptr();
@@ -763,8 +774,23 @@ namespace ld
 				container[row_count].push_back(current_str);
 				current_str.clear();
 			}
-
+		}
+		void read(const string_indicator::tag& path)
+		{
+			//open file, in|binary
+			std::ifstream in_file(path, std::ios::in | std::ios::binary);
+			read(in_file);
 			in_file.close();
+		}
+
+		instance() :instance<first_layer>(new first_layer()) {}
+		instance(std::ifstream& in_file) :instance<first_layer>(new first_layer())
+		{
+			read(in_file);
+		}
+		instance(const string_indicator::tag & path) :instance<first_layer>(new first_layer())
+		{
+			read(path);
 		}
 		instance(instance && from) noexcept :instance<first_layer>(std::move(from)) {}
 		instance& operator=(instance&& from) noexcept
@@ -842,6 +868,73 @@ namespace ld
 		{
 			this->row(row_index)[col_index] = str;
 		}
+
+		template<typename _Index>
+		first_layer sub_ignore_pr(const std::vector<_Index>& ignore_rows, const std::vector<_Index>& ignore_cols)
+		{
+			auto& from = *this->get_ptr();
+			first_layer result;
+			for (size_t i = 0, row_ignore_count = 0, e = from.size(); i + row_ignore_count < e; i++)
+			{
+				if (std::find(ignore_rows.begin(), ignore_rows.end(), i) != ignore_rows.end())
+				{
+					row_ignore_count++;
+					continue;
+				}
+				result.push_back(second_layer());
+				for (size_t j = 0, col_ignore_count = 0, ej = from[i].size(); j < ej; j++)
+				{
+					if (std::find(ignore_cols.begin(), ignore_cols.end(), j) != ignore_cols.end())
+					{
+						continue;
+					}
+					result[i - row_ignore_count].push_back(from[i][j]);
+				}
+			}
+			return result;
+		}
+
+		template<typename _Index>
+		first_layer sub_pr(const std::vector<_Index>& choose_rows, const std::vector<_Index>& choose_cols)
+		{
+			auto& from = *this->get_ptr();
+			first_layer result;
+			for (size_t i = 0, row_count = 0, e = from.size(); row_count < e; row_count++)
+			{
+				if (std::find(choose_rows.begin(), choose_rows.end(), row_count) == choose_rows.end())continue;
+				result.push_back(second_layer());
+				for (size_t j = 0, col_count = 0, ej = from[i].size(); col_count < ej; col_count++)
+				{
+					if (std::find(choose_cols.begin(), choose_cols.end(), col_count) == choose_cols.end())continue;
+					result[i].push_back(from[row_count][col_count]);
+					j++;
+				}
+				i++;
+			}
+			return result;
+		}
+
+		void save(const string_indicator::tag& path)
+		{
+			//open file, out|binary
+			std::ofstream out_file(path, std::ios::out | std::ios::binary);
+			save(out_file);
+			out_file.close();
+		}
+		void save(std::ofstream& out_file)
+		{
+			for (auto& i : *this->get_ptr())
+			{
+				for (auto& j : i)
+				{
+					out_file << j << (_CharTy)splitChar;
+				}
+				out_file << (_CharTy)splitLineChar;
+			}
+
+			out_file.flush();
+		}
+
 	private:
 
 	};
@@ -923,5 +1016,57 @@ namespace ld
 
 	using config_instance = instance<type_list<io_tag_indicator, config_indicator, char>>;
 }
+
+#pragma region is_ld_instance
+
+template<typename T>
+_LF_C_API(TStruct) is_ld_instance
+{
+	using tag = T;
+	constexpr static bool value = false;
+};
+template<typename T>
+_LF_C_API(TStruct) is_ld_instance<ld::instance<T>>
+{
+	using tag = T;
+	constexpr static bool value = true;
+};
+template<typename T>
+_LF_C_API(TStruct) is_ld_instance<ld::instance<T>&>
+{
+	using tag = T;
+	constexpr static bool value = true;
+};
+template<typename T>
+_LF_C_API(TStruct) is_ld_instance<ld::instance<T>&&>
+{
+	using tag = T;
+	constexpr static bool value = true;
+};
+template<typename T>
+_LF_C_API(TStruct) is_ld_instance<const ld::instance<T>&&>
+{
+	using tag = T;
+	constexpr static bool value = true;
+};
+template<typename T> constexpr bool is_ld_instance_v = is_ld_instance<T>::value;
+
+#pragma endregion
+
+#pragma region remove_instance
+
+template<typename T>
+_LF_C_API(TStruct) remove_instance
+{
+	using tag = T;
+};
+template<typename T>
+_LF_C_API(TStruct) remove_instance<ld::instance<T>>
+{
+	using tag = T;
+};
+template<typename T> using remove_instance_v = typename remove_instance<T>::tag;
+
+#pragma endregion
 
 #endif // !__FILE_LF_RAII

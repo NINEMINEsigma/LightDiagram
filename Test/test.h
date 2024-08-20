@@ -119,7 +119,7 @@ public:
 		console.LogMessage(L"model init successful");
 	}
 	_LFramework_API_BindingTo(id, Ref);
-	IAnyArchitecture::ReleaseAction WithRelease() const override
+	IAnyArchitecture::DestroyAction WithDestroy() const override
 	{
 		return SMD::WithDestroy();
 	}
@@ -136,7 +136,7 @@ public:
 		console.LogMessage(L"system init successful");
 	}
 	_LFramework_API_BindingTo(id, Ref);
-	IAnyArchitecture::ReleaseAction WithRelease() const override
+	IAnyArchitecture::DestroyAction WithDestroy() const override
 	{
 		return SMD::WithDestroy();
 	}

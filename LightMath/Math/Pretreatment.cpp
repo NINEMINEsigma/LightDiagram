@@ -7,14 +7,68 @@ namespace ld
 {
     namespace math
     {
+        vector<vector<Number>> PretreatmentBy3sigmaRule(const vector<vector<Number>>& data)
+        {
+            vector<Number> mean, std;
+            vector<size_t> count;
+            return PretreatmentBy3sigmaRule(data, mean, std, count);
+        }
+        vector<vector<Number>> PretreatmentBy3sigmaRule(const vector<vector<Number>>& data, vector<Number>& means, vector<Number>& stds,vector<size_t>& counts)
+        {
+            size_t rowe = data.size(), cole = data[0].size();
+            vector<vector<Number>> result(rowe, vector<Number>(cole));
+
+            for (size_t col = 0; col < cole; col++)
+            {
+                Number mean = 0;
+                Number std = 0;
+                size_t count = 0;
+                if (rowe > 1)
+                {
+                    for (size_t row = 0; row < rowe; row++)
+                    {
+                        mean += data[row][col];
+                    }
+                    mean /= (Number)rowe;
+                    for (size_t row = 0; row < rowe; row++)
+                    {
+                        std += pow(data[row][col] - mean, 2);
+                    }
+                    std = sqrt(std / (Number)rowe);
+                }
+                else mean = data[0][col];
+                for (size_t row = 0; row < rowe; row++)
+                {
+                    if (abs(mean - data[row][col]) > 3 * std)
+                    {
+                        count++;
+                        result[row][col] = mean;
+                    }
+                    else
+                        result[row][col] = data[row][col];
+                }
+                means.push_back(mean);
+                stds.push_back(std);
+                counts.push_back(count);
+            }
+
+            return result;
+        }
+
         vector<vector<Number>> NormalizeData(const vector<vector<Number>>& data)
+        {
+            vector<Number> mean, std;
+            return NormalizeData(data, mean, std);
+        }
+        vector<vector<Number>> NormalizeData(const vector<vector<Number>>& data, vector<Number>& means,vector<Number>& stds)
         {
             size_t rowe = data.size(), cole = data[0].size();
             vector<vector<Number>> normalizedData(rowe, vector<Number>(cole));
 
             for (size_t col = 0; col < cole; col++)
             {
-                Number mean(0), std(0);
+                Number mean = 0;
+                Number std = 0;
                 if (rowe > 1)
                 {
                     for (size_t row = 0; row < rowe; row++)
@@ -33,12 +87,19 @@ namespace ld
                 {
                     normalizedData[row][col] = (data[row][col] - mean) / std;
                 }
+                means.push_back(mean);
+                stds.push_back(std);
             }
 
             return normalizedData;
         }
 
         vector<vector<Number>> NormalizeDataMinMax(const vector<vector<Number>>& data)
+        {
+            vector<pair<Number, Number>> minmax;
+            return NormalizeDataMinMax(data, minmax);
+        }
+        vector<vector<Number>> NormalizeDataMinMax(const vector<vector<Number>>& data,vector<pair<Number,Number>>& minmaxs)
         {
             size_t rowe = data.size(), cole = data[0].size();
             vector<vector<Number>> normalizedData(rowe, vector<Number>(cole));
@@ -58,12 +119,18 @@ namespace ld
                 {
                     normalizedData[row][col] = (data[row][col] - min) / (max - min);
                 }
+                minmaxs.push_back(make_pair(min, max));
             }
 
             return normalizedData;
         }
 
         vector<vector<Number>> NormalizeDataSum(const vector<vector<Number>>& data)
+        {
+            vector<Number> sum;
+            return NormalizeDataSum(data, sum);
+        }
+        vector<vector<Number>> NormalizeDataSum(const vector<vector<Number>>& data,vector<Number>& sums)
         {
             size_t rowe = data.size(), cole = data[0].size();
             vector<vector<Number>> normalizedData(rowe, vector<Number>(cole));
@@ -80,6 +147,7 @@ namespace ld
                 {
                     normalizedData[row][col] = data[row][col] / sum;
                 }
+                sums.push_back(sum);
             }
 
             return normalizedData;

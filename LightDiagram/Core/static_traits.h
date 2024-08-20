@@ -53,7 +53,7 @@ function_traits
 /*
 	get regular function information
 */
-template<typename Ret, typename... Args> _LF_C_API(OStruct) function_traits<Ret(Args...)>
+template<typename Ret, typename... Args> _LF_C_API(OStruct) function_traits<Ret(Args...)> Symbol_Endl
 {
 	_LFramework_Kit_API_StaticOperatorBool(true);
 	using tag = Ret(*)(Args...);
@@ -64,6 +64,7 @@ template<typename Ret, typename... Args> _LF_C_API(OStruct) function_traits<Ret(
 	using belong = namespace_indicator;
 	using call = _cdecl_indicator;
 	using consting = unconst_indicator;
+	using noexcepting = except_indicator;
 	using typen = LDType<tag>;
 
 	template<class ThisType> using extension_func = function_traits<Ret(ThisType*, Args...)>;
@@ -72,7 +73,7 @@ template<typename Ret, typename... Args> _LF_C_API(OStruct) function_traits<Ret(
 /*
 	get regular function information
 */
-template<typename Ret> _LF_C_API(OStruct) function_traits<Ret(void)>
+template<typename Ret> _LF_C_API(OStruct) function_traits<Ret(void)> Symbol_Endl
 {
 	_LFramework_Kit_API_StaticOperatorBool(true);
 	using tag = Ret(*)();
@@ -83,16 +84,18 @@ template<typename Ret> _LF_C_API(OStruct) function_traits<Ret(void)>
 	using belong = namespace_indicator;
 	using call = _cdecl_indicator;
 	using consting = unconst_indicator;
+	using noexcepting = except_indicator;
 	using typen = LDType<tag>;
 
 	template<class ThisType> using extension_func = function_traits<Ret(ThisType*)>;
 };
 
+#pragma region class function const type
 
 /*
 	get const member function information
 */
-template<typename Ret, typename C, typename... Args> _LF_C_API(OStruct) function_traits<Ret(C::*)(Args...) const>
+template<typename Ret, typename C, typename... Args> _LF_C_API(OStruct) function_traits<Ret(C::*)(Args...) const> Symbol_Endl
 {
 	_LFramework_Kit_API_StaticOperatorBool(true);
 	using tag = Ret(C::*)(Args...) const;
@@ -103,6 +106,7 @@ template<typename Ret, typename C, typename... Args> _LF_C_API(OStruct) function
 	using belong = C;
 	using call = _cdecl_indicator;
 	using consting = const_indicator;
+	using noexcepting = except_indicator;
 	using typen = LDType<tag>;
 
 	template<class ThisType> using extension_func = function_traits<Ret(C::*)(ThisType*, Args...) const>;
@@ -111,7 +115,7 @@ template<typename Ret, typename C, typename... Args> _LF_C_API(OStruct) function
 /*
 	get const member function information
 */
-template<typename Ret, typename C > _LF_C_API(OStruct) function_traits<Ret(C::*)() const>
+template<typename Ret, typename C > _LF_C_API(OStruct) function_traits<Ret(C::*)() const> Symbol_Endl
 {
 	_LFramework_Kit_API_StaticOperatorBool(true);
 	using tag = Ret(C::*)() const;
@@ -122,15 +126,20 @@ template<typename Ret, typename C > _LF_C_API(OStruct) function_traits<Ret(C::*)
 	using belong = C;
 	using call = _cdecl_indicator;
 	using consting = const_indicator;
+	using noexcepting = except_indicator;
 	using typen = LDType<tag>;
 
 	template<class ThisType> using extension_func = function_traits<Ret(C::*)(ThisType*) const>;
 };
 
+#pragma endregion
+
+#pragma region class function non-symbol
+
 /*
 	get unconst member function information
 */
-template<typename Ret, typename C, typename... Args> _LF_C_API(OStruct) function_traits<Ret(C::*)(Args...)>
+template<typename Ret, typename C, typename... Args> _LF_C_API(OStruct) function_traits<Ret(C::*)(Args...)> Symbol_Endl
 {
 	_LFramework_Kit_API_StaticOperatorBool(true);
 	using tag = Ret(C::*)(Args...);
@@ -141,6 +150,7 @@ template<typename Ret, typename C, typename... Args> _LF_C_API(OStruct) function
 	using belong = C;
 	using call = _cdecl_indicator;
 	using consting = unconst_indicator;
+	using noexcepting = except_indicator;
 	using typen = LDType<tag>;
 
 	template<class ThisType> using extension_func = function_traits<Ret(C::*)(ThisType*, Args...)>;
@@ -149,7 +159,7 @@ template<typename Ret, typename C, typename... Args> _LF_C_API(OStruct) function
 /*
 	get unconst member function information
 */
-template<typename Ret, typename C> _LF_C_API(OStruct) function_traits<Ret(C::*)()>
+template<typename Ret, typename C> _LF_C_API(OStruct) function_traits<Ret(C::*)()> Symbol_Endl
 {
 	_LFramework_Kit_API_StaticOperatorBool(true);
 	using tag = Ret(C::*)();
@@ -160,10 +170,109 @@ template<typename Ret, typename C> _LF_C_API(OStruct) function_traits<Ret(C::*)(
 	using belong = C;
 	using call = _cdecl_indicator;
 	using consting = unconst_indicator;
+	using noexcepting = except_indicator;
 	using typen = LDType<tag>;
 
 	template<class ThisType> using extension_func = function_traits<Ret(C::*)(ThisType*)>;
 };
+
+#pragma endregion
+
+#ifdef __Using_Noexcept_Func_Traits
+
+#pragma region class function noexcept
+
+#pragma region class function const type
+
+/*
+	get const noexcept member function information
+*/
+template<typename Ret, typename C, typename... Args> _LF_C_API(OStruct) function_traits<Ret(C::*)(Args...) const noexcept> Symbol_Endl
+{
+	_LFramework_Kit_API_StaticOperatorBool(true);
+	using tag = Ret(C::*)(Args...) const;
+	constexpr static bool value = true;
+
+	using result = Ret;
+	using parameters = type_list<Args...>;
+	using belong = C;
+	using call = _cdecl_indicator;
+	using consting = const_indicator;
+	using noexcepting = noexcept_indicator;
+	using typen = LDType<tag>;
+
+	template<class ThisType> using extension_func = function_traits<Ret(C::*)(ThisType*, Args...) const noexcept>;
+};
+
+/*
+	get const noexcept member function information
+*/
+template<typename Ret, typename C > _LF_C_API(OStruct) function_traits<Ret(C::*)() const noexcept> Symbol_Endl
+{
+	_LFramework_Kit_API_StaticOperatorBool(true);
+	using tag = Ret(C::*)() const;
+	constexpr static bool value = true;
+
+	using result = Ret;
+	using parameters = type_list<void>;
+	using belong = C;
+	using call = _cdecl_indicator;
+	using consting = const_indicator;
+	using noexcepting = noexcept_indicator;
+	using typen = LDType<tag>;
+
+	template<class ThisType> using extension_func = function_traits<Ret(C::*)(ThisType*) const noexcept>;
+};
+
+#pragma endregion
+
+#pragma region class function non-symbol
+
+/*
+	get unconst noexcept member function information
+*/
+template<typename Ret, typename C, typename... Args> _LF_C_API(OStruct) function_traits<Ret(C::*)(Args...) noexcept> Symbol_Endl
+{
+	_LFramework_Kit_API_StaticOperatorBool(true);
+	using tag = Ret(C::*)(Args...);
+	constexpr static bool value = true;
+
+	using result = Ret;
+	using parameters = type_list<Args...>;
+	using belong = C;
+	using call = _cdecl_indicator;
+	using consting = unconst_indicator;
+	using noexcepting = noexcept_indicator;
+	using typen = LDType<tag>;
+
+	template<class ThisType> using extension_func = function_traits<Ret(C::*)(ThisType*, Args...) noexcept>;
+};
+
+/*
+	get unconst noexcept member function information
+*/
+template<typename Ret, typename C> _LF_C_API(OStruct) function_traits<Ret(C::*)() noexcept> Symbol_Endl
+{
+	_LFramework_Kit_API_StaticOperatorBool(true);
+	using tag = Ret(C::*)();
+	constexpr static bool value = true;
+
+	using result = Ret;
+	using parameters = type_list<void>;
+	using belong = C;
+	using call = _cdecl_indicator;
+	using consting = unconst_indicator;
+	using noexcepting = noexcept_indicator;
+	using typen = LDType<tag>;
+
+	template<class ThisType> using extension_func = function_traits<Ret(C::*)(ThisType*) noexcept>;
+};
+
+#pragma endregion
+
+#pragma endregion
+
+#endif // __Using_Noexcept_Func_Traits
 
 /*
 	get regular function information
@@ -355,6 +464,144 @@ public:
 				else
 				{
 					return ((*instance).*invoker)();
+				}
+			}
+		}
+		else
+		{
+			static_assert(std::is_same_v<parameters, type_list<void>>, "invoke args check type: failed");
+		}
+	}
+	template<typename... Args>
+	typename choose_type < std::is_same_v<void, result>, int, result >::tag invoke(belong& instance, Args... args) const
+	{
+		if constexpr (std::is_same_v<parameters, type_list<Args...>>)
+		{
+			if constexpr (std::is_same_v<belong, namespace_indicator>)
+			{
+				if constexpr (std::is_same_v<result, void>)
+				{
+					invoker(args...);
+					return 0;
+				}
+				else
+				{
+					return invoker(args...);
+				}
+			}
+			else
+			{
+				if constexpr (std::is_same_v<result, void>)
+				{
+					(instance.*invoker)(args...);
+					return 0;
+				}
+				else
+				{
+					return (instance.*invoker)(args...);
+				}
+			}
+		}
+		else
+		{
+			static_assert(std::is_same_v<parameters, type_list<Args...>>, "invoke args check type: failed");
+		}
+	}
+	typename choose_type < std::is_same_v<void, result>, int, result >::tag invoke(belong& instance) const
+	{
+		if constexpr (std::is_same_v<parameters, type_list<void>>)
+		{
+			if constexpr (std::is_same_v<belong, namespace_indicator>)
+			{
+				if constexpr (std::is_same_v<result, void>)
+				{
+					invoker();
+					return 0;
+				}
+				else
+				{
+					return invoker();
+				}
+			}
+			else
+			{
+				if constexpr (std::is_same_v<result, void>)
+				{
+					(instance.*invoker)();
+					return 0;
+				}
+				else
+				{
+					return (instance.*invoker)();
+				}
+			}
+		}
+		else
+		{
+			static_assert(std::is_same_v<parameters, type_list<void>>, "invoke args check type: failed");
+		}
+	}
+	template<typename... Args>
+	typename choose_type < std::is_same_v<void, result>, int, result >::tag invoke(const belong& instance, Args... args) const
+	{
+		if constexpr (std::is_same_v<parameters, type_list<Args...>>)
+		{
+			if constexpr (std::is_same_v<belong, namespace_indicator>)
+			{
+				if constexpr (std::is_same_v<result, void>)
+				{
+					invoker(args...);
+					return 0;
+				}
+				else
+				{
+					return invoker(args...);
+				}
+			}
+			else
+			{
+				if constexpr (std::is_same_v<result, void>)
+				{
+					(instance.*invoker)(args...);
+					return 0;
+				}
+				else
+				{
+					return (instance.*invoker)(args...);
+				}
+			}
+		}
+		else
+		{
+			static_assert(std::is_same_v<parameters, type_list<Args...>>, "invoke args check type: failed");
+		}
+	}
+	typename choose_type < std::is_same_v<void, result>, int, result >::tag invoke(const belong& instance) const
+	{
+		if constexpr (std::is_same_v<parameters, type_list<void>>)
+		{
+			if constexpr (std::is_same_v<belong, namespace_indicator>)
+			{
+				if constexpr (std::is_same_v<result, void>)
+				{
+					invoker();
+					return 0;
+				}
+				else
+				{
+					return invoker();
+				}
+			}
+			else
+			{
+				if constexpr (std::is_same_v<result, void>)
+				{
+					(instance.*invoker)();
+					return 0;
+				}
+				else
+				{
+					return (instance.*invoker)();
 				}
 			}
 		}

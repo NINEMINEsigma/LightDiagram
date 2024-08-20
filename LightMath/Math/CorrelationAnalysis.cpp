@@ -74,7 +74,7 @@ namespace ld
 	// 计算主成分
 	namespace math
 	{
-		pair<VectorXd,MatrixXd> PCA(const MatrixXd& mat)
+		pair<VectorXd, MatrixXd> PCA(const MatrixXd& mat)
 		{
 			// 计算协方差矩阵
 			// cov.ij = (1/n-1) Sigma_{k}^{n}( X_ki X_kj )
@@ -86,16 +86,16 @@ namespace ld
 			return make_pair(eig.eigenvalues(), eig.eigenvectors());
 		}
 
-		map<Number,pair<Number, vector<Number>>> DimensionalityReduction_PCA(const MatrixXd& mat,const Number& alpha,const bool& uppen)
+		map<Number, pair<Number, vector<Number>>> DimensionalityReduction_PCA(const MatrixXd& mat, const Number& alpha, const bool& uppen)
 		{
 			auto aws = PCA(mat);
 			decltype(DimensionalityReduction_PCA({}, {}, {})) result;
-			Number sum(0),psc(0);
+			Number sum(0), psc(0);
 			for (auto i : aws.first)
 			{
 				sum += i;
 			}
-			for (int i = aws.first.size() - 1, e = -1; i != e&&psc<alpha; i--)
+			for (int i = aws.first.size() - 1, e = -1; i != e && psc < alpha; i--)
 			{
 				psc += aws.first[i] / sum;
 				if (psc > alpha && uppen == false)break;

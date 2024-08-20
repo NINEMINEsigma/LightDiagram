@@ -1,4 +1,4 @@
-#ifndef SC_TYPE_API_H
+﻿#ifndef SC_TYPE_API_H
 #define SC_TYPE_API_H
 
 /**

@@ -5,6 +5,7 @@
 #include<Math/CorrelationAnalysis.h>
 #include<Math/DistributionCheck.h>
 #include<Math/Pretreatment.h>
+#include<Math/Predict.h>
 #include<Math/Graph.h>
 
 #endif // !__FILE_LIGHTMATH

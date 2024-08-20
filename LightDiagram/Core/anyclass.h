@@ -58,12 +58,12 @@ template<typename T> constexpr size_t count_full_ptr_v = count_full_ptr<T>::valu
 #pragma region remove_atomic
 
 template<typename T>
-_LF_C_API(Struct) remove_atomic
+_LF_C_API(TStruct) remove_atomic
 {
 	using tag = T;
 };
 template<typename T>
-_LF_C_API(Struct) remove_atomic<std::atomic<T>>
+_LF_C_API(TStruct) remove_atomic<std::atomic<T>>
 {
 	using tag = T;
 };
@@ -73,17 +73,17 @@ _LF_C_API(Struct) remove_atomic<std::atomic<T>>
 #pragma region remove_array
 
 template<typename T>
-_LF_C_API(Struct) remove_array
+_LF_C_API(TStruct) remove_array
 {
 	using tag = T;
 };
 template<typename T, size_t size>
-_LF_C_API(Struct) remove_array<std::array<T, size>>
+_LF_C_API(TStruct) remove_array<std::array<T, size>>
 {
 	using tag = T;
 };
 template<typename T>
-_LF_C_API(Struct) remove_array<T[]>
+_LF_C_API(TStruct) remove_array<T[]>
 {
 	using tag = T;
 };

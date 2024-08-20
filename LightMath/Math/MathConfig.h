@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #ifndef __FILE_MATHCONFIG
 #define __FILE_MATHCONFIG

@@ -36,6 +36,8 @@ _LFramework_Indicator_Def(global, void, false);
 _LFramework_Indicator_Def(namespace, void, false);
 _LFramework_Indicator_Def(const, void, true);
 _LFramework_Indicator_Def(unconst, void, false);
+_LFramework_Indicator_Def(noexcept, void, true);
+_LFramework_Indicator_Def(except, void, false);
 _LFramework_Indicator_Def(template_fill, void, false);
 _LFramework_Indicator_Def(key, void, true);
 _LFramework_Indicator_Def(string, std::string, true);
@@ -47,7 +49,7 @@ _LFramework_Indicator_Def(weak, void, true);
 _LFramework_Indicator_Def(true, void, true);
 _LFramework_Indicator_Def(false, void, false);
 _LFramework_Indicator_Def(container, void, true);
-_LFramework_Indicator_Def(config, void, true);
+_LFramework_Indicator_Def(config, void, true); 
 
 #define __Global_Space
 
@@ -170,7 +172,12 @@ _LF_C_API(OStruct) type_decltype
 
 template<typename type_list_type, bool _IsF = true> const string_indicator::tag& get_type_list_string()
 {
-	if constexpr (std::is_same_v<type_list_type, type_list<void>>)
+	if constexpr (type_list_type::value == false)
+	{
+		static string_indicator::tag bad("bad_type_list");
+		return bad;
+	}
+	else if constexpr (std::is_same_v<type_list_type, type_list<void>>)
 	{
 		static string_indicator::tag empty("");
 		return empty;

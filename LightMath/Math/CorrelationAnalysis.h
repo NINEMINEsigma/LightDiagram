@@ -1,4 +1,4 @@
-#ifndef __FILE_CORRELATION_ANALYSIS
+﻿#ifndef __FILE_CORRELATION_ANALYSIS
 #define __FILE_CORRELATION_ANALYSIS
 
 #include<Math/MathConfig.h>
