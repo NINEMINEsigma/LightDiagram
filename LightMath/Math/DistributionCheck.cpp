@@ -95,6 +95,25 @@ namespace ld
             return p_value > 1 - alpha * (isSingleTail ? 1 : 0.5);
         }
 
+        bool is_smooth(const vector<Number>& data, size_t lag, const Number& alpha)
+        {
+            return adf_test_value(data, lag) < -alpha;
+        }
+        bool is_white_noise(const vector<Number>& series, size_t max_lag, const Number& alpha)
+        {
+            vector<Number> acf_val = acf(series, max_lag);
+            vector<Number> pacf_val = pacf(series, max_lag);
+
+            for (size_t i = 1; i <= max_lag; ++i)
+            {
+                if (acf_val[i] > alpha || pacf_val[i] > alpha)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
     }
 }
 

@@ -9,7 +9,7 @@ namespace ld
 	namespace math
 	{
         template <typename Dist>
-        bool _LF_C_API(Func) is_distribution(const std::vector<Number>& data, const Dist& dist, Number alpha)
+        bool is_distribution(const std::vector<Number>& data, const Dist& dist, Number alpha)
         {
             Number test_statistic = 0.0;
             for (auto& value : data)
@@ -28,6 +28,10 @@ namespace ld
         bool _LF_C_API(Func) is_exponential_distribution(const std::vector<Number>& data, const Number& lambda, bool isSingleTail = true, const Number& alpha = 0.05);
         bool _LF_C_API(Func) kolmogorov_smirnov_test(const std::vector<Number>& data1, const std::vector<Number>& data2, bool isSingleTail = true, const Number& alpha = 0.05);
 
+        // 简单的判断序列的平稳性
+        bool _LF_C_API(Func) is_smooth(const std::vector<Number>& data, size_t lag, const Number& alpha = 0.05);
+        // 简单的对序列进行非白噪声检验,不考虑季节性趋势性等
+        bool _LF_C_API(Func) is_white_noise(const std::vector<Number>& series, size_t max_lag, const Number& alpha = 0.05);
 	}
 }
 

@@ -36,6 +36,7 @@ message("CMAKE_CXX_STANDARD(LLM) = ${CMAKE_CXX_STANDARD}" )
 #Spack
 file(GLOB LLMToolKit_Spack_Header_List ${Spack_Part_Dir}/include/*.h)
 install(FILES ${LLMToolKit_Spack_Header_List} DESTINATION ${Install_Path}/include/${Spack_Part_Path})
+install(FILES ${PROJECT_SOURCE_DIR}/LLMToolkit/Windows/Spark/3.5/v1.1/libs/${_WINDOWS}/SparkChain.dll DESTINATION ${Install_Path}/lib)
 #ToolKit
 file(GLOB LLMToolKit_Header_List ${PROJECT_SOURCE_DIR}/LLMToolKit/LLM/*.h)
 install(FILES ${LLMToolKit_Header_List} DESTINATION ${Install_Path}/include/LLM/)

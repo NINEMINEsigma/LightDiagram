@@ -152,5 +152,33 @@ namespace ld
 
             return normalizedData;
         }
+
+        Number get_sum(const vector<Number>& data)
+        {
+            Number result(0);
+            for (auto& i : data)
+            {
+                result += i;
+            }
+            return result;
+        }
+        Number get_mean(const vector<Number>& data)
+        {
+            return get_sum(data) / (Number)data.size();
+        }
+        Number get_variance(const vector<Number>& data)
+        {
+            Number mean = get_mean(data);
+            Number result(0);
+            for(auto& i:data)
+            {
+                result += pow(i - mean, 2);
+            }
+            return result;
+        }
+        Number get_std(const std::vector<Number>& data)
+        {
+            return sqrt(get_variance(data) / (Number)data.size());
+        }
     }
 }

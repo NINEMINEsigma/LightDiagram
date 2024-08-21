@@ -34,6 +34,15 @@ namespace ld
 		//row_2	{a21,	a22}}
 		Eigen::MatrixXd _LF_C_API(Func) MatrixToMatrix(const std::vector<std::vector<ld::math::Number>>& from);
 		std::vector<std::vector<ld::math::Number>> _LF_C_API(Func) MatrixToMatrix(const Eigen::MatrixXd& from);
+
+		// 计算ADF统计量(时间序列平稳性检验用,使用Dickey-Fuller Test方法)
+		Number _LF_C_API(Func) adf_test_value(const std::vector<Number>& series, size_t lag);
+		// 计算自相关函数（ACF）
+		// nlags是最大延迟阶数
+		std::vector<Number> _LF_C_API(Func) acf(const std::vector<Number>& data, size_t nlags);
+		// 计算偏自相关函数（PACF）
+		// nlags是最大延迟阶数
+		std::vector<Number> _LF_C_API(Func) pacf(const std::vector<Number>& data, size_t nlags);
 	}
 }
 

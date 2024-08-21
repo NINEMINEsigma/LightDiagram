@@ -187,6 +187,10 @@ namespace ld
 		{
 			return instance_ptr;
 		}
+		Tag& get_ref() const
+		{
+			return *instance_ptr;
+		}
 		void swap(instance<Tag>& from)noexcept
 		{
 			instance<void>::swap(from);
@@ -750,7 +754,7 @@ namespace ld
 				}
 				else if ((size_t)val == (size_t)splitLineChar)
 				{
-#ifdef _WINDOW_
+#if defined(_WINDOW_)||true
 					if (current_str.empty() == false && (size_t)'\r' == (size_t)*current_str.rbegin())
 						current_str.erase(--current_str.end());
 #endif // _WINDOW_
@@ -925,9 +929,14 @@ namespace ld
 		{
 			for (auto& i : *this->get_ptr())
 			{
+				bool isfirst = true;
 				for (auto& j : i)
 				{
-					out_file << j << (_CharTy)splitChar;
+					if (isfirst)
+						out_file << j;
+					else
+						out_file << (_CharTy)splitChar << j;
+					isfirst = false;
 				}
 				out_file << (_CharTy)splitLineChar;
 			}
