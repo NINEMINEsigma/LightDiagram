@@ -35,6 +35,7 @@ namespace ld
 		M = n(n^2 - 1).
 		*/
 		Number _LF_C_API(Func) Spearman(const std::vector<Number>& x, const std::vector<Number>& y);
+		Number _LF_C_API(Func) SpearmanEx(const std::vector<Number>& x, const std::vector<Number>& y);
 
 		std::pair<Eigen::VectorXd, Eigen::MatrixXd> _LF_C_API(Func) PCA(const Eigen::MatrixXd& mat);
 		std::pair<Eigen::VectorXd, Eigen::MatrixXd> _LF_C_API(Func) PCA(const std::vector<std::vector<Number>>& normalizeData);

@@ -1,3 +1,6 @@
+#ifndef __FILE_PREDICT
+#define __FILE_PREDICT
+
 #include<Math/MathConfig.h>
 
 namespace ld
@@ -86,4 +89,6 @@ namespace ld
         };
 	}
 }
+
+#endif // !__FILE_PREDICT
 

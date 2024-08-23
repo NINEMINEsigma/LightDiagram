@@ -43,8 +43,11 @@ namespace ld
 		// 计算偏自相关函数（PACF）
 		// nlags是最大延迟阶数
 		std::vector<Number> _LF_C_API(Func) pacf(const std::vector<Number>& data, size_t nlags);
+
+		constexpr long double Pi = 3.141592653589793238462643383279502884L;
 	}
 }
+
 
 #endif // !__FILE_MATHCONFIG
 

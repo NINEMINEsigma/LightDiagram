@@ -13,6 +13,9 @@ namespace ld
 			std::vector<Number>& means,
 			std::vector<Number>& stds,
 			std::vector<size_t>& counts);
+
+		std::vector<std::vector<Number>> _LF_C_API(Func) decenter(const std::vector<std::vector<Number>>& data);
+
 		std::vector<std::vector<Number>> _LF_C_API(Func) NormalizeData(const std::vector<std::vector<Number>>& data);
 		std::vector<std::vector<Number>> _LF_C_API(Func) NormalizeData(
 			const std::vector<std::vector<Number>>& data,

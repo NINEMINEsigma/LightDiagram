@@ -33,7 +33,7 @@ namespace ld
 		}
 		Number Pearson_T_value(const Number& r, const Integer& n)
 		{
-			return r / (sqrt(1 - r * r) / (n - 2));
+			return r / (sqrt(1 - r * r) / (double)(n - 2));
 		}
 
 		Number Spearman(const vector<Number>& x, const vector<Number>& y)
@@ -67,7 +67,30 @@ namespace ld
 				Number dpv = d_x[i] - d_y[i];
 				sum += dpv * dpv;
 			}
-			return 1 - (6 * sum) / (n * (n * n - 1));
+			return 1.0 - (6 * sum) / (Number)(n * (n * n - 1));
+		}
+		Number SpearmanEx(const vector<Number>& x, const vector<Number>& y)
+		{
+			int n = x.size();
+			map<Number, int> rank_x, rank_y;
+
+			// 计算x和y的排名
+			for (int i = 0; i < n; ++i)
+			{
+				rank_x[x[i]] = i + 1;
+				rank_y[y[i]] = i + 1;
+			}
+
+			// 计算斯皮尔曼相关性统计量
+			Number sum_xy = 0, sum_x = 0, sum_y = 0;
+			for (int i = 0; i < n; ++i)
+			{
+				sum_xy += rank_x[x[i]] * rank_y[y[i]];
+				sum_x += rank_x[x[i]] * rank_x[x[i]];
+				sum_y += rank_y[y[i]] * rank_y[y[i]];
+			}
+
+			return (n * sum_xy - sum_x * sum_y) / (sqrt(n * sum_x - sum_x * sum_x) * sqrt(n * sum_y - sum_y * sum_y));
 		}
 	}
 
