@@ -49,6 +49,7 @@
 #include<Core/anyclass.h>
 #include<Core/LF_Cache.h>
 #include<Core/LF_Exception.h>
+#include<Core/LF_Time.h>
 #include<Core/LF_RAII.h>
 #include<Core/LF_Container.h>
 
