@@ -1022,8 +1022,322 @@ namespace ld
 			return (*this->get_ptr())[key];
 		}
 	};
-
 	using config_instance = instance<type_list<io_tag_indicator, config_indicator, char>>;
+
+#if defined(_WINDOWS_)
+	template<>
+	_LF_C_API(Class) instance<type_list<io_tag_indicator, bitmap_indicator>>
+		Symbol_Push _LF_Inherited(instance<BITMAP_FILE>) Symbol_Endl
+	{
+	public:
+		using Bitmap = BITMAP_FILE;
+		using IndexCount = DWORD;
+		using IndexCountN = WORD;
+	private:
+		void CreateBitMap(
+			_In_ Bitmap * output,
+			IndexCount bitCount,
+			const int& height,
+			const int& width,
+			_In_opt_ Bitmap::PaletteBuffer palette,
+			size_t paletteSize,
+			IndexCount ClrUsed,
+			IndexCount ClrImportant)
+		{
+			const IndexCount size = height * width * 3;
+			//Header
+			output->BitmapHeader.bfType = 0x4D42;
+			output->BitmapHeader.bfReserved1 = 0;
+			output->BitmapHeader.bfReserved2 = 0;
+			auto headerAndInfo = static_cast<IndexCount>(sizeof(Bitmap::Header) + sizeof(Bitmap::ColorBuffer) + paletteSize);
+			output->BitmapHeader.bfSize = headerAndInfo + size;
+			output->BitmapHeader.bfOffBits = headerAndInfo;
+			//Info Header
+			output->BitmapInfoHeader = { 0 };
+			output->BitmapInfoHeader.biSize = sizeof(Bitmap::Info);
+			output->BitmapInfoHeader.biHeight = height;
+			output->BitmapInfoHeader.biWidth = width;
+			output->BitmapInfoHeader.biPlanes = 1;
+			output->BitmapInfoHeader.biBitCount = (IndexCountN)bitCount;
+			output->BitmapInfoHeader.biSizeImage = size;
+			output->BitmapInfoHeader.biCompression = BI_RGB;
+			output->BitmapInfoHeader.biClrUsed = ClrUsed;
+			output->BitmapInfoHeader.biClrImportant = ClrImportant;
+			//Palette
+			output->BitMapPalette = palette;
+			output->PaletteSize = paletteSize;
+			//Map
+			Bitmap::ColorBuffer bits = (Bitmap::ColorBuffer)(malloc(size));
+			memset(bits, 0xFF, size);
+			output->BitMapBuffer = bits;
+		}
+
+		template<typename _Ty, typename _BTy>
+		int GetIndex(_Ty& x, _Ty& y, _BTy& width) const
+		{
+			return (int)((int)x + (int)y * width) * 3;
+		}
+	public:
+		instance(
+			const int& height,
+			const int& width,
+			IndexCount bitCount = 24,
+			_In_opt_ Bitmap::PaletteBuffer palette = nullptr,
+			size_t paletteSize = 0,
+			IndexCount ClrUsed = 0,
+			IndexCount ClrImportant = 0) :instance<Bitmap>(new Bitmap())
+		{
+			CreateBitMap(this->get_ptr(), bitCount, height, width, palette, paletteSize, ClrUsed, ClrImportant);
+		}
+
+		bool SaveBitMap(const char* path)
+		{
+			Bitmap* source = this->get_ptr();
+			FILE* output;
+			fopen_s(&output, path, "wb");
+
+			if (output == NULL)
+			{
+				return false;
+			}
+			else
+			{
+				fwrite(&source->BitmapHeader, sizeof(Bitmap::Header), 1, output);
+				fwrite(&source->BitmapInfoHeader, sizeof(Bitmap::Info), 1, output);
+				fwrite(&source->BitMapPalette, sizeof(Bitmap::PaletteBuffer), source->PaletteSize, output);
+				fwrite(source->BitMapBuffer, (size_t)source->BitmapInfoHeader.biSizeImage, 1, output);
+				fclose(output);
+				return true;
+			}
+		}
+
+		bool SaveBitMap(const wchar_t* path)
+		{
+			Bitmap* source = this->get_ptr();
+			FILE* output;
+			_wfopen_s(&output, path, L"wb");
+
+			if (output == NULL)
+			{
+				return false;
+			}
+			else
+			{
+				fwrite(&source->BitmapHeader, sizeof(Bitmap::Header), 1, output);
+				fwrite(&source->BitmapInfoHeader, sizeof(Bitmap::Info), 1, output);
+				fwrite(&source->BitMapPalette, sizeof(Bitmap::PaletteBuffer), source->PaletteSize, output);
+				fwrite(source->BitMapBuffer, (size_t)source->BitmapInfoHeader.biSizeImage, 1, output);
+				fclose(output);
+				return true;
+			}
+		}
+
+		enum class SetBitmapPixelType
+		{
+			overwrite = 0, multiply = 1, overlay = 2
+		};
+
+		enum class ColorSpaceStandardMultiplierType
+		{
+			floating = 1, integer = 256
+		};
+
+		ColorSpaceStandardMultiplierType ColorSpaceStandardMultiplier = ColorSpaceStandardMultiplierType::floating;
+
+	private:
+		BOOL SetBitmapPixel(
+			Bitmap::ColorBuffer BitMapBuffer,
+			const double& x,
+			const double& y,
+			const double& valueR,
+			const double& valueG,
+			const double& valueB,
+			const SetBitmapPixelType& type)
+		{
+			const int& height = this->get_ptr()->BitmapInfoHeader.biHeight;
+			const int& width = this->get_ptr()->BitmapInfoHeader.biWidth;
+			const int index = GetIndex(x, y, width);
+			if (index < height * width * 3)
+			{
+				switch (type)
+				{
+				case SetBitmapPixelType::overwrite:
+				{
+					BitMapBuffer[index + 0] = (Bitmap::Color)(valueB * (double)ColorSpaceStandardMultiplier);	// Blue
+					BitMapBuffer[index + 1] = (Bitmap::Color)(valueG * (double)ColorSpaceStandardMultiplier);   // Green
+					BitMapBuffer[index + 2] = (Bitmap::Color)(valueR * (double)ColorSpaceStandardMultiplier);   // Red
+				}
+				break;
+				case SetBitmapPixelType::multiply:
+				{
+					BitMapBuffer[index + 0] *= (Bitmap::Color)(valueB * (double)ColorSpaceStandardMultiplier);	 // Blue
+					BitMapBuffer[index + 1] *= (Bitmap::Color)(valueG * (double)ColorSpaceStandardMultiplier);   // Green
+					BitMapBuffer[index + 2] *= (Bitmap::Color)(valueR * (double)ColorSpaceStandardMultiplier);   // Red
+				}
+				break;
+				case SetBitmapPixelType::overlay:
+				{
+					BitMapBuffer[index + 0] += (Bitmap::Color)(valueB * (double)ColorSpaceStandardMultiplier);	 // Blue
+					BitMapBuffer[index + 1] += (Bitmap::Color)(valueG * (double)ColorSpaceStandardMultiplier);   // Green
+					BitMapBuffer[index + 2] += (Bitmap::Color)(valueR * (double)ColorSpaceStandardMultiplier);   // Red
+				}
+				break;
+				}
+				return TRUE;
+			}
+			else
+			{
+				return FALSE;
+			}
+		}
+	public:
+		BOOL SetBitmapPixel(
+			const double& x,
+			const double& y,
+			const double& valueR,
+			const double& valueG,
+			const double& valueB,
+			const SetBitmapPixelType& type)
+		{
+			return SetBitmapPixel(this->get_ptr()->BitMapBuffer, x, y, valueR, valueG, valueB, type);
+		}
+
+		Bitmap::Color GetBitmapPixel(
+			const double& x,
+			const double& y,
+			_Out_opt_ double* valueR = nullptr,
+			_Out_opt_ double* valueG = nullptr,
+			_Out_opt_ double* valueB = nullptr)const
+		{
+			const int& width = this->get_ptr()->BitmapInfoHeader.biWidth;
+			Bitmap::ColorBuffer BitMapBuffer = this->get_ptr()->BitMapBuffer;
+			const int index = GetIndex(x, y, width);
+			if (valueB)
+				*valueB = BitMapBuffer[index + 0];
+			if (valueG)
+				*valueG = BitMapBuffer[index + 1];
+			if (valueR)
+				*valueR = BitMapBuffer[index + 2];
+		}
+
+#define _RGBGET(i) &r[i], &g[i], &b[i]
+
+		constexpr static double _GaussianBlurConvolutionKernel_Centre = 0.1478;
+		constexpr static double _GaussianBlurConvolutionKernel_Core = 0.11831;
+		constexpr static double _GaussianBlurConvolutionKernel_Marginal = 0.09474;
+
+#define _i_GaussianBlurBlock(i,t,c) \
+r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
+
+		void GaussianBlur(int distance, double Kernel_Centre, double Kernel_Marginal, double Kernel_Core)
+		{
+			Bitmap* target = this->get_ptr();
+			const int height = target->BitmapInfoHeader.biHeight;
+			const int width = target->BitmapInfoHeader.biWidth;
+			const IndexCount size = height * width * 3;
+			Bitmap::ColorBuffer bits = (Bitmap::ColorBuffer)malloc(size);
+			memset(bits, 0xFF, size);
+
+			for (int x = 0; x < width; x++)
+			{
+				for (int y = 0; y < height; y++)
+				{
+					const int index = GetIndex(x, y, width);
+					for (size_t offset = 0; offset < 3; offset++)
+					{
+						double r[10], g[10], b[10];
+						GetBitmapPixel(Clamp0E(x - distance, width - 1), Clamp0E(y - distance, height - 1), _RGBGET(0));
+						GetBitmapPixel(Clamp0E(x - distance, width - 1), y, _RGBGET(1));
+						GetBitmapPixel(Clamp0E(x - distance, width - 1), Clamp0E(y + distance, height - 1), _RGBGET(2));
+						GetBitmapPixel(x, Clamp0E(y - distance, height - 1), _RGBGET(3));
+						GetBitmapPixel(x, y, _RGBGET(4));
+						GetBitmapPixel(x, Clamp0E(y + distance, height - 1), _RGBGET(5));
+						GetBitmapPixel(Clamp0E(x + distance, width - 1), Clamp0E(y - distance, height - 1), _RGBGET(6));
+						GetBitmapPixel(Clamp0E(x + distance, width - 1), y, _RGBGET(7));
+						GetBitmapPixel(Clamp0E(x + distance, width - 1), Clamp0E(y + distance, height - 1), _RGBGET(8));
+						r[9] = g[9] = b[9] = 0;
+						_i_GaussianBlurBlock(9, 4, Kernel_Centre);
+						_i_GaussianBlurBlock(9, 0, Kernel_Marginal);
+						_i_GaussianBlurBlock(9, 2, Kernel_Marginal);
+						_i_GaussianBlurBlock(9, 6, Kernel_Marginal);
+						_i_GaussianBlurBlock(9, 8, Kernel_Marginal);
+						_i_GaussianBlurBlock(9, 0 + 1, Kernel_Core);
+						_i_GaussianBlurBlock(9, 2 + 1, Kernel_Core);
+						_i_GaussianBlurBlock(9, 6 + 1, Kernel_Core);
+						_i_GaussianBlurBlock(9, 4 + 1, Kernel_Core);
+						SetBitmapPixel(bits, x, y,
+							r[9] / (int)ColorSpaceStandardMultiplier,
+							g[9] / (int)ColorSpaceStandardMultiplier,
+							b[9] / (int)ColorSpaceStandardMultiplier, SetBitmapPixelType::overwrite);
+					}
+				}
+			}
+
+			delete target->BitMapBuffer;
+			target->BitMapBuffer = bits;
+		}
+
+		void GaussianBlur(int distance)
+		{
+			GaussianBlur(distance, _GaussianBlurConvolutionKernel_Centre, _GaussianBlurConvolutionKernel_Marginal, _GaussianBlurConvolutionKernel_Core);
+		}
+
+		BOOL DrawBitmapLine(
+			const double& x1,
+			const double& y1,
+			const double& x2,
+			const double& y2,
+			const double& width,
+			const double& valueR,
+			const double& valueG,
+			const double& valueB,
+			const SetBitmapPixelType& type)
+		{
+			double normal_x = y2 - y1, normal_y = x1 - x2, direction_x = x2 - x1, direction_y = y2 - y1;
+			double normal_len = pow(normal_x * normal_x + normal_y * normal_y, 0.5);
+			normal_x /= normal_len;
+			normal_y /= normal_len;
+			direction_x /= normal_len;
+			direction_y /= normal_len;
+
+			for (size_t i = 0, e = static_cast<size_t>(normal_len); i < e; i++)
+			{
+				for (int j = 0, e2 = static_cast<int>(width); j < e2; j++)
+				{
+					int x = static_cast<int>(x1 + i * direction_x + j * normal_x);
+					int y = static_cast<int>(y1 + i * direction_y + j * normal_y);
+					if (!SetBitmapPixel(x, y, valueR, valueG, valueB, type))
+					{
+						return FALSE;
+					}
+					SetBitmapPixel(x + (direction_x > direction_y ? 0 : 1), y + (direction_y > direction_x ? 0 : 1), valueR, valueG, valueB, type);
+				}
+			}
+
+			return TRUE;
+		}
+
+		BOOL DrawBitmapTriangle(
+			const double& x,
+			const double& y,
+			const double& x2,
+			const double& y2,
+			const double& x3,
+			const double& y3,
+			const double& width,
+			const double& valueR,
+			const double& valueG,
+			const double& valueB,
+			const SetBitmapPixelType& type)
+		{
+			BOOL a = DrawBitmapLine(x, y, x2, y2, width, valueR, valueG, valueB, type);
+			BOOL b = DrawBitmapLine(x2, y2, x3, y3, width, valueR, valueG, valueB, type);
+			BOOL c = DrawBitmapLine(x3, y3, x, y, width, valueR, valueG, valueB, type);
+			return (a == TRUE && b == TRUE && c == TRUE) ? TRUE : FALSE;
+		}
+	};
+#endif
+	using bitmap_instance = instance<type_list<io_tag_indicator, bitmap_indicator>>;
 }
 
 #pragma region is_ld_instance

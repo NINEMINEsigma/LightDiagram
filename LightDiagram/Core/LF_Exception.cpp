@@ -235,12 +235,12 @@ namespace ld
 	void    _LF_C_API(DLL)  EaseProgressBar(double t, int length, ConsoleBackgroundColor color)
 	{
 		std::cout << color;
-		for (int i = 0, e = t * length; i < e; i++)
+		for (int i = 0, e = static_cast<int>(t * length); i < e; i++)
 		{
 			std::cout << " ";
 		}
 		std::cout << ConsoleBackgroundColor::None;
-		for (int i = t * length; i <= length; i++)
+		for (int i = static_cast<int>(t * length); i <= length; i++)
 		{
 			std::cout << " ";
 		}

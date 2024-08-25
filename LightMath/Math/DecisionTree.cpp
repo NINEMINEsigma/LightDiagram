@@ -40,13 +40,13 @@ namespace ld
 		{
 			if (pNode != nullptr)
 			{
-				printf("value of this node is: %d.\n", pNode->m_sAttribute);
+				printf("value of this node is: %d.\n", atoi(pNode->m_sAttribute.c_str()));
 				printf("its children is as the following:\n");
 				std::vector<TreeNode*>::iterator i = pNode->m_vChildren.begin();
 				while (i < pNode->m_vChildren.end())
 				{
 					if (*i != nullptr)
-						printf("%s\t", (*i)->m_sAttribute);
+						printf("%s\t", (*i)->m_sAttribute.c_str());
 					++i;
 				}
 				printf("\n");
@@ -93,14 +93,9 @@ namespace ld
 		{
 			return infos;
 		}
-		vector<attributes*>& DecisionTree::getStatTree()
+		vector<DecisionTree::attributes*>& DecisionTree::getStatTree()
 		{
 			return statTree;
-		}
-
-		DecisionTree::DecisionTree()
-		{
-			attriNum = 0;
 		}
 
 		int DecisionTree::pretreatment(string filename, set<int>& readLineNum, vector<int>& readClumNum)
@@ -137,7 +132,7 @@ namespace ld
 			return result;
 		}
 
-		int DecisionTree::compuDecisiNote(vector<attributes*>& statTree, int deciNum, int lineNum, vector<int>& readClumNum)
+		int DecisionTree::compuDecisiNote(vector<DecisionTree::attributes*>& statTree, int deciNum, int lineNum, vector<int>& readClumNum)
 		{
 			double max_temp = 0;
 			int max_attribute = 0;
@@ -170,7 +165,7 @@ namespace ld
 			return max_attribute;
 		}
 
-		void DecisionTree::resetStatTree(vector<attributes*>& statTree, vector<int>& readClumNum)
+		void DecisionTree::resetStatTree(vector<DecisionTree::attributes*>& statTree, vector<int>& readClumNum)
 		{
 			for (int i = 0; i < readClumNum.size() - 1; i++)
 			{
@@ -189,20 +184,20 @@ namespace ld
 		}
 
 
-		int main(int argc, char* argv[]) {
-			string filename = "tree.txt";
-			DecisionTree dt;
-			int attr_node = 0;
-			TreeNode* treeHead = nullptr;
-			set<int> readLineNum;
-			vector<int> readClumNum;
-			int deep = 0;
-			if (dt.pretreatment(filename, readLineNum, readClumNum) == 0)
-			{
-				dt.CreatTree(treeHead, dt.getStatTree(), dt.getInfos(), readLineNum, readClumNum, deep);
-			}
-			return 0;
-		}
+		//int main(int argc, char* argv[]) {
+		//	string filename = "tree.txt";
+		//	DecisionTree dt;
+		//	int attr_node = 0;
+		//	TreeNode* treeHead = nullptr;
+		//	set<int> readLineNum;
+		//	vector<int> readClumNum;
+		//	int deep = 0;
+		//	if (dt.pretreatment(filename, readLineNum, readClumNum) == 0)
+		//	{
+		//		dt.CreatTree(treeHead, dt.getStatTree(), dt.getInfos(), readLineNum, readClumNum, deep);
+		//	}
+		//	return 0;
+		//}
 	}
 }
 

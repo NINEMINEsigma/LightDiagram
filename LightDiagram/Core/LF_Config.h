@@ -330,6 +330,8 @@ struct platform_indicator
 #if defined(_WINDOW_)
 #include <Windows.h>
 #include <io.h>
+#include <wingdi.h>
+#include <gdiplus.h>
 struct platform_indicator
 {
 	using tag = void;
@@ -1562,7 +1564,7 @@ inline std::wstring to_wstring(const std::string& input)
 	DWORD dBufSize = MultiByteToWideChar(CP_ACP, 0, input.c_str(), (int)input.size(), NULL, 0);
 	wchar_t* dBuf = new wchar_t[dBufSize + 1];
 	wmemset(dBuf, 0, dBufSize);
-	MultiByteToWideChar(CP_ACP, 0, input.c_str(), input.size(), dBuf, dBufSize);
+	MultiByteToWideChar(CP_ACP, 0, input.c_str(), (int)input.size(), dBuf, dBufSize);
 	std::wstring result(dBuf);
 	delete[] dBuf;
 	return result;
@@ -1622,5 +1624,59 @@ inline bool isGBK(unsigned char* data, int len)
 
 
 #pragma endregion
+
+#pragma region Kit
+
+
+#pragma pack (1)
+struct tagBITMAPFILEHEADER_OnLF 
+{
+	WORD    bfType;
+	DWORD   bfSize;
+	WORD    bfReserved1;
+	WORD    bfReserved2;
+	DWORD   bfOffBits;
+};
+typedef _LF_C_API(OStruct) tagBITMAPFILE
+{
+	using Header = tagBITMAPFILEHEADER_OnLF;
+	Header BitmapHeader;
+	using Info = BITMAPINFOHEADER;
+	Info BitmapInfoHeader;
+	using Palette = PALETTEENTRY;
+	using PaletteBuffer = Palette*;
+	PaletteBuffer BitMapPalette;
+	size_t PaletteSize;
+	using Color = UCHAR;
+	using ColorBuffer = Color*;
+	ColorBuffer BitMapBuffer;
+} BITMAP_FILE;
+#pragma pack()
+template<typename _T>
+_T Clamp01(const _T& t)
+{
+	if (t > 1)return 1;
+	else if (t < 0)return 0;
+	else return t;
+}
+
+template<typename _T>
+_T Clamp0E(const _T& t, const _T& max)
+{
+	if (t > max)return 1;
+	else if (t < 0)return 0;
+	else return t;
+}
+
+template<typename _T>
+_T Clamp(const _T& t, const _T& min, const _T& max)
+{
+	if (t > max)return 1;
+	else if (t < min)return 0;
+	else return t;
+}
+
+#pragma endregion
+
 
 #endif // !__FILE_LF_CONFIG

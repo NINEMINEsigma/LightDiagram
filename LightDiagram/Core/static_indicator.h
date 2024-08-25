@@ -49,7 +49,8 @@ _LFramework_Indicator_Def(weak, void, true);
 _LFramework_Indicator_Def(true, void, true);
 _LFramework_Indicator_Def(false, void, false);
 _LFramework_Indicator_Def(container, void, true);
-_LFramework_Indicator_Def(config, void, true); 
+_LFramework_Indicator_Def(config, void, true);
+_LFramework_Indicator_Def(bitmap, void, true);
 
 #define __Global_Space
 

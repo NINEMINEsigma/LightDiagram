@@ -10,10 +10,10 @@ namespace ld
 		/*******树的构造*******/
 		_LF_C_API(Struct) TreeNode 
 		{
-			string            m_sAttribute;//节点名字
-			int               m_iDeciNum;  //yes 数
-			int               m_iUnDecinum; //no 数
-			vector<TreeNode*> m_vChildren;
+			string m_sAttribute;//节点名字
+			int m_iDeciNum;  //yes 数
+			int m_iUnDecinum; //no 数
+			std::vector<TreeNode*> m_vChildren;
 		};
 		TreeNode* CreateTreeNode(std::string value);
 		bool FindNode(TreeNode* pRoot, std::string& item);
@@ -62,7 +62,7 @@ namespace ld
 			* @param: readClumNum 可用属性vector 0可用 1不可用
 			* @return int 返回函数执行状态
 			*/
-			int pretreatment(string filename, set<int>& readLineNum, vector<int>& readClumNum);
+			int pretreatment(std::string filename, std::set<int>& readLineNum, std::vector<int>& readClumNum);
 			int statister(std::vector<std::vector<string>>& infos, std::vector<attributes*>& statTree,std::set<int>& readLine, std::vector<int>& readClumNum);
 			/*
 			* @function compuDecisiNote 计算C4.5
@@ -86,7 +86,7 @@ namespace ld
 			* @param: readClumNum 需要清理的属性set
 			* @return void
 			*/
-			void resetStatTree(std::vector<attributes*>& statTree, vector<int>& readClumNum);
+			void resetStatTree(std::vector<attributes*>& statTree, std::vector<int>& readClumNum);
 			/*
 			* @function Info_attr 总信息量
 			* @param: deciNum 有效信息数
