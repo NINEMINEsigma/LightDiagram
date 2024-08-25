@@ -10,4 +10,39 @@
 #include<Math/DecisionTree.h>
 #include<Math/Graph.h>
 
+namespace ld
+{
+	namespace math
+	{
+		_LF_C_API(Struct) EmptyFillRule
+		{
+			enum class EmptyFillType
+			{
+				//使用empty_fill_value填充
+				Default = 0,
+				//使用平均值填充
+				Mean = 1,
+				//使用中位数填充
+				Median
+			};
+
+			Number empty_fill_value = 0;
+			EmptyFillType type = EmptyFillType::Default;
+		};
+
+		//通过读取csv获取全部数据
+		//使用之前需要将csv最后可能存在的完全空缺的无用行数删除
+		_LF_C_API(Class) FirstStep
+		{
+			csv_instance my_csv;
+			std::vector<std::vector<Number>> my_database;
+		public:
+			FirstStep(const std::string& path);
+		private:
+			EmptyFillRule empty_fill_rule;
+			void DisplayRawDataStats();
+		};
+	}
+}
+
 #endif // !__FILE_LIGHTMATH

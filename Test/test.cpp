@@ -10,9 +10,7 @@ string allstr;
 int main()
 {
 	console.LogMessage("start");
-	bitmap_instance bitmap(900, 900);
-	bitmap.DrawBitmapTriangle(20, 20, 200, 200, 200, 20, 15, 1, 0, 0, bitmap_instance::SetBitmapPixelType::overlay);
-	bitmap.SaveBitMap("D:/Testing Dir/test.bmp");
+	cout << get_std({ 3,4,0,1,2,100 }) << "\n";
 	console.LogMessage("end");
 }
 

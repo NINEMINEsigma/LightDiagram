@@ -17,7 +17,7 @@ if(Boost_FOUND)
     MESSAGE( STATUS "Boost_LIB_VERSION = ${Boost_LIB_VERSION}.")
     message("Boost setting successfully")
 
-add_library(LightMath ${Math_Cpp_List})
+add_library(LightMath ${Math_Cpp_List} ./LightMath.cpp)
 
 target_link_libraries(LightMath LightDiagram)
 

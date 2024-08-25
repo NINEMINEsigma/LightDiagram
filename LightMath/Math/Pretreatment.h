@@ -34,6 +34,8 @@ namespace ld
 		Number _LF_C_API(Func) get_mean(const std::vector<Number>& data);
 		Number _LF_C_API(Func) get_variance(const std::vector<Number>& data);
 		Number _LF_C_API(Func) get_std(const std::vector<Number>& data);
+		Number _LF_C_API(Func) get_percentiles(std::vector<Number> data, Number t);
+		Number _LF_C_API(Func) get_median(const std::vector<Number>& data);
 	}
 }
 

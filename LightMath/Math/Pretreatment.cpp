@@ -13,7 +13,7 @@ namespace ld
             vector<size_t> count;
             return PretreatmentBy3sigmaRule(data, mean, std, count);
         }
-        vector<vector<Number>> PretreatmentBy3sigmaRule(const vector<vector<Number>>& data, vector<Number>& means, vector<Number>& stds,vector<size_t>& counts)
+        vector<vector<Number>> PretreatmentBy3sigmaRule(const vector<vector<Number>>& data, vector<Number>& means, vector<Number>& stds, vector<size_t>& counts)
         {
             size_t rowe = data.size(), cole = data[0].size();
             vector<vector<Number>> result(rowe, vector<Number>(cole));
@@ -75,7 +75,7 @@ namespace ld
             vector<Number> mean, std;
             return NormalizeData(data, mean, std);
         }
-        vector<vector<Number>> NormalizeData(const vector<vector<Number>>& data, vector<Number>& means,vector<Number>& stds)
+        vector<vector<Number>> NormalizeData(const vector<vector<Number>>& data, vector<Number>& means, vector<Number>& stds)
         {
             size_t rowe = data.size(), cole = data[0].size();
             vector<vector<Number>> normalizedData(rowe, vector<Number>(cole));
@@ -114,7 +114,7 @@ namespace ld
             vector<pair<Number, Number>> minmax;
             return NormalizeDataMinMax(data, minmax);
         }
-        vector<vector<Number>> NormalizeDataMinMax(const vector<vector<Number>>& data,vector<pair<Number,Number>>& minmaxs)
+        vector<vector<Number>> NormalizeDataMinMax(const vector<vector<Number>>& data, vector<pair<Number, Number>>& minmaxs)
         {
             size_t rowe = data.size(), cole = data[0].size();
             vector<vector<Number>> normalizedData(rowe, vector<Number>(cole));
@@ -145,7 +145,7 @@ namespace ld
             vector<Number> sum;
             return NormalizeDataSum(data, sum);
         }
-        vector<vector<Number>> NormalizeDataSum(const vector<vector<Number>>& data,vector<Number>& sums)
+        vector<vector<Number>> NormalizeDataSum(const vector<vector<Number>>& data, vector<Number>& sums)
         {
             size_t rowe = data.size(), cole = data[0].size();
             vector<vector<Number>> normalizedData(rowe, vector<Number>(cole));
@@ -185,15 +185,28 @@ namespace ld
         {
             Number mean = get_mean(data);
             Number result(0);
-            for(auto& i:data)
+            for (auto& i : data)
             {
                 result += pow(i - mean, 2);
             }
             return result;
         }
-        Number get_std(const std::vector<Number>& data)
+        Number get_std(const vector<Number>& data)
         {
-            return sqrt(get_variance(data) / (Number)data.size());
+            return sqrt(get_variance(data));
+        }
+        Number get_percentiles(vector<Number> data, Number t)
+        {
+            sort(data.begin(), data.end());
+            size_t pos = t * (Number)data.size() - 1;
+            if (data.size() % 2 == 0)
+                return (data[pos] + data[pos + 1]) / 2.0;
+            else
+                return data[pos];
+        }
+        Number get_median(const vector<Number>& data)
+        {
+            return get_percentiles(data, 0.5);
         }
     }
 }
