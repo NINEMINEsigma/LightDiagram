@@ -8,17 +8,11 @@ namespace ld
 	namespace math
 	{
 		template<int row, int col>
-		Number L1Loss(const Eigen::Matrix<Number, row, col>& mat)
+		auto L1Loss(
+			const Eigen::Matrix<Number, row, col>& predict_data,
+			const Eigen::Matrix<Number, row, col>& teacher_data)
 		{
-			Number result(0);
-			for (size_t i = 0, e = mat.rows(); i < e; i++)
-			{
-				for (size_t j = 0, ej = mat.cols(); j < ej; j++)
-				{
-					result += ::abs(mat(i, j));
-				}
-			}
-			return result;
+			return teacher_data - predict_data;
 		}
 
 		template<
@@ -26,21 +20,23 @@ namespace ld
 		>
 		_LF_C_API(TClass) Perceptron
 			Symbol_Push _LF_Inherited(any_class)
-			Symbol_Link public instance<Eigen::Matrix<Number, -1, OutputDimension>>
+			Symbol_Link public instance<Eigen::Matrix<Number, InputDimension, OutputDimension>>
 			Symbol_Endl
 		{
 		public:
 			using tag = Perceptron;
+			using base_tag = instance<Eigen::Matrix<Number, InputDimension, OutputDimension>>;
 			using InputMatrix = Eigen::Matrix<Number, -1, InputDimension>;
-			using OutputMatrix = Eigen::Matrix < Number, InputDimension, OutputDimension>;
-			using WeightMatrix = Eigen::Matrix<Number, -1, OutputDimension>;
+			using OutputMatrix = Eigen::Matrix < Number, -1, OutputDimension>;
+			using WeightMatrix = Eigen::Matrix<Number, InputDimension, OutputDimension>;
 
 			constexpr static size_t InputDimensionValue = InputDimension;
 			constexpr static size_t OutputDimensionValue = OutputDimension;
 
 			using instance = instance<WeightMatrix>;
 
-			using LossFunction = std::function<Number(const OutputMatrix&)>;
+			//predict_data,teacher_data
+			using LossFunction = std::function<OutputMatrix(const OutputMatrix&, const OutputMatrix&)>;
 			LossFunction lost;
 			using ActivateFunction = std::function<Number(Number)>;
 			ActivateFunction activate;
@@ -48,12 +44,15 @@ namespace ld
 
 		public:
 			Perceptron(_In_ WeightMatrix* from, ActivateFunction activate, LossFunction lost)
-				:instance(from), activate(activate), lost(lost) {}
+				:instance(from), activate(activate), lost(lost) 
+			{
+				this->get_ref().setZero();
+			}
 			Perceptron(_In_ WeightMatrix* from, LossFunction lost)
-				:instance(from), activate(ld::math::sigmoid), lost(lost) {}
+				:Perceptron(from, ld::math::sigmoid, lost) {}
 			Perceptron(_In_ WeightMatrix* from, ActivateFunction activate)
-				:instance(from), activate(activate), lost(L1Loss<InputDimension, OutputDimension>) {}
-			Perceptron(_In_ WeightMatrix* from) :Perceptron(from, ActivateFunction(ld::math::sigmoid), LossFunction(L1Loss<InputDimension, OutputDimension>)) {}
+				:Perceptron(from,activate,L1Loss<InputDimension, OutputDimension>) {}
+			Perceptron(_In_ WeightMatrix* from) :Perceptron(from, ld::math::sigmoid, L1Loss<InputDimension, OutputDimension>) {}
 			Perceptron() :Perceptron(new WeightMatrix()) {}
 			Perceptron(instance& from) :instance(from) {}
 			Perceptron(instance&& from) :instance(std::move(from)) {}
@@ -76,41 +75,153 @@ namespace ld
 
 			Number learning_rate = 0.1;
 
-			void learning(Number cost)
+			void learning(
+				const InputMatrix& input_data,
+				const OutputMatrix& predict_data,
+				const OutputMatrix& teacher_data
+				)
 			{
-				this->get_ref().unaryExpr([&cost, this](Number n)
+				WeightMatrix back_cost = lost(predict_data, teacher_data) * input_data.inverse();
+				back_cost.unaryExpr([this](const Number& from)
 					{
-						return n - cost * learning_rate;
+						return from * learning_rate;
 					});
+				this->get_ref() = this->get_ref() + back_cost;
+			}
+
+			Number& operator()(const size_t& row, const size_t& col)
+			{
+				return this->get_ref()(row, col);
 			}
 		};
 
+#pragma region Predict
+
 		template<
+			typename _In_Matrix,
 			size_t InputDimension,
-			int DataSize,
 			size_t OutputDimension
 		>
-		auto predict(
-			const Eigen::Matrix<Number, DataSize, InputDimension>& mat,
+		auto _predict(
+			const _In_Matrix& mat,
 			const Perceptron<InputDimension, OutputDimension>& current)
 		{
 			return (mat * current.get_ref()).unaryExpr(current.activate);
 		}
 		template<
+			typename _In_Matrix,
 			size_t InputDimension,
-			int DataSize,
-			size_t NextInputDimension,
-			class... PerceptronArgs
+			size_t OutputDimension,
+			typename NextPerceptron
 		>
-		auto predict(
-			const Eigen::Matrix<Number, DataSize, InputDimension>& mat,
-			const Perceptron<InputDimension, NextInputDimension>& current,
-			PerceptronArgs&... matrixs)
+		auto _predict(
+			const _In_Matrix& mat,
+			const Perceptron<InputDimension, OutputDimension>& current,
+			const NextPerceptron& next)
 		{
-			return Push<NextInputDimension, -1, decltype(matrixs)::InputDimensionValue>(
-				(mat * current.get_ref()).unaryExpr(current.activate)
-				, matrixs...);
+			return _predict(
+				_predict(mat, current),
+				next);
 		}
+		template<
+			typename _In_Matrix,
+			size_t InputDimension,
+			size_t OutputDimension,
+			typename NextPerceptron,
+			typename... Perceptrons
+		>
+		auto _predict(
+			const _In_Matrix& mat,
+			const Perceptron<InputDimension, OutputDimension>& current,
+			const NextPerceptron& next,
+			const Perceptrons&... args)
+		{
+			return _predict(
+				_predict(mat, current),
+				next,
+				args...);
+		}
+
+		template<
+			typename _In_Matrix,
+			size_t InputDimension,
+			size_t OutputDimension,
+			typename NextPerceptron,
+			typename... Perceptrons
+		>
+		Eigen::MatrixXd predict(
+			const _In_Matrix& mat,
+			const Perceptron<InputDimension, OutputDimension>& current,
+			const NextPerceptron& next,
+			const Perceptrons&... args)
+		{
+			return _predict(mat, current, next, args...);
+		}
+		template<
+			typename _In_Matrix,
+			size_t InputDimension,
+			size_t OutputDimension,
+			typename NextPerceptron
+		>
+		typename NextPerceptron::OutputMatrix predict(
+			const _In_Matrix& mat,
+			const Perceptron<InputDimension, OutputDimension>& current,
+			const NextPerceptron& next)
+		{
+			return _predict(mat, current, next);
+		}
+		template<
+			typename _In_Matrix,
+			size_t InputDimension,
+			size_t OutputDimension
+		>
+		typename Perceptron<InputDimension, OutputDimension>::OutputMatrix predict(
+			const _In_Matrix& mat,
+			const Perceptron<InputDimension, OutputDimension>& current)
+		{
+			return _predict(mat, current);
+		}
+
+#pragma endregion
+
+#pragma region Fit
+
+		template<
+			typename _In_Matrix,
+			size_t InputDimension,
+			size_t OutputDimension
+		>
+		auto fit(
+			const typename Perceptron<InputDimension, OutputDimension>::OutputMatrix& label,
+			const _In_Matrix& mat,
+			const Perceptron<InputDimension, OutputDimension>& current
+		)
+		{
+			using _Out_Matrix = typename Perceptron<InputDimension, OutputDimension>::OutputMatrix;
+			_Out_Matrix predict_data = _predict(mat, current);
+			current.learning(mat, predict_data, label);
+			return predict_data;
+		}
+		template<
+			typename _In_Matrix,
+			size_t InputDimension,
+			size_t OutputDimension,
+			typename NextPerceptron
+		>
+		void fit(
+			const typename Perceptron<InputDimension, OutputDimension>::OutputMatrix& label,
+			const _In_Matrix& mat,
+			const Perceptron<InputDimension, OutputDimension>& current,
+			const NextPerceptron& next
+		)
+		{
+			using _Out_Matrix = typename Perceptron<InputDimension, OutputDimension>::OutputMatrix;
+			//_Out_Matrix predict_data = _predict(mat, current);
+			current.learning(mat, _predict(mat, current), label);
+		}
+
+#pragma endregion
+
 	}
 }
 

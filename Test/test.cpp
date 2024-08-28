@@ -53,13 +53,16 @@ int main()
 {
 	console.LogMessage("start"); 
     Perceptron<5, 3> a;
+    a.get_ref()(3, 1) = 0.2;
     Perceptron<3, 2> b;
     Perceptron<2, 1> c;
-    Matrix<Number, 1, 5> data;
-    data << 5, 1, 2, 4, 0;
+    Matrix<Number, 2, 5> data;
+    data << 5, 1, 2, 4, 0,
+        1, 2, 5, 10, 99;
     Matrix<Number, 1, 1> test;
     test << 1;
-    cout << predict(data, a, b, c);
+    auto result = predict(data, a);
+    cout << result << '\n';
 	console.LogMessage("end");
 }
 
