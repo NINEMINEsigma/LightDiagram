@@ -105,6 +105,16 @@ namespace ld
             }
             return pacf_values;
         }
+
+        // 激活函数及其导数
+        Number sigmoid(Number x)
+        {
+            return 1 / (1 + exp(-x));
+        }
+        Number dSigmoid(Number x)
+        {
+            return sigmoid(x) * (1 - sigmoid(x));
+        }
 	}
 }
 

@@ -44,7 +44,12 @@ namespace ld
 		// nlags是最大延迟阶数
 		std::vector<Number> _LF_C_API(Func) pacf(const std::vector<Number>& data, size_t nlags);
 
-		constexpr long double Pi = 3.141592653589793238462643383279502884L;
+		constexpr exNumber Pi = 3.141592653589793238462643383279502884L;
+
+		// 激活函数
+		Number sigmoid(Number x);
+		// 激活函数导数
+		Number dSigmoid(Number x);
 	}
 }
 

@@ -2,9 +2,11 @@
 #define __FILE_PREDICT
 
 #include<Math/MathConfig.h>
+#include<Math/Perceptron.hpp>
 
 namespace ld
 {
+    //ARIMA
 	namespace math
 	{
         _LF_C_API(Class) ARMAMath 
@@ -88,6 +90,11 @@ namespace ld
             std::vector<std::vector<double> > solveCoeOfAR();
         };
 	}
+
+    namespace math
+    {
+
+    }
 }
 
 #endif // !__FILE_PREDICT

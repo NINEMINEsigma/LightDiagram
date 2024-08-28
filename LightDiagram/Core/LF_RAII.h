@@ -16,6 +16,8 @@ namespace ld
 {
 	template<typename T> _LF_C_API(Class) instance;
 
+#pragma region Basic
+
 	// Referance Counter
 	template<> _LF_C_API(Class) instance<void> Symbol_Push _LF_Inherited(any_class)
 	{
@@ -125,7 +127,7 @@ namespace ld
 	using instance_base = instance<void>;
 
 	// Referance Counter(has function <get_ptr> and <get_ref>)
-	template<> _LF_C_API(Class) instance<nullptr_t>: public instance<void>
+	template<> _LF_C_API(Class) instance<nullptr_t> Symbol_Push _LF_Inherited(instance<void>) Symbol_Endl
 	{
 	public:
 		using tag = nullptr_t;
@@ -164,6 +166,9 @@ namespace ld
 	// Base referance counter(has some function)
 	using instance_counter = instance<nullptr_t>;
 
+#pragma endregion
+
+#pragma region Memory X kit
 
 	//main instance template type to be a shared ptr
 	template<typename Tag> _LF_C_API(TClass) instance : public instance<void>
@@ -638,6 +643,10 @@ namespace ld
 	template<size_t BufferSize, size_t SlotID> void* instance<long_tag_indicator<long_tag_indicator<void_indicator, BufferSize>, SlotID>>::buffer_ptr = nullptr;
 	template<size_t BufferSize, size_t SlotID> void* instance<long_tag_indicator<long_tag_indicator<void_indicator, BufferSize>, SlotID>>::lock_ptr = nullptr;
 
+#pragma endregion
+
+#pragma region Meta Instance
+
 	// file stream by instance impt
 	template<typename... Args> _LF_C_API(TClass) instance<type_list<io_tag_indicator, Args...>>  Symbol_Push _LF_Inherited(instance<void>)
 	{
@@ -650,7 +659,6 @@ namespace ld
 	template<typename... Args> using instance_wstream = instance<type_list<io_tag_indicator, wstring_indicator, Args...>>;
 	// file stream by instance impt
 	template<typename... Args> using instance_stream_t = instance < type_list < io_tag_indicator, Args... >>;
-
 
 	template<typename... Modules, typename... Functions, typename... Fields> _LF_C_API(TClass)
 		instance<type_list<class_indicator, type_list<Modules...>, type_list<Functions...>, type_list<Fields...>>> Symbol_Endl
@@ -694,6 +702,10 @@ namespace ld
 	};
 	template<typename ModulesList, typename FunctionsList, typename FieldsList > using meta_instance = instance<type_list<class_indicator, ModulesList, FunctionsList, FieldsList>>;
 
+#pragma endregion
+
+#pragma region Array container
+
 	//array memory buffer
 	template<typename VoidContainerType> _LF_C_API(TClass)
 		instance<type_list<container_indicator, void_indicator, VoidContainerType>> Symbol_Push _LF_Inherited(instance<VoidContainerType>)
@@ -725,6 +737,10 @@ namespace ld
 	};
 	template<typename VoidContainerType> using void_container_instance = instance<type_list<container_indicator, void_indicator, VoidContainerType>>;
 	template<typename AccTy, typename AccContainerType> using accu_container_instance = instance<type_list<container_indicator, AccTy, AccContainerType>>;
+
+#pragma endregion
+
+#pragma region CSV type ioer
 
 	//file reader of setup split char
 	template<typename _CharTy, size_t splitChar, size_t splitLineChar>
@@ -951,6 +967,10 @@ namespace ld
 	using csv_instance = instance<type_list<io_tag_indicator, long_tag_indicator<char, ','>, long_tag_indicator<char, '\n'>>>;
 	using csv_w_instance = instance<type_list<io_tag_indicator, long_tag_indicator<wchar_t, ','>, long_tag_indicator<wchar_t, '\n'>>>;
 
+#pragma endregion
+
+#pragma region Config
+
 	//config/setting reader and setup global
 	template<>
 	_LF_C_API(TClass) instance<type_list<io_tag_indicator, config_indicator, char>>
@@ -1023,6 +1043,10 @@ namespace ld
 		}
 	};
 	using config_instance = instance<type_list<io_tag_indicator, config_indicator, char>>;
+
+#pragma endregion
+
+#pragma region Bitmap
 
 #if defined(_WINDOWS_)
 	template<>
@@ -1338,6 +1362,13 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 	};
 #endif
 	using bitmap_instance = instance<type_list<io_tag_indicator, bitmap_indicator>>;
+
+#pragma endregion
+
+#pragma region Learning Perceptron
+
+#pragma endregion
+
 }
 
 #pragma region is_ld_instance

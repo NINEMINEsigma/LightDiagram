@@ -32,5 +32,3 @@ namespace ld
 		}
 	}
 }
-
-#endif // !__FILE_SOME_FEATURES

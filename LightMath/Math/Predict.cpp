@@ -8,6 +8,7 @@ using namespace std;
 
 namespace ld
 {
+    //ARIMA
     namespace math
     {
         ARModel::ARModel(std::vector<double> data, int p)
@@ -700,6 +701,12 @@ namespace ld
             vec.push_back(maCoe);
             return vec;
         }
+    }
+
+    //BP神经网络
+    namespace math
+    {
+
     }
 }
 
