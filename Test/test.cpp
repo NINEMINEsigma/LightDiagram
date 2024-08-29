@@ -61,8 +61,11 @@ int main()
         1, 2, 5, 10, 99;
     Matrix<Number, 1, 1> test;
     test << 1;
-    auto result = predict(data, a);
-    cout << result << '\n';
+    auto result = predict(data, a,b,c);
+    cout << result << "\n\n";
+    fit(test, data, a, b, c);
+    auto result2 = predict(data, a, b, c);
+    cout << result2 << '\n';
 	console.LogMessage("end");
 }
 

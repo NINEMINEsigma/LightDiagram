@@ -75,21 +75,36 @@ namespace ld
 
 			Number learning_rate = 0.1;
 
-			void learning(
+			/// <summary>
+			/// 更新权重,返回更新权重后对应的真实值的输入
+			/// </summary>
+			/// <param name="input_data">当前输入</param>
+			/// <param name="predict_data">预测输出</param>
+			/// <param name="teacher_data">真实值</param>
+			auto learning(
 				const InputMatrix& input_data,
 				const OutputMatrix& predict_data,
 				const OutputMatrix& teacher_data
 				)
 			{
-				WeightMatrix back_cost = lost(predict_data, teacher_data) * input_data.inverse();
-				back_cost.unaryExpr([this](const Number& from)
-					{
-						return from * learning_rate;
-					});
+				//获取当前前向输入
+				//auto front_input = teacher_data * this->get_ref().inverse();
+				//计算可能的正确权重与当前权重的误差
+				WeightMatrix back_cost = lost(input_data.inverse() * predict_data, input_data.inverse() * teacher_data);
+				//与学习率相乘
+				//back_cost.unaryExpr([this](const Number& from)
+				//	{
+				//		return from * learning_rate;
+				//	});
+				back_cost *= learning_rate;
+				//更新权重
 				this->get_ref() = this->get_ref() + back_cost;
+				//返回真实值的前向输入
+				//TODO
+				return teacher_data * this->get_ref().inverse();
 			}
 
-			Number& operator()(const size_t& row, const size_t& col)
+			Number& operator()(const size_t& row, const size_t& col) const
 			{
 				return this->get_ref()(row, col);
 			}
@@ -97,6 +112,7 @@ namespace ld
 
 #pragma region Predict
 
+		//返回预测结果
 		template<
 			typename _In_Matrix,
 			size_t InputDimension,
@@ -108,12 +124,14 @@ namespace ld
 		{
 			return (mat * current.get_ref()).unaryExpr(current.activate);
 		}
+		//返回预测结果
 		template<
 			typename _In_Matrix,
 			size_t InputDimension,
 			size_t OutputDimension,
 			typename NextPerceptron
 		>
+		//返回预测结果
 		auto _predict(
 			const _In_Matrix& mat,
 			const Perceptron<InputDimension, OutputDimension>& current,
@@ -123,6 +141,7 @@ namespace ld
 				_predict(mat, current),
 				next);
 		}
+		//返回预测结果
 		template<
 			typename _In_Matrix,
 			size_t InputDimension,
@@ -141,7 +160,7 @@ namespace ld
 				next,
 				args...);
 		}
-
+		//返回预测结果
 		template<
 			typename _In_Matrix,
 			size_t InputDimension,
@@ -157,6 +176,7 @@ namespace ld
 		{
 			return _predict(mat, current, next, args...);
 		}
+		//返回预测结果
 		template<
 			typename _In_Matrix,
 			size_t InputDimension,
@@ -170,6 +190,7 @@ namespace ld
 		{
 			return _predict(mat, current, next);
 		}
+		//返回预测结果
 		template<
 			typename _In_Matrix,
 			size_t InputDimension,
@@ -186,6 +207,7 @@ namespace ld
 
 #pragma region Fit
 
+		//返回真实值在学习后权重下的输入
 		template<
 			typename _In_Matrix,
 			size_t InputDimension,
@@ -194,30 +216,50 @@ namespace ld
 		auto fit(
 			const typename Perceptron<InputDimension, OutputDimension>::OutputMatrix& label,
 			const _In_Matrix& mat,
-			const Perceptron<InputDimension, OutputDimension>& current
+			Perceptron<InputDimension, OutputDimension>& current
 		)
 		{
-			using _Out_Matrix = typename Perceptron<InputDimension, OutputDimension>::OutputMatrix;
-			_Out_Matrix predict_data = _predict(mat, current);
-			current.learning(mat, predict_data, label);
-			return predict_data;
+			return current.learning(mat, _predict(mat, current), label);
 		}
+		// 返回真实值在学习后权重下的输入
+		// 对于current而言,由next学习后返回的矩阵即为current的真实值
 		template<
 			typename _In_Matrix,
+			typename _Label_Matrix,
 			size_t InputDimension,
 			size_t OutputDimension,
 			typename NextPerceptron
 		>
-		void fit(
-			const typename Perceptron<InputDimension, OutputDimension>::OutputMatrix& label,
+		auto fit(
+			const _Label_Matrix& label,
 			const _In_Matrix& mat,
-			const Perceptron<InputDimension, OutputDimension>& current,
-			const NextPerceptron& next
+			Perceptron<InputDimension, OutputDimension>& current,
+			NextPerceptron& next
 		)
 		{
-			using _Out_Matrix = typename Perceptron<InputDimension, OutputDimension>::OutputMatrix;
-			//_Out_Matrix predict_data = _predict(mat, current);
-			current.learning(mat, _predict(mat, current), label);
+			typename Perceptron<InputDimension, OutputDimension>::OutputMatrix current_predict_data = _predict(mat, current); 
+			return current.learning(mat, current_predict_data, fit(label, current_predict_data, next));
+		}
+		// 返回真实值在学习后权重下的输入
+		// 对于current而言,由next学习后返回的矩阵即为current的真实值
+		template<
+			typename _In_Matrix,
+			typename _Label_Matrix,
+			size_t InputDimension,
+			size_t OutputDimension,
+			typename NextPerceptron,
+			typename... Perceptrons
+		>
+		auto fit(
+			const _Label_Matrix& label,
+			const _In_Matrix& mat,
+			Perceptron<InputDimension, OutputDimension>& current,
+			NextPerceptron& next,
+			Perceptrons&... args
+		)
+		{
+			typename Perceptron<InputDimension, OutputDimension>::OutputMatrix current_predict_data = _predict(mat, current);
+			return current.learning(mat, current_predict_data, fit(label, current_predict_data, next, args...));
 		}
 
 #pragma endregion
