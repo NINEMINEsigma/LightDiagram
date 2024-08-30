@@ -647,19 +647,6 @@ namespace ld
 
 #pragma region Meta Instance
 
-	// file stream by instance impt
-	template<typename... Args> _LF_C_API(TClass) instance<type_list<io_tag_indicator, Args...>>  Symbol_Push _LF_Inherited(instance<void>)
-	{
-	public:
-		//TODO
-	};
-	// file (a)stream by instance impt
-	template<typename... Args> using instance_astream = instance<type_list<io_tag_indicator, string_indicator, Args...>>;
-	// file wstream by instance impt
-	template<typename... Args> using instance_wstream = instance<type_list<io_tag_indicator, wstring_indicator, Args...>>;
-	// file stream by instance impt
-	template<typename... Args> using instance_stream_t = instance < type_list < io_tag_indicator, Args... >>;
-
 	template<typename... Modules, typename... Functions, typename... Fields> _LF_C_API(TClass)
 		instance<type_list<class_indicator, type_list<Modules...>, type_list<Functions...>, type_list<Fields...>>> Symbol_Endl
 	{
@@ -1048,7 +1035,7 @@ namespace ld
 
 #pragma region Bitmap
 
-#if defined(_WINDOWS_)
+#if defined(_WINDOWS_)||defined(_LINUX_ON_WINDOW_)
 	template<>
 	_LF_C_API(Class) instance<type_list<io_tag_indicator, bitmap_indicator>>
 		Symbol_Push _LF_Inherited(instance<BITMAP_FILE>) Symbol_Endl
@@ -1360,6 +1347,9 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 			return (a == TRUE && b == TRUE && c == TRUE) ? TRUE : FALSE;
 		}
 	};
+#undef _RGBGET
+#undef _i_GaussianBlurBlock
+
 #endif
 	using bitmap_instance = instance<type_list<io_tag_indicator, bitmap_indicator>>;
 
