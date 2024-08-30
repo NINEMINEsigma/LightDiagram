@@ -52,20 +52,22 @@ int mainx()
 int main()
 {
 	console.LogMessage("start"); 
-    Perceptron<5, 3> a;
-    a.get_ref()(3, 1) = 0.2;
-    Perceptron<3, 2> b;
-    Perceptron<2, 1> c;
-    Matrix<Number, 2, 5> data;
-    data << 5, 1, 2, 4, 0,
-        1, 2, 5, 10, 99;
-    Matrix<Number, 1, 1> test;
-    test << 1;
-    auto result = predict(data, a,b,c);
-    cout << result << "\n\n";
-    fit(test, data, a, b, c);
-    auto result2 = predict(data, a, b, c);
-    cout << result2 << '\n';
+    Perceptron<5, 2> a;
+    a.get_ref() <<
+        -100, -100, -100, 100, 100,
+        100, 100, 100, -100, -100;
+    Matrix<Number, 1, 2> test;
+    test << 1, 0;
+    Matrix<Number, 1, 5> input;
+    input << 1, 2, 3, 4, 5;
+    Perceptron<5, 2>::OutputMatrix p = predict(input, a);
+    cout << a << "\n--------------------------------\n" << p << "\n\n";
+    while ((test - p).maxCoeff() > 0.0001)
+    {
+        fit(test, input, a);
+        p = predict(input, a);
+        cout << a << "\n--------------------------------\n" << p << "\n\n";
+    }
 	console.LogMessage("end");
 }
 
