@@ -7,6 +7,7 @@
 #include <Core/static_indicator.h>
 #include <Core/static_exist.h>
 #include <Core/LF_Exception.h>
+#include <filesystem>
 
 //*
 //	On this page, each <set>function returns the old value before the change if it returns
@@ -1430,6 +1431,127 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 #pragma region Learning Perceptron
 
 #pragma endregion
+
+#pragma region File System
+
+	//file system
+	template<>
+	_LF_C_API(Class) instance<type_list<io_tag_indicator, file_indicator>>
+		Symbol_Push _LF_Inherited(instance<std::filesystem::path>)
+	{
+	public:
+		using tag = std::filesystem::path;
+		using base_instance = instance<tag>;
+		instance(const tag & path) :base_instance(new tag(path)) {}
+		instance(instance&& from) noexcept :base_instance(std::move(from)) {}
+		instance& operator=(instance&& from) noexcept
+		{
+			base_instance::operator=(std::move(from));
+			return *this;
+		}
+		instance(instance& from) noexcept :base_instance(from) {}
+		instance& operator=(instance& from) noexcept
+		{
+			base_instance::operator=(from);
+			return *this;
+		}
+		virtual ~instance() {}
+
+		auto get_filesystem_status() const noexcept
+		{
+			return std::filesystem::status(this->get_ref());
+		}
+		auto get_filesystem_type() const noexcept
+		{
+			return get_filesystem_status().type();
+		}
+
+		bool exists() const noexcept
+		{
+			return std::filesystem::exists(this->get_ref());
+		}
+		bool is_directory() const noexcept
+		{
+			return this->exists() && get_filesystem_type() == std::filesystem::file_type::directory;
+		}
+		bool is_not_directory() const noexcept
+		{
+			return this->exists() && get_filesystem_type() != std::filesystem::file_type::directory;
+		}
+
+		void try_create_directories() const
+		{
+			std::filesystem::create_directories(this->get_ref().parent_path());
+		}
+		bool copy_to(const tag& to_path)
+		{
+			try
+			{
+				std::filesystem::copy(this->get_ref(), to_path);
+				return true;
+			}
+			catch (...)
+			{
+				return false;
+			}
+		}
+		bool move_to(const tag& to_path)
+		{
+			if (this->is_not_directory())
+			{
+				try
+				{
+					std::filesystem::copy(this->get_ref(), to_path);
+					try
+					{
+						std::filesystem::remove(this->get_ref());
+					}
+					catch (...) {}
+					this->get_ref() = to_path;
+					return true;
+				}
+				catch (...)
+				{
+					std::filesystem::remove(to_path);
+					return false;
+				}
+			}
+			else
+			{
+				copy_to(to_path);
+			}
+		}
+
+		bool delete_file() const
+		{
+			std::filesystem::remove(this->get_ref());
+		}
+		bool delete_all() const
+		{
+			std::filesystem::remove_all(this->get_ref());
+		}
+
+		std::filesystem::directory_entry get_entry() const
+		{
+			return std::filesystem::directory_entry(this->get_ref());
+		}
+		std::filesystem::directory_iterator get_dir_itor() const
+		{
+			return std::filesystem::directory_iterator(this->get_ref());
+		}
+
+		operator bool()
+		{
+			return this->exists();
+		}
+		operator std::filesystem::path()
+		{
+			return this->get_ref();
+		}
+	};
+
+#pragma endregion
+
 
 }
 
