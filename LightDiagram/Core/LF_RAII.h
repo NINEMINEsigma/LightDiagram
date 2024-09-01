@@ -1,4 +1,4 @@
-#ifndef __FILE_LF_RAII
+﻿#ifndef __FILE_LF_RAII
 #define __FILE_LF_RAII
 
 #include <Core/LF_Config.h>
@@ -741,7 +741,48 @@ namespace ld
 		using inside_layer = std::basic_string<_CharTy>;
 		using inside_char = _CharTy;
 
-		void read(std::ifstream & in_file)
+		void read(std::wifstream & in_file)
+		{
+			_CharTy val;
+			string current_str;
+			auto& container = *this->get_ptr();
+			container.push_back(second_layer());
+			size_t row_count = 0;
+			while (in_file.read(reinterpret_cast<wchar_t*>(&val), sizeof(_CharTy)))
+			{
+				if ((size_t)val == (size_t)splitChar)
+				{
+					container[row_count].push_back(current_str);
+					current_str.clear();
+				}
+				else if ((size_t)val == (size_t)splitLineChar)
+				{
+#if defined(_WINDOW_)||true
+					if (current_str.empty() == false && (size_t)L'\r' == (size_t)*current_str.rbegin())
+						current_str.erase(--current_str.end());
+#endif // _WINDOW_
+					if (current_str.empty() == false)
+					{
+						container[row_count].push_back(current_str);
+
+						current_str.clear();
+					}
+					row_count++;
+					container.push_back(second_layer());
+				}
+				else
+				{
+					current_str.push_back(val);
+				}
+				if (in_file.eof())break;
+			}
+			if (current_str.empty() == false)
+			{
+				container[row_count].push_back(current_str);
+				current_str.clear();
+			}
+		}
+		void read(std::ifstream& in_file)
 		{
 			_CharTy val;
 			string current_str;
@@ -792,6 +833,10 @@ namespace ld
 
 		instance() :instance<first_layer>(new first_layer()) {}
 		instance(std::ifstream& in_file) :instance<first_layer>(new first_layer())
+		{
+			read(in_file);
+		}
+		instance(std::wifstream& in_file) :instance<first_layer>(new first_layer())
 		{
 			read(in_file);
 		}
@@ -1035,7 +1080,7 @@ namespace ld
 
 #pragma region Bitmap
 
-#if defined(_WINDOWS_)||defined(_LINUX_ON_WINDOW_)
+#if defined(_WINDOW_)||defined(_LINUX_ON_WINDOW_)
 	template<>
 	_LF_C_API(Class) instance<type_list<io_tag_indicator, bitmap_indicator>>
 		Symbol_Push _LF_Inherited(instance<BITMAP_FILE>) Symbol_Endl
@@ -1145,12 +1190,12 @@ namespace ld
 
 		enum class SetBitmapPixelType
 		{
-			overwrite = 0, multiply = 1, overlay = 2
+			overwrite = 0, multiply = 1, overlay = 2, mix = 3
 		};
 
 		enum class ColorSpaceStandardMultiplierType
 		{
-			floating = 1, integer = 256
+			floating = 255, integer = 1
 		};
 
 		ColorSpaceStandardMultiplierType ColorSpaceStandardMultiplier = ColorSpaceStandardMultiplierType::floating;
@@ -1193,6 +1238,14 @@ namespace ld
 					BitMapBuffer[index + 2] += (Bitmap::Color)(valueR * (double)ColorSpaceStandardMultiplier);   // Red
 				}
 				break;
+				case SetBitmapPixelType::mix:
+				{
+					BitMapBuffer[index + 0] = BitMapBuffer[index + 0] * 0.5 + 0.5 * (Bitmap::Color)(valueB * (double)ColorSpaceStandardMultiplier);	 // Blue
+					BitMapBuffer[index + 1] = BitMapBuffer[index + 1] * 0.5 + 0.5 * (Bitmap::Color)(valueG * (double)ColorSpaceStandardMultiplier);   // Green
+					BitMapBuffer[index + 2] = BitMapBuffer[index + 2] * 0.5 + 0.5 * (Bitmap::Color)(valueR * (double)ColorSpaceStandardMultiplier);   // Red
+				}
+				break;
+				break;
 				}
 				return TRUE;
 			}
@@ -1211,6 +1264,25 @@ namespace ld
 			const SetBitmapPixelType& type)
 		{
 			return SetBitmapPixel(this->get_ptr()->BitMapBuffer, x, y, valueR, valueG, valueB, type);
+		}
+
+		void DrawBitmapPoint(
+			const double& x,
+			const double& y,
+			const double& valueR,
+			const double& valueG,
+			const double& valueB,
+			const double& size,
+			const SetBitmapPixelType& type)
+		{
+			for (size_t i_size = 0; i_size < size; i_size++)
+			{
+				for (size_t j = 0, ej = pow(i_size + 1, 2); j < ej; j++)
+				{
+					double theta = j / (double)ej * 3.1415926 * 2 + 0.000000001;
+					SetBitmapPixel(this->get_ptr()->BitMapBuffer, x + i_size * ::cos(theta), y + i_size * ::sin(theta), valueR, valueG, valueB, type);
+				}
+			}
 		}
 
 		Bitmap::Color GetBitmapPixel(
