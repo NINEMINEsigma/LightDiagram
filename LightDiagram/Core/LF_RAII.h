@@ -340,6 +340,11 @@ namespace ld
 			this->reboxing(std::move(from));
 			return *this;
 		}
+
+		operator Tag& ()
+		{
+			return this->get_ref();
+		}
 	};
 
 	template<typename... Args> using type_list_instance_baseclass = std::array<void*, sizeof...(Args)>;
@@ -897,24 +902,37 @@ namespace ld
 			return this->row(row_index)[col_index];
 		}
 
+		void trim()
+		{
+			while (this->rbegin()->empty())
+			{
+				this->get_ref().erase(--this->end());
+			}
+		}
+
+		template<typename _Ty>
+		std::vector<std::vector<_Ty>> to_matrix() const
+		{
+			std::vector<std::vector<_Ty>> result(this->get_ref().size());
+			size_t index = 0;
+			for (auto& row_line : this->get_ref())
+			{
+				if (row_line.empty())continue;
+				result[index].resize(row_line.size());
+				for (size_t i = 0, e = row_line.size(); i < e; i++)
+				{
+					result[index][i] = to_value<_Ty>(row_line[i]);
+				}
+				index++;
+			}
+			return result;
+		}
+
 		template<typename _ReTy>
 		auto get_cell_value(size_t row_index, size_t col_index) const
 		{
 			inside_layer& str = cell(row_index, col_index);
-
-			if constexpr (std::is_floating_point_v<_ReTy>)
-				return std::atof(str.c_str());
-			else if constexpr (std::is_integral_v<_ReTy>)
-				return std::atoi(str.c_str());
-			else if constexpr (std::is_same_v<const char*, _ReTy>)
-				return str.c_str();
-			else if constexpr (std::is_same_v<inside_layer, _ReTy>)
-				return str;
-			else
-			{
-				static_assert(std::is_same_v<decltype(std::declval<instance>().get_cell_value(0, 0)), void > == false, "not support for this type");
-				return;
-			}
+			return to_value<_ReTy>(str);
 		}
 
 		void set_cell_value(size_t row_index, size_t col_index, const inside_layer& str)
@@ -922,8 +940,14 @@ namespace ld
 			this->row(row_index)[col_index] = str;
 		}
 
+		template<typename _InTy>
+		void set_cell_value(size_t row_index, size_t col_index, const _InTy& value)
+		{
+			set_cell_value(row_index, col_index, std::to_string(value));
+		}
+
 		template<typename _Index>
-		first_layer sub_ignore_pr(const std::vector<_Index>& ignore_rows, const std::vector<_Index>& ignore_cols)
+		first_layer sub_ignore_pr(const std::vector<_Index>& ignore_rows, const std::vector<_Index>& ignore_cols) const
 		{
 			auto& from = *this->get_ptr();
 			first_layer result;
@@ -948,7 +972,7 @@ namespace ld
 		}
 
 		template<typename _Index>
-		first_layer sub_pr(const std::vector<_Index>& choose_rows, const std::vector<_Index>& choose_cols)
+		first_layer sub_pr(const std::vector<_Index>& choose_rows, const std::vector<_Index>& choose_cols) const
 		{
 			auto& from = *this->get_ptr();
 			first_layer result;
@@ -965,6 +989,22 @@ namespace ld
 				i++;
 			}
 			return result;
+		}
+
+		template<typename _Index>
+		instance subinstance_ignore_pr(const std::vector<_Index>& ignore_rows, const std::vector<_Index>& ignore_cols) const
+		{
+			instance selftype;
+			selftype.get_ref() = this->sub_ignore_pr(ignore_rows, ignore_cols);
+			return selftype;
+		}
+
+		template<typename _Index>
+		instance subinstance_pr(const std::vector<_Index>& choose_rows, const std::vector<_Index>& choose_cols) const
+		{
+			instance selftype;
+			selftype.get_ref() = this->sub_pr(choose_rows, choose_cols);
+			return selftype;
 		}
 
 		void save(const string_indicator::tag& path)
@@ -997,7 +1037,9 @@ namespace ld
 
 	};
 
+	//Implement some simple functions
 	using csv_instance = instance<type_list<io_tag_indicator, long_tag_indicator<char, ','>, long_tag_indicator<char, '\n'>>>;
+	//Implement some simple functions
 	using csv_w_instance = instance<type_list<io_tag_indicator, long_tag_indicator<wchar_t, ','>, long_tag_indicator<wchar_t, '\n'>>>;
 
 #pragma endregion
@@ -1479,9 +1521,12 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 			return this->exists() && get_filesystem_type() != std::filesystem::file_type::directory;
 		}
 
-		void try_create_directories() const
+		void try_create_directories(bool is_get_parent = false) const
 		{
-			std::filesystem::create_directories(this->get_ref().parent_path());
+			if (exists() == false || is_get_parent || (this->get_ref().extension().empty() == false && is_not_directory()))
+				std::filesystem::create_directories(this->get_ref().parent_path());
+			else
+				std::filesystem::create_directories(this->get_ref());
 		}
 		bool copy_to(const tag& to_path)
 		{
@@ -1548,7 +1593,27 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 		{
 			return this->get_ref();
 		}
+
+		tag operator/(const tag& right) const
+		{
+			return this->get_ref() / right;
+		}
+
+		template<typename _CharTy = char>
+		std::basic_ifstream<_CharTy, std::char_traits<_CharTy>> to_ifstream(std::ios::openmode mode = std::ios_base::in, int prot = std::ios_base::_Default_open_prot)
+		{
+			return std::basic_ifstream<_CharTy, std::char_traits<_CharTy>>(
+				this->get_ref().string<_CharTy, std::char_traits<_CharTy>>(),
+				mode, prot);
+		}
 	};
+	using tool_file = instance<type_list<io_tag_indicator, file_indicator>>;
+
+	template<typename _Ty>
+	auto to_string(const tool_file& file)
+	{
+		return file.get_ref().string<_Ty>();
+	}
 
 #pragma endregion
 

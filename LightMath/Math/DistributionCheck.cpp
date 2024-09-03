@@ -114,6 +114,91 @@ namespace ld
 
             return true;
         }
+
+        vector<vector<int>> dbscan(vector<Number> datas, Number eps, Number MinPts, function<Number(const Number&, const Number&)> pr)
+        {
+            using namespace std;
+
+            vector<vector<int>> clusters;
+            set<int> visited;
+
+            for (size_t i = 0, e = datas.size(); i < e; i++)
+            {
+                if (visited.find(i) == visited.end())
+                {
+                    vector<int> neighbors;
+                    for (size_t j = 0; j < e; j++)
+                    {
+                        if (pr(datas[i], datas[j]) <= eps)
+                        {
+                            neighbors.push_back(j);
+                        }
+                    }
+
+                    if (neighbors.size() >= MinPts)
+                    {
+                        vector<int> cluster;
+                        cluster.push_back(i);
+                        visited.insert(i);
+
+                        for (auto& neighbor : neighbors)
+                        {
+                            if (visited.find(neighbor) == visited.end())
+                            {
+                                visited.insert(neighbor);
+                                cluster.push_back(neighbor);
+                            }
+                        }
+
+                        clusters.push_back(cluster);
+                    }
+                }
+            }
+
+            return clusters;
+        }
+        vector<vector<int>> dbscan(vector<Integer> datas, Number eps, Number MinPts, function<Number(const Integer&, const Integer&)> pr)
+        {
+            using namespace std;
+
+            vector<vector<int>> clusters;
+            set<int> visited;
+
+            for (size_t i = 0, e = datas.size(); i < e; i++)
+            {
+                if (visited.find(i) == visited.end())
+                {
+                    vector<int> neighbors;
+                    for (size_t j = 0; j < e; j++)
+                    {
+                        if (pr(datas[i], datas[j]) <= eps)
+                        {
+                            neighbors.push_back(j);
+                        }
+                    }
+
+                    if (neighbors.size() >= MinPts)
+                    {
+                        vector<int> cluster;
+                        cluster.push_back(i);
+                        visited.insert(i);
+
+                        for (auto& neighbor : neighbors)
+                        {
+                            if (visited.find(neighbor) == visited.end())
+                            {
+                                visited.insert(neighbor);
+                                cluster.push_back(neighbor);
+                            }
+                        }
+
+                        clusters.push_back(cluster);
+                    }
+                }
+            }
+
+            return clusters;
+        }
     }
 }
 

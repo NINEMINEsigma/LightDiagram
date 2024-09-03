@@ -1622,6 +1622,23 @@ inline bool isGBK(unsigned char* data, int len)
 	return true;
 }
 
+template<typename _ReTy>
+auto to_value(const std::string& str)
+{
+	if constexpr (std::is_floating_point_v<_ReTy>)
+		return std::atof(str.c_str());
+	else if constexpr (std::is_integral_v<_ReTy>)
+		return std::atoi(str.c_str());
+	else if constexpr (std::is_same_v<const char*, _ReTy>)
+		return str.c_str();
+	else if constexpr (std::is_same_v<std::string, _ReTy>)
+		return str;
+	else
+	{
+		static_assert(std::is_same_v<_ReTy, void > == true, "not support for this type");
+		return;
+	}
+}
 
 #pragma endregion
 
