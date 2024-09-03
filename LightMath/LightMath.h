@@ -14,6 +14,41 @@ namespace ld
 {
 	namespace math
 	{
+		_LF_C_API(Struct) draw_bitmap_rect
+		{
+			size_t top, bottom, left, right;
+		};
+
+		_LF_C_API(Struct) draw_bitmap_size
+		{
+			size_t height, width;
+		};
+
+		_LF_C_API(Struct) draw_bitmap_color
+		{
+			Number r, g, b;
+		};
+
+		_LF_C_API(Struct) draw_bitmap_setting
+		{
+			draw_bitmap_rect rect;
+			draw_bitmap_color color;
+			draw_bitmap_size size;
+		};
+
+		bitmap_instance scatters(
+			const std::vector<Number>& x,
+			const std::vector<Number>& y,
+			const draw_bitmap_setting& setting);
+		bitmap_instance scatters(
+			bitmap_instance from,
+			const std::vector<Number>& x,
+			const std::vector<Number>& y,
+			const draw_bitmap_setting& setting);
+	}
+
+	namespace math
+	{
 		_LF_C_API(Struct) EmptyFillRule
 		{
 			enum class EmptyFillType

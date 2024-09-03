@@ -1477,21 +1477,21 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 #pragma region File System
 
 	//file system
-	template<>
-	_LF_C_API(Class) instance<type_list<io_tag_indicator, file_indicator>>
+	template<typename _CharTy>
+	_LF_C_API(Class) instance<type_list<io_tag_indicator, file_indicator, _CharTy>>
 		Symbol_Push _LF_Inherited(instance<std::filesystem::path>)
 	{
 	public:
 		using tag = std::filesystem::path;
 		using base_instance = instance<tag>;
-		instance(const tag & path) :base_instance(new tag(path)) {}
-		instance(instance&& from) noexcept :base_instance(std::move(from)) {}
+		instance(const tag & path, bool is_host = false) :base_instance(new tag(path)), my_hoster(is_host ? new std::ifstream(path) : nullptr) {}
+		instance(instance&& from) noexcept :base_instance(std::move(from)), my_hoster(nullptr) {}
 		instance& operator=(instance&& from) noexcept
 		{
 			base_instance::operator=(std::move(from));
 			return *this;
 		}
-		instance(instance& from) noexcept :base_instance(from) {}
+		instance(instance& from) noexcept :base_instance(from), my_hoster(nullptr) {}
 		instance& operator=(instance& from) noexcept
 		{
 			base_instance::operator=(from);
@@ -1599,15 +1599,94 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 			return this->get_ref() / right;
 		}
 
-		template<typename _CharTy = char>
 		std::basic_ifstream<_CharTy, std::char_traits<_CharTy>> to_ifstream(std::ios::openmode mode = std::ios_base::in, int prot = std::ios_base::_Default_open_prot)
 		{
 			return std::basic_ifstream<_CharTy, std::char_traits<_CharTy>>(
 				this->get_ref().string<_CharTy, std::char_traits<_CharTy>>(),
 				mode, prot);
 		}
+
+		instance<std::basic_ifstream<_CharTy, std::char_traits<_CharTy>>> to_ifstream_instance(std::ios::openmode mode = std::ios_base::in, int prot = std::ios_base::_Default_open_prot)
+		{
+			return new std::basic_ifstream<_CharTy, std::char_traits<_CharTy>>(
+				this->get_ref().string<_CharTy, std::char_traits<_CharTy>>(),
+				mode, prot);
+		}
+
+		std::basic_ofstream<_CharTy, std::char_traits<_CharTy>> to_ofstream(std::ios::openmode mode = std::ios_base::in, int prot = std::ios_base::_Default_open_prot)
+		{
+			return std::basic_ofstream<_CharTy, std::char_traits<_CharTy>>(
+				this->get_ref().string<_CharTy, std::char_traits<_CharTy>>(),
+				mode, prot);
+		}
+
+		instance<std::basic_ofstream<_CharTy, std::char_traits<_CharTy>>> to_ofstream_instance(std::ios::openmode mode = std::ios_base::in, int prot = std::ios_base::_Default_open_prot)
+		{
+			return new std::basic_ofstream<_CharTy, std::char_traits<_CharTy>>(
+				this->get_ref().string<_CharTy, std::char_traits<_CharTy>>(),
+				mode, prot);
+		}
+
+		void hoster_stream(std::ios_base* hoster)
+		{
+			my_hoster = hoster;
+		}
+		void hoster_stream(instance<std::ios_base>& hoster)
+		{
+			my_hoster = hoster;
+		}
+		void hoster_stream(instance<std::ios_base>&& hoster)
+		{
+			my_hoster = hoster;
+		}
+		void relinquish_hoster()
+		{
+			my_hoster.release();
+		}
+
+		instance<std::ios_base> my_hoster;
+
+		constexpr static int auto_io_length = -1;
+
+		template<typename _StreamTy,typename Arg>
+		instance& write(_In_ Arg* buffer, int length = auto_io_length)
+		{
+			if (my_hoster.get_ptr() == nullptr)
+				throw std::exception("hoster not active");
+			auto _stream = dynamic_cast<_StreamTy*>(my_hoster.get_ptr());
+			if (_stream == nullptr)
+				throw std::bad_cast();
+			_stream->write(reinterpret_cast<char*>(buffer), (length < 0 ? sizeof(Arg) : length));
+			return *this;
+		}
+		template<typename _StreamTy, typename Arg>
+		instance& read(_In_ Arg* buffer, int length = auto_io_length)
+		{
+			if (my_hoster.get_ptr() == nullptr)
+				throw std::exception("hoster not active");
+			auto _stream = dynamic_cast<_StreamTy*>(my_hoster.get_ptr());
+			if (_stream == nullptr)
+				throw std::bad_cast();
+			_stream->read(reinterpret_cast<char*>(buffer), (length < 0 ? sizeof(Arg) : length));
+			return *this;
+		}
+
+		template<typename Arg>
+		instance& operator<<(_In_ Arg* buffer)
+		{
+			this->write(buffer);
+			return *this;
+		}
+		template<typename Arg>
+		instance& operator>>(_In_ Arg* buffer)
+		{
+			this->read(buffer);
+			return *this;
+		}
 	};
-	using tool_file = instance<type_list<io_tag_indicator, file_indicator>>;
+	template<typename _CharTy>
+	using tool_file = instance<type_list<io_tag_indicator, file_indicator, _CharTy>>;
+	using tool_file = instance<type_list<io_tag_indicator, file_indicator, char>>;
 
 	template<typename _Ty>
 	auto to_string(const tool_file& file)
@@ -1616,8 +1695,6 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 	}
 
 #pragma endregion
-
-
 }
 
 #pragma region is_ld_instance

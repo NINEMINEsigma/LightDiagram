@@ -1,4 +1,4 @@
-#ifndef _FILE_PRETREATMENT
+﻿#ifndef _FILE_PRETREATMENT
 #define _FILE_PRETREATMENT
 
 #include<Math/MathConfig.h>
@@ -7,7 +7,9 @@ namespace ld
 {
 	namespace math
 	{
+		//使用前需要检验是否满足正态分布
 		std::vector<std::vector<Number>> _LF_C_API(Func) PretreatmentBy3sigmaRule(const std::vector<std::vector<Number>>& data);
+		//使用前需要检验是否满足正态分布
 		std::vector<std::vector<Number>> _LF_C_API(Func) PretreatmentBy3sigmaRule(
 			const std::vector<std::vector<Number>>& data,
 			std::vector<Number>& means,
