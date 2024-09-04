@@ -1,4 +1,4 @@
-#ifndef __FILE_PERCEPTRON
+﻿#ifndef __FILE_PERCEPTRON
 #define __FILE_PERCEPTRON
 
 #include<Math/MathConfig.h>

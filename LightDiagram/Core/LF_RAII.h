@@ -123,6 +123,18 @@ namespace ld
 		{
 			return this->instance_counter == from.instance_counter;
 		}
+		size_t* __interval_get_counter() Symbol_Endl
+		{
+			return get_counter();
+		}
+		size_t* __interval_set_counter(size_t* incounter) Symbol_Endl
+		{
+			return set_counter(incounter);
+		}
+		size_t* __interval_set_counter(nullptr_t) Symbol_Endl
+		{
+			return set_counter(nullptr);
+		}
 	};
 	// Base referance counter
 	using instance_base = instance<void>;
@@ -344,6 +356,26 @@ namespace ld
 		operator Tag& ()
 		{
 			return this->get_ref();
+		}
+
+		//reboxing operator
+		template<typename OtherTag>
+		instance<OtherTag> reboxing_to()
+		{
+			if constexpr (std::is_base_of_v<OtherTag, Tag >)
+			{
+				instance<OtherTag> result(this->instance_ptr);
+				result.__interval_set_counter(this->get_counter());
+				*this->get_counter() = this->get_count() + 1;
+				return result;
+			}
+			else return instance<OtherTag>(nullptr);
+		}
+
+		template<typename OtherTag>
+		explicit operator instance<OtherTag>()
+		{
+			return reboxing_to<OtherTag>();
 		}
 	};
 
@@ -1283,9 +1315,9 @@ namespace ld
 				break;
 				case SetBitmapPixelType::mix:
 				{
-					BitMapBuffer[index + 0] = BitMapBuffer[index + 0] * 0.5 + 0.5 * (Bitmap::Color)(valueB * (double)ColorSpaceStandardMultiplier);	 // Blue
-					BitMapBuffer[index + 1] = BitMapBuffer[index + 1] * 0.5 + 0.5 * (Bitmap::Color)(valueG * (double)ColorSpaceStandardMultiplier);   // Green
-					BitMapBuffer[index + 2] = BitMapBuffer[index + 2] * 0.5 + 0.5 * (Bitmap::Color)(valueR * (double)ColorSpaceStandardMultiplier);   // Red
+					BitMapBuffer[index + 0] = (Bitmap::Color)(BitMapBuffer[index + 0] * 0.5 + 0.5 * (Bitmap::Color)(valueB * (double)ColorSpaceStandardMultiplier));	 // Blue
+					BitMapBuffer[index + 1] = (Bitmap::Color)(BitMapBuffer[index + 1] * 0.5 + 0.5 * (Bitmap::Color)(valueG * (double)ColorSpaceStandardMultiplier));   // Green
+					BitMapBuffer[index + 2] = (Bitmap::Color)(BitMapBuffer[index + 2] * 0.5 + 0.5 * (Bitmap::Color)(valueR * (double)ColorSpaceStandardMultiplier));   // Red
 				}
 				break;
 				break;
@@ -1320,7 +1352,7 @@ namespace ld
 		{
 			for (size_t i_size = 0; i_size < size; i_size++)
 			{
-				for (size_t j = 0, ej = pow(i_size + 1, 2); j < ej; j++)
+				for (size_t j = 0, ej = (size_t)pow(i_size + 1, 2); j < ej; j++)
 				{
 					double theta = j / (double)ej * 3.1415926 * 2 + 0.000000001;
 					SetBitmapPixel(this->get_ptr()->BitMapBuffer, x + i_size * ::cos(theta), y + i_size * ::sin(theta), valueR, valueG, valueB, type);
@@ -1484,14 +1516,23 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 	public:
 		using tag = std::filesystem::path;
 		using base_instance = instance<tag>;
-		instance(const tag & path, bool is_host = false) :base_instance(new tag(path)), my_hoster(is_host ? new std::ifstream(path) : nullptr) {}
-		instance(instance&& from) noexcept :base_instance(std::move(from)), my_hoster(nullptr) {}
+		instance(const tag & path, bool is_host = false) :
+			base_instance(new tag(path)),
+			my_hoster(is_host ? new std::ifstream(path) : nullptr),
+			my_hoster_type_info(typeid(void).hash_code()){}
+		instance(instance&& from) noexcept :
+			base_instance(std::move(from)), 
+			my_hoster(nullptr),
+			my_hoster_type_info(typeid(void).hash_code()) {}
 		instance& operator=(instance&& from) noexcept
 		{
 			base_instance::operator=(std::move(from));
 			return *this;
 		}
-		instance(instance& from) noexcept :base_instance(from), my_hoster(nullptr) {}
+		instance(instance& from) noexcept :
+			base_instance(from), 
+			my_hoster(nullptr),
+			my_hoster_type_info(typeid(void).hash_code()) {}
 		instance& operator=(instance& from) noexcept
 		{
 			base_instance::operator=(from);
@@ -1599,56 +1640,83 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 			return this->get_ref() / right;
 		}
 
-		std::basic_ifstream<_CharTy, std::char_traits<_CharTy>> to_ifstream(std::ios::openmode mode = std::ios_base::in, int prot = std::ios_base::_Default_open_prot)
+		using istream_tag = std::basic_ifstream<_CharTy, std::char_traits<_CharTy>>;
+
+		istream_tag to_ifstream(
+			std::ios::openmode mode = std::ios_base::in, 
+			int prot = std::ios_base::_Default_open_prot)
 		{
-			return std::basic_ifstream<_CharTy, std::char_traits<_CharTy>>(
+			return istream_tag(
 				this->get_ref().string<_CharTy, std::char_traits<_CharTy>>(),
 				mode, prot);
 		}
 
-		instance<std::basic_ifstream<_CharTy, std::char_traits<_CharTy>>> to_ifstream_instance(std::ios::openmode mode = std::ios_base::in, int prot = std::ios_base::_Default_open_prot)
+		instance<istream_tag> to_ifstream_instance(
+			std::ios::openmode mode = std::ios_base::in,
+			int prot = std::ios_base::_Default_open_prot)
 		{
-			return new std::basic_ifstream<_CharTy, std::char_traits<_CharTy>>(
+			return new istream_tag(
 				this->get_ref().string<_CharTy, std::char_traits<_CharTy>>(),
 				mode, prot);
 		}
 
-		std::basic_ofstream<_CharTy, std::char_traits<_CharTy>> to_ofstream(std::ios::openmode mode = std::ios_base::in, int prot = std::ios_base::_Default_open_prot)
+		using ostream_tag = std::basic_ofstream<_CharTy, std::char_traits<_CharTy>>;
+
+		ostream_tag to_ofstream(
+			std::ios::openmode mode = std::ios_base::out| std::ios_base::ate, 
+			int prot = std::ios_base::_Default_open_prot)
 		{
-			return std::basic_ofstream<_CharTy, std::char_traits<_CharTy>>(
+			return ostream_tag(
 				this->get_ref().string<_CharTy, std::char_traits<_CharTy>>(),
 				mode, prot);
 		}
 
-		instance<std::basic_ofstream<_CharTy, std::char_traits<_CharTy>>> to_ofstream_instance(std::ios::openmode mode = std::ios_base::in, int prot = std::ios_base::_Default_open_prot)
+		instance<ostream_tag> to_ofstream_instance(
+			std::ios::openmode mode = std::ios_base::out| std::ios_base::ate, 
+			int prot = std::ios_base::_Default_open_prot)
 		{
-			return new std::basic_ofstream<_CharTy, std::char_traits<_CharTy>>(
+			return new ostream_tag(
 				this->get_ref().string<_CharTy, std::char_traits<_CharTy>>(),
 				mode, prot);
 		}
 
-		void hoster_stream(std::ios_base* hoster)
+		using iostream_tag = std::basic_fstream<_CharTy, std::char_traits<_CharTy>>;
+
+		template<typename _StreamTy>
+		void hoster_stream(_StreamTy* hoster)
 		{
+			my_hoster_type_info = typeid(_StreamTy).hash_code();
 			my_hoster = hoster;
 		}
-		void hoster_stream(instance<std::ios_base>& hoster)
+		template<typename _StreamTy>
+		void hoster_stream(instance<_StreamTy> hoster)
 		{
-			my_hoster = hoster;
-		}
-		void hoster_stream(instance<std::ios_base>&& hoster)
-		{
-			my_hoster = hoster;
+			my_hoster_type_info = typeid(_StreamTy).hash_code();
+			my_hoster = hoster.reboxing_to<std::ios_base>();
 		}
 		void relinquish_hoster()
 		{
+			my_hoster_type_info = typeid(void).hash_code();
 			my_hoster.release();
 		}
-
+	private:
 		instance<std::ios_base> my_hoster;
+		size_t my_hoster_type_info;
+	public:
+		std::ios_base* get_hoster() const
+		{
+			return my_hoster.get_ptr();
+		}
+		size_t get_hoster_type_hashcode() const
+		{
+			return my_hoster_type_info;
+		}
 
 		constexpr static int auto_io_length = -1;
 
-		template<typename _StreamTy,typename Arg>
+#define mut_of_wchar (sizeof(wchar_t)/sizeof(char))
+
+		template<typename _StreamTy, typename Arg>
 		instance& write(_In_ Arg* buffer, int length = auto_io_length)
 		{
 			if (my_hoster.get_ptr() == nullptr)
@@ -1656,7 +1724,19 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 			auto _stream = dynamic_cast<_StreamTy*>(my_hoster.get_ptr());
 			if (_stream == nullptr)
 				throw std::bad_cast();
-			_stream->write(reinterpret_cast<char*>(buffer), (length < 0 ? sizeof(Arg) : length));
+			if constexpr (std::is_same_v<Arg, wchar_t>)
+			{
+				_stream->write(
+					reinterpret_cast<const char*>(buffer),
+					(length < 0 ? sizeof(Arg) : length) * mut_of_wchar);
+			}
+			else
+			{
+				_stream->write(
+					reinterpret_cast<const char*>(buffer),
+					(length < 0 ? sizeof(Arg) : length));
+			}
+			_stream->flush();
 			return *this;
 		}
 		template<typename _StreamTy, typename Arg>
@@ -1667,25 +1747,282 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 			auto _stream = dynamic_cast<_StreamTy*>(my_hoster.get_ptr());
 			if (_stream == nullptr)
 				throw std::bad_cast();
-			_stream->read(reinterpret_cast<char*>(buffer), (length < 0 ? sizeof(Arg) : length));
+			if constexpr (std::is_same_v<Arg, char>)
+			{
+				if (length < 0)
+					*_stream >> buffer;
+				else
+					_stream->readsome(buffer, length);
+			}
+			else if constexpr(std::is_same_v<Arg, wchar_t>)
+			{
+				if (length < 0)
+					*_stream >> buffer;
+				else
+					_stream->readsome(buffer, length * mut_of_wchar);
+			}
+			else
+				_stream->read(reinterpret_cast<char*>(buffer), (length < 0 ? sizeof(Arg) : length));
+			return *this;
+		}
+		template<typename _StreamTy, typename Arg>
+		instance& write(instance<Arg> buffer, int length = auto_io_length)
+		{
+			this->write<_StreamTy>(buffer.get_ptr(), length);
+			return *this;
+		}
+		template<typename _StreamTy, typename Arg>
+		instance& read(instance<Arg> buffer, int length = auto_io_length)
+		{
+			this->read<_StreamTy>(buffer.get_ptr(), length);
+			return *this;
+		}
+
+		template<typename _StreamTy>
+		instance& write(char* buffer, int length)
+		{
+			this->write<_StreamTy>(buffer, length);
+			return *this;
+		}
+		template<typename _StreamTy,size_t length>
+		instance& write(const char buffer[length])
+		{
+			this->write<_StreamTy>(buffer, length);
+			return *this;
+		}
+		template<typename _StreamTy, size_t length>
+		instance& write(char buffer[length])
+		{
+			this->write<_StreamTy>(buffer, length);
+			return *this;
+		}
+		template<typename _StreamTy>
+		instance& write(wchar_t* buffer, int length)
+		{
+			this->write<_StreamTy>(buffer, length);
+			return *this;
+		}
+		template<typename _StreamTy, size_t length>
+		instance& write(const wchar_t buffer[length])
+		{
+			this->write<_StreamTy>(buffer, length);
+			return *this;
+		}
+		template<typename _StreamTy, size_t length>
+		instance& write(wchar_t buffer[length])
+		{
+			this->write<_StreamTy>(buffer, length);
+			return *this;
+		}
+
+		template<int length>
+		instance& operator<<(const char buffer[length]) Symbol_Endl
+		{
+			if (my_hoster_type_info == typeid(iostream_tag).hash_code())
+				this->write<iostream_tag>(buffer, length);
+			else if (my_hoster_type_info == typeid(ostream_tag).hash_code())
+				this->write<ostream_tag>(buffer, length);
+			else
+			{
+#ifdef _DEBUG
+				console.LogError(std::string("not match default _StreamTy, current type is ") + typeid(my_hoster.get_ptr()).name());
+#else
+				throw std::bad_function_call();
+#endif // _DEBUG
+			}
+			return *this;
+		}
+		template<int length>
+		instance& operator<<(char buffer[length]) Symbol_Endl
+		{
+			if (my_hoster_type_info == typeid(iostream_tag).hash_code())
+				this->write<iostream_tag>(buffer, length);
+			else if (my_hoster_type_info == typeid(ostream_tag).hash_code())
+				this->write<ostream_tag>(buffer, length);
+			else
+			{
+#ifdef _DEBUG
+				console.LogError(std::string("not match default _StreamTy, current type is ") + typeid(my_hoster.get_ptr()).name());
+#else
+				throw std::bad_function_call();
+#endif // _DEBUG
+			}
+			return *this;
+		}
+		template<int length>
+		instance& operator>>(char buffer[length])
+		{
+			if (my_hoster_type_info == typeid(iostream_tag).hash_code())
+				this->read<iostream_tag>(buffer, length);
+			else if (my_hoster_type_info == typeid(istream_tag).hash_code())
+				this->read<istream_tag>(buffer, length);
+			else
+			{
+#ifdef _DEBUG
+				console.LogError(std::string("not match default _StreamTy, current type is ") + typeid(my_hoster.get_ptr()).name());
+#else
+				throw std::bad_function_call();
+#endif // _DEBUG
+			}
+			return *this;
+		}
+		instance& operator<<(const char* buffer) Symbol_Endl
+		{
+			if (my_hoster_type_info == typeid(iostream_tag).hash_code())
+				this->write<iostream_tag>(buffer, (int)strlen(buffer));
+			else if (my_hoster_type_info == typeid(ostream_tag).hash_code())
+				this->write<ostream_tag>(buffer, (int)strlen(buffer));
+			else
+			{
+#ifdef _DEBUG
+				console.LogError(std::string("not match default _StreamTy, current type is ") + typeid(my_hoster.get_ptr()).name());
+#else
+				throw std::bad_function_call();
+#endif // _DEBUG
+			}
+			return *this;
+		}
+		template<int length>
+		instance& operator<<(const wchar_t buffer[length]) Symbol_Endl
+		{
+			if (my_hoster_type_info == typeid(iostream_tag).hash_code())
+				this->write<iostream_tag>(buffer, length);
+			else if (my_hoster_type_info == typeid(ostream_tag).hash_code())
+				this->write<ostream_tag>(buffer, length);
+			else
+			{
+#ifdef _DEBUG
+				console.LogError(std::string("not match default _StreamTy, current type is ") + typeid(my_hoster.get_ptr()).name());
+#else
+				throw std::bad_function_call();
+#endif // _DEBUG
+			}
+			return *this;
+		}
+		template<int length>
+		instance& operator<<(wchar_t buffer[length]) Symbol_Endl
+		{
+			if (my_hoster_type_info == typeid(iostream_tag).hash_code())
+				this->write<iostream_tag>(buffer, length);
+			else if (my_hoster_type_info == typeid(ostream_tag).hash_code())
+				this->write<ostream_tag>(buffer, length);
+			else
+			{
+#ifdef _DEBUG
+				console.LogError(std::string("not match default _StreamTy, current type is ") + typeid(my_hoster.get_ptr()).name());
+#else
+				throw std::bad_function_call();
+#endif // _DEBUG
+			}
+			return *this;
+		}
+		template<int length>
+		instance& operator>>(wchar_t buffer[length])
+		{
+			if (my_hoster_type_info == typeid(iostream_tag).hash_code())
+				this->read<iostream_tag>(buffer, length);
+			else if (my_hoster_type_info == typeid(istream_tag).hash_code())
+				this->read<istream_tag>(buffer, length);
+			else
+			{
+#ifdef _DEBUG
+				console.LogError(std::string("not match default _StreamTy, current type is ") + typeid(my_hoster.get_ptr()).name());
+#else
+				throw std::bad_function_call();
+#endif // _DEBUG
+			}
+			return *this;
+		}
+		instance& operator<<(const wchar_t* buffer) Symbol_Endl
+		{
+			if (my_hoster_type_info == typeid(iostream_tag).hash_code())
+				this->write<iostream_tag>(buffer, (int)wcslen(buffer));
+			else if (my_hoster_type_info == typeid(ostream_tag).hash_code())
+				this->write<ostream_tag>(buffer, (int)wcslen(buffer));
+			else
+			{
+#ifdef _DEBUG
+				console.LogError(std::string("not match default _StreamTy, current type is ") + typeid(my_hoster.get_ptr()).name());
+#else
+				throw std::bad_function_call();
+#endif // _DEBUG
+			}
 			return *this;
 		}
 
 		template<typename Arg>
-		instance& operator<<(_In_ Arg* buffer)
+		instance& operator<<(_In_ Arg* buffer) Symbol_Endl
 		{
-			this->write(buffer);
+			if (my_hoster_type_info == typeid(iostream_tag).hash_code())
+				this->write<iostream_tag>(buffer);
+			else if (my_hoster_type_info == typeid(ostream_tag).hash_code())
+				this->write<ostream_tag>(buffer);
+			else
+			{
+#ifdef _DEBUG
+				console.LogError(std::string("not match default _StreamTy, current type is ")+typeid(my_hoster.get_ptr()).name());
+#else
+				throw std::bad_function_call();
+#endif // _DEBUG
+			}
 			return *this;
 		}
 		template<typename Arg>
 		instance& operator>>(_In_ Arg* buffer)
 		{
-			this->read(buffer);
+			if (my_hoster_type_info == typeid(iostream_tag).hash_code())
+				this->read<iostream_tag>(buffer);
+			else if (my_hoster_type_info == typeid(istream_tag).hash_code())
+				this->read<istream_tag>(buffer);
+			else
+			{
+#ifdef _DEBUG
+				console.LogError(std::string("not match default _StreamTy, current type is ")+typeid(my_hoster.get_ptr()).name());
+#else
+				throw std::bad_function_call();
+#endif // _DEBUG
+			}
 			return *this;
 		}
+		template<typename Arg>
+		instance& operator<<(instance<Arg> buffer)
+		{
+			if (my_hoster_type_info == typeid(iostream_tag).hash_code())
+				this->write<iostream_tag>(buffer.get_ptr());
+			else if (my_hoster_type_info == typeid(ostream_tag).hash_code())
+				this->write<ostream_tag>(buffer.get_ptr());
+			else
+			{
+#ifdef _DEBUG
+				console.LogError(std::string("not match default _StreamTy, current type is ")+typeid(my_hoster.get_ptr()).name());
+#else
+				throw std::bad_function_call();
+#endif // _DEBUG
+			}
+			return *this;
+		}
+		template<typename Arg>
+		instance& operator>>(instance<Arg> buffer)
+		{
+			if (my_hoster_type_info == typeid(iostream_tag).hash_code())
+				this->read<iostream_tag>(buffer.get_ptr());
+			else if (my_hoster_type_info == typeid(istream_tag).hash_code())
+				this->read<istream_tag>(buffer.get_ptr());
+			else
+			{
+#ifdef _DEBUG
+				console.LogError(std::string("match default _StreamTy, current type is ")+typeid(my_hoster.get_ptr()).name());
+#else
+				throw std::bad_function_call();
+#endif // _DEBUG
+			}
+			return *this;
+		}
+
+#undef mut_of_wchar
+
 	};
-	template<typename _CharTy>
-	using tool_file = instance<type_list<io_tag_indicator, file_indicator, _CharTy>>;
+	using tool_file_w = instance<type_list<io_tag_indicator, file_indicator, wchar_t>>;
 	using tool_file = instance<type_list<io_tag_indicator, file_indicator, char>>;
 
 	template<typename _Ty>

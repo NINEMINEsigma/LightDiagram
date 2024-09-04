@@ -1,4 +1,4 @@
-#ifndef __FILE_LIGHTMATH
+﻿#ifndef __FILE_LIGHTMATH
 #define __FILE_LIGHTMATH
 
 #include<Math/MathConfig.h>

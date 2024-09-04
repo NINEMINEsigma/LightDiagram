@@ -51,23 +51,19 @@ int mainx()
 
 int main()
 {
+    //system("chcp 65001");
 	console.LogMessage("start"); 
-    Perceptron<5, 2> a;
-    a.get_ref() <<
-        -100, -100, -100, 100, 100,
-        100, 100, 100, -100, -100;
-    Matrix<Number, 1, 2> test;
-    test << 1, 0;
-    Matrix<Number, 1, 5> input;
-    input << 1, 2, 3, 4, 5;
-    Perceptron<5, 2>::OutputMatrix p = predict(input, a);
-    cout << a << "\n--------------------------------\n" << p << "\n\n";
-    while ((test - p).maxCoeff() > 0.0001)
-    {
-        fit(test, input, a);
-        p = predict(input, a);
-        cout << a << "\n--------------------------------\n" << p << "\n\n";
-    }
+
+    tool_file file("test.txt");
+
+    file.hoster_stream(file.to_ofstream_instance());
+    file << "测试中文";
+    file.relinquish_hoster();
+
+    file.hoster_stream(file.to_ifstream_instance());
+    char buf[255];
+    file.operator>>(buf);
+    cout << buf << endl;
 	console.LogMessage("end");
 }
 
