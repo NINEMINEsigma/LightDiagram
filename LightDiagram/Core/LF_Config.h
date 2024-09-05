@@ -1562,9 +1562,9 @@ inline std::wstring to_wstring(const std::string& input)
 {
 #if defined(_LINUX_ON_WINDOW_)||defined(_WINDOW_)
 	DWORD dBufSize = MultiByteToWideChar(CP_ACP, 0, input.c_str(), (int)input.size(), NULL, 0);
-	wchar_t* dBuf = new wchar_t[dBufSize + 1];
+	wchar_t* dBuf = new wchar_t[dBufSize];
 	wmemset(dBuf, 0, dBufSize);
-	MultiByteToWideChar(CP_ACP, 0, input.c_str(), (int)input.size(), dBuf, dBufSize);
+	MultiByteToWideChar(CP_ACP, 0, input.c_str(), -1, dBuf, dBufSize);
 	std::wstring result(dBuf);
 	delete[] dBuf;
 	return result;
@@ -1578,7 +1578,7 @@ inline std::string to_string(const std::wstring& input)
 {
 #if defined(_LINUX_ON_WINDOW_)||defined(_WINDOW_)
 	DWORD dBufSize = WideCharToMultiByte(CP_UTF8, 0, input.c_str(), -1, NULL, 0, NULL, FALSE);
-	char* dBuf = new char[dBufSize + 1];
+	char* dBuf = new char[dBufSize];
 	memset(dBuf, 0, dBufSize);
 	WideCharToMultiByte(CP_UTF8, 0, input.c_str(), -1, dBuf, dBufSize, NULL, FALSE);
 	std::string result(dBuf);
@@ -1589,6 +1589,11 @@ inline std::string to_string(const std::wstring& input)
 	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
 	return converter.to_bytes(input);
 #endif
+}
+
+inline std::string back_to_string(const char* input)
+{
+	return to_string(to_wstring(input));
 }
 
 inline bool isGBK(unsigned char* data, int len) 

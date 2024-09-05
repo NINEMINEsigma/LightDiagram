@@ -9,6 +9,7 @@
 #include<Math/Fourier.h>
 #include<Math/DecisionTree.h>
 #include<Math/Graph.h>
+#include<Math/OpenCVH.h>
 
 namespace ld
 {

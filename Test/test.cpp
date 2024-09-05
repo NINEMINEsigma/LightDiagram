@@ -1,5 +1,6 @@
 ﻿#include<test.h>
 #include<Math/Graph.h>
+#include <opencv2/opencv.hpp>
 
 using namespace ld::math;
 using namespace Eigen;
@@ -48,23 +49,18 @@ int mainx()
     return 0;
 }
 
-
+using namespace cv;
 int main()
 {
     //system("chcp 65001");
-	console.LogMessage("start"); 
-
-    tool_file file("test.txt");
-
-    file.hoster_stream(file.to_ofstream_instance());
-    file << "测试中文";
-    file.relinquish_hoster();
-
-    file.hoster_stream(file.to_ifstream_instance());
-    char buf[255];
-    file.operator>>(buf);
-    cout << buf << endl;
-	console.LogMessage("end");
+    console.LogMessage("start");
+    //Mat src(400, 400, CV_8UC3, cv::Scalar(255, 255, 255));
+    //line(src, Point(1, 1), Point(250, 250), Scalar(255, 0, 0), 1, LINE_AA);
+    //imwrite("src.jpg", src);
+    //imshow("line", src);
+    //waitKey(0);
+    csv_instance file("C:/Users/000/Desktop/sxjm l/2024数模正式/E题/附件2.csv");
+    console.LogMessage("end");
 }
 
 

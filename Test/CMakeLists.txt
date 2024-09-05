@@ -1,5 +1,4 @@
-﻿
-set(Boost_NO_SYSTEM_PATHS ON) 
+﻿set(Boost_NO_SYSTEM_PATHS ON) 
 set(BOOST_ROOT "C:/Boost")
 find_package(Boost 1.85.0 EXACT)
 if(Boost_FOUND)
@@ -29,6 +28,9 @@ target_link_libraries(demo_test LightDiagram)
 target_link_libraries(demo_test LLMToolKit)
 target_link_libraries(demo_test OpenXLSX::OpenXLSX)
 target_link_libraries(demo_test LightMath)
+
+file(GLOB OpenCV2_Lib_List ${PROJECT_SOURCE_DIR}/LightMath/opencv2-lib/static/*.lib)
+target_link_libraries(demo_test ${OpenCV2_Lib_List})
 
 install(TARGETS demo_test)
 
