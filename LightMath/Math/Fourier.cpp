@@ -255,7 +255,7 @@ namespace ld
 					cv::namedWindow("DFT result", cv::WINDOW_NORMAL);
 					cv::resizeWindow("DFT result", cv::Size(1100, 400));
 					cv::imshow("DFT result", show_mat);
-					cv::waitKey(5);
+					cv::waitKey(0);
 				}
 				else {
 					std::cout << "数据未求解！" << std::endl;

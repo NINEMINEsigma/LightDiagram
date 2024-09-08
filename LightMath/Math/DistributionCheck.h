@@ -35,6 +35,7 @@ namespace ld
 
         //DBSCAN算法实现
         //返回对原始数据的簇的编号
+        //参数eps和minpts分别表示邻域大小和最小簇大小。
         std::vector<std::vector<int>> dbscan(
             std::vector<ld::math::Number> datas,
             ld::math::Number eps, 
@@ -42,11 +43,21 @@ namespace ld
             std::function<ld::math::Number(const ld::math::Number&, const ld::math::Number&)> pr);
         //DBSCAN算法实现
         //返回对原始数据的簇的编号
+        //参数eps和minpts分别表示邻域大小和最小簇大小。
         std::vector<std::vector<int>> dbscan(
             std::vector<ld::math::Integer> datas,
             ld::math::Number eps,
             ld::math::Number MinPts,
             std::function<ld::math::Number(const ld::math::Integer&, const ld::math::Integer&)> pr);
+
+        // 数据点的结构体
+        struct DataPoint 
+        {
+            double x;
+            double y;
+            int cluster;
+        };
+        std::vector<std::vector<DataPoint>> kMeans(std::vector<DataPoint>& datas, int k, int maxIterations = 100, double epsilon = 1e-4);
 	}
 }
 

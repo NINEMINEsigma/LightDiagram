@@ -199,6 +199,78 @@ namespace ld
 
             return clusters;
         }
+
+        // K-Means算法
+        vector<vector<DataPoint>> kMeans(vector<DataPoint>& datas, int k, int maxIterations, double epsilon) 
+        {
+            // 初始化聚类中心
+            vector<DataPoint> centroids(k);
+            for (int i = 0; i < k; ++i) {
+                centroids[i].x = datas[i].x;
+                centroids[i].y = datas[i].y;
+                centroids[i].cluster = -1;
+            }
+
+            int iteration = 0;
+            while (iteration < maxIterations) {
+                // 清空聚类结果
+                for (DataPoint& data : datas) {
+                    data.cluster = -1;
+                }
+
+                // 将每个数据点分配到最近的聚类中心
+                for (DataPoint& data : datas) {
+                    double minDist = DBL_MAX;
+                    for (int i = 0; i < k; ++i) {
+                        double dist = sqrt(pow(data.x - centroids[i].x, 2) + pow(data.y - centroids[i].y, 2));
+                        if (dist < minDist) {
+                            minDist = dist;
+                            data.cluster = i;
+                        }
+                    }
+                }
+
+                // 更新聚类中心
+                vector<int> counts(k, 0);
+                vector<double> sumX(k, 0);
+                vector<double> sumY(k, 0);
+                for (DataPoint& data : datas) {
+                    int cluster = data.cluster;
+                    counts[cluster]++;
+                    sumX[cluster] += data.x;
+                    sumY[cluster] += data.y;
+                }
+                for (int i = 0; i < k; ++i) {
+                    if (counts[i] > 0) {
+                        centroids[i].x = sumX[i] / counts[i];
+                        centroids[i].y = sumY[i] / counts[i];
+                    }
+                }
+
+                // 检查聚类结果是否收敛
+                bool converged = true;
+                for (int i = 0; i < k; ++i) {
+                    double dist = sqrt(pow(centroids[i].x - centroids[i].x, 2) + pow(centroids[i].y - centroids[i].y, 2));
+                    if (dist > epsilon) {
+                        converged = false;
+                        break;
+                    }
+                }
+                if (converged) {
+                    break;
+                }
+
+                iteration++;
+            }
+
+            // 将聚类结果分组
+            vector<vector<DataPoint>> clusters(k);
+            for (DataPoint& data : datas) {
+                clusters[data.cluster].push_back(data);
+            }
+
+            return clusters;
+        }
     }
 }
 

@@ -768,16 +768,22 @@ namespace ld
 #pragma region CSV type ioer
 
 	//file reader of setup split char
-	template<typename _CharTy, size_t splitChar, size_t splitLineChar>
-	_LF_C_API(TClass) instance<type_list<io_tag_indicator, long_tag_indicator<_CharTy, splitChar>, long_tag_indicator<_CharTy, splitLineChar>>>
-		Symbol_Push _LF_Inherited(instance<std::vector<std::vector<std::basic_string<_CharTy>>>>) Symbol_Endl
+	template<
+		typename _CharTy = char,
+		size_t splitChar = ',',
+		size_t splitLineChar = '\n',
+		template<class> class _Layer_Ty = std::vector
+	>
+	_LF_C_API(TClass) 
+		csv_instance
+		Symbol_Push _LF_Inherited(instance<_Layer_Ty<_Layer_Ty<std::basic_string<_CharTy>>>>) Symbol_Endl
 	{
 	public:
-		using string = std::basic_string<_CharTy>;
-		using first_layer = std::vector<std::vector<std::basic_string<_CharTy>>>;
-		using second_layer = std::vector<std::basic_string<_CharTy>>;
-		using inside_layer = std::basic_string<_CharTy>;
 		using inside_char = _CharTy;
+		using string = std::basic_string<inside_char>;
+		using inside_layer = std::basic_string<_CharTy>;
+		using second_layer = _Layer_Ty<inside_layer>;
+		using first_layer = _Layer_Ty<second_layer>;
 
 		void read(std::wifstream & in_file)
 		{
@@ -790,7 +796,13 @@ namespace ld
 			{
 				if ((size_t)val == (size_t)splitChar)
 				{
-					container[row_count].push_back(current_str);
+					if (
+						(size_t)*current_str.begin() == (size_t)L'\"' &&
+						(size_t)*current_str.rbegin() == L'\"' &&
+						current_str.size() > 2)
+						container.rbegin()->push_back(current_str.substr(1, current_str.size() - 2));
+					else
+						container.rbegin()->push_back(current_str);
 					current_str.clear();
 				}
 				else if ((size_t)val == (size_t)splitLineChar)
@@ -801,7 +813,7 @@ namespace ld
 #endif // _WINDOW_
 					if (current_str.empty() == false)
 					{
-						container[row_count].push_back(current_str);
+						container.rbegin()->push_back(current_str);
 
 						current_str.clear();
 					}
@@ -816,11 +828,11 @@ namespace ld
 			}
 			if (current_str.empty() == false)
 			{
-				container[row_count].push_back(current_str);
+				container.rbegin()->push_back(current_str);
 				current_str.clear();
 			}
 		}
-		void read(std::ifstream& in_file)
+		void read(std::ifstream & in_file)
 		{
 			_CharTy val;
 			string current_str;
@@ -831,7 +843,13 @@ namespace ld
 			{
 				if ((size_t)val == (size_t)splitChar)
 				{
-					container[row_count].push_back(current_str);
+					if (
+						(size_t)*current_str.begin() == (size_t)'\"' &&
+						(size_t)*current_str.rbegin() == (size_t)'\"' &&
+						current_str.size() > 2)
+						container.rbegin()->push_back(current_str.substr(1, current_str.size() - 2));
+					else
+						container.rbegin()->push_back(current_str);
 					current_str.clear();
 				}
 				else if ((size_t)val == (size_t)splitLineChar)
@@ -842,7 +860,7 @@ namespace ld
 #endif // _WINDOW_
 					if (current_str.empty() == false)
 					{
-						container[row_count].push_back(current_str);
+						container.rbegin()->push_back(current_str);
 
 						current_str.clear();
 					}
@@ -857,11 +875,11 @@ namespace ld
 			}
 			if (current_str.empty() == false)
 			{
-				container[row_count].push_back(current_str);
+				container.rbegin()->push_back(current_str);
 				current_str.clear();
 			}
 		}
-		void read(const string_indicator::tag& path)
+		void read(const string_indicator::tag & path)
 		{
 			//open file, in|binary
 			std::ifstream in_file(path, std::ios::in | std::ios::binary);
@@ -869,32 +887,32 @@ namespace ld
 			in_file.close();
 		}
 
-		instance() :instance<first_layer>(new first_layer()) {}
-		instance(std::ifstream& in_file) :instance<first_layer>(new first_layer())
+		csv_instance() :instance<first_layer>(new first_layer()) {}
+		csv_instance(std::ifstream & in_file) :instance<first_layer>(new first_layer())
 		{
 			read(in_file);
 		}
-		instance(std::wifstream& in_file) :instance<first_layer>(new first_layer())
+		csv_instance(std::wifstream & in_file) :instance<first_layer>(new first_layer())
 		{
 			read(in_file);
 		}
-		instance(const string_indicator::tag & path) :instance<first_layer>(new first_layer())
+		csv_instance(const string_indicator::tag & path) :instance<first_layer>(new first_layer())
 		{
 			read(path);
 		}
-		instance(instance && from) noexcept :instance<first_layer>(std::move(from)) {}
-		instance& operator=(instance&& from) noexcept
+		csv_instance(csv_instance && from) noexcept :instance<first_layer>(std::move(from)) {}
+		csv_instance& operator=(csv_instance && from) noexcept
 		{
 			instance<first_layer>::operator=(std::move(from));
 			return *this;
 		}
-		instance(instance & from) noexcept : instance<first_layer>(from) {}
-		instance& operator=(instance& from) noexcept
+		csv_instance(csv_instance & from) noexcept : instance<first_layer>(from) {}
+		csv_instance& operator=(csv_instance & from) noexcept
 		{
 			instance<first_layer>::operator=(from);
 			return *this;
 		}
-		~instance() {}
+		virtual ~csv_instance() {}
 
 		inline auto begin() const noexcept
 		{
@@ -967,19 +985,19 @@ namespace ld
 			return to_value<_ReTy>(str);
 		}
 
-		void set_cell_value(size_t row_index, size_t col_index, const inside_layer& str)
+		void set_cell_value(size_t row_index, size_t col_index, const inside_layer & str)
 		{
 			this->row(row_index)[col_index] = str;
 		}
 
 		template<typename _InTy>
-		void set_cell_value(size_t row_index, size_t col_index, const _InTy& value)
+		void set_cell_value(size_t row_index, size_t col_index, const _InTy & value)
 		{
 			set_cell_value(row_index, col_index, std::to_string(value));
 		}
 
-		template<typename _Index>
-		first_layer sub_ignore_pr(const std::vector<_Index>& ignore_rows, const std::vector<_Index>& ignore_cols) const
+		template<typename _Index = int>
+		first_layer sub_ignore_pr(const std::vector<_Index>&ignore_rows, const std::vector<_Index>&ignore_cols) const
 		{
 			auto& from = *this->get_ptr();
 			first_layer result;
@@ -1003,8 +1021,8 @@ namespace ld
 			return result;
 		}
 
-		template<typename _Index>
-		first_layer sub_pr(const std::vector<_Index>& choose_rows, const std::vector<_Index>& choose_cols) const
+		template<typename _Index = int>
+		first_layer sub_pr(const std::vector<_Index>&choose_rows, const std::vector<_Index>&choose_cols) const
 		{
 			auto& from = *this->get_ptr();
 			first_layer result;
@@ -1023,30 +1041,30 @@ namespace ld
 			return result;
 		}
 
-		template<typename _Index>
-		instance subinstance_ignore_pr(const std::vector<_Index>& ignore_rows, const std::vector<_Index>& ignore_cols) const
+		template<typename _Index = int>
+		csv_instance subinstance_ignore_pr(const std::vector<_Index>&ignore_rows, const std::vector<_Index>&ignore_cols) const
 		{
 			instance selftype;
 			selftype.get_ref() = this->sub_ignore_pr(ignore_rows, ignore_cols);
 			return selftype;
 		}
 
-		template<typename _Index>
-		instance subinstance_pr(const std::vector<_Index>& choose_rows, const std::vector<_Index>& choose_cols) const
+		template<typename _Index = int>
+		csv_instance subinstance_pr(const std::vector<_Index>&choose_rows, const std::vector<_Index>&choose_cols) const
 		{
 			instance selftype;
 			selftype.get_ref() = this->sub_pr(choose_rows, choose_cols);
 			return selftype;
 		}
 
-		void save(const string_indicator::tag& path)
+		void save(const string_indicator::tag & path)
 		{
 			//open file, out|binary
 			std::ofstream out_file(path, std::ios::out | std::ios::binary);
 			save(out_file);
 			out_file.close();
 		}
-		void save(std::ofstream& out_file)
+		void save(std::ofstream & out_file)
 		{
 			for (auto& i : *this->get_ptr())
 			{
@@ -1068,11 +1086,6 @@ namespace ld
 	private:
 
 	};
-
-	//Implement some simple functions
-	using csv_instance = instance<type_list<io_tag_indicator, long_tag_indicator<char, ','>, long_tag_indicator<char, '\n'>>>;
-	//Implement some simple functions
-	using csv_w_instance = instance<type_list<io_tag_indicator, long_tag_indicator<wchar_t, ','>, long_tag_indicator<wchar_t, '\n'>>>;
 
 #pragma endregion
 

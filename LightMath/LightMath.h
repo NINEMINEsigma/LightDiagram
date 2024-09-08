@@ -70,7 +70,7 @@ namespace ld
 		//使用之前需要将csv最后可能存在的完全空缺的无用行数删除
 		_LF_C_API(Class) FirstStep
 		{
-			csv_instance my_csv;
+			csv_instance<char> my_csv;
 			std::vector<std::vector<Number>> my_database;
 		public:
 			FirstStep(const std::string& path);
