@@ -1,11 +1,9 @@
 #pragma once
 #include<LightDiagram.h>
 #include<LLMToolkit.h>
-#include<LightMath.h>
 
 using namespace std;
 using namespace ld;
-using namespace ld::math;
 
 class SMD :_LF_Inherited(IAnyArchitecture)
 {

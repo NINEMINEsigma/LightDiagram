@@ -52,12 +52,28 @@
 #include<Core/LF_Time.h>
 #include<Core/LF_RAII.h>
 #include<Core/LF_Container.h>
+#include<Core/algorithm.h>
 
 _LF_C_API(OClass) ld_test
 {
 public:
 	ld_test() {}
 };
+
+template<typename _Ty>
+decltype(auto) Unwrapped(_Ty&& from)
+{
+	if constexpr (std::is_pointer_v<_Ty>)
+		return *from;
+	else if constexpr (
+		std::is_same_v<ld::instance<void>, _Ty> ||
+		std::is_same_v<ld::instance<nullptr_t>, _Ty>)
+		return void_indicator();
+	else if constexpr (is_ld_instance_v<Ty>)
+		return from.get_ref();
+	else
+		return std::_Get_unwrapped(std::forward<_Ty>(from));
+}
 
 #include<Core/LF_Architecture.h>
 
