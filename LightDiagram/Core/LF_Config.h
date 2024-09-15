@@ -313,6 +313,8 @@ enum class platform_current
 	linux_on_windows_platform,windows_platform,linux_platform
 };
 
+#define NOMINMAX
+
 #if defined(_LINUX_ON_WINDOW_)
 #include <Winsock2.h>
 #include <ws2tcpip.h>

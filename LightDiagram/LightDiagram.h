@@ -69,7 +69,7 @@ decltype(auto) Unwrapped(_Ty&& from)
 		std::is_same_v<ld::instance<void>, _Ty> ||
 		std::is_same_v<ld::instance<nullptr_t>, _Ty>)
 		return void_indicator();
-	else if constexpr (is_ld_instance_v<Ty>)
+	else if constexpr (is_ld_instance_v<_Ty>)
 		return from.get_ref();
 	else
 		return std::_Get_unwrapped(std::forward<_Ty>(from));
