@@ -91,6 +91,7 @@ namespace ld
 		intervals = std::move(result);
 	}
 
+	//dfs
 	namespace algorithm
 	{
 #define __Check__Mapper(x,y) ((x)>=0&&(y)>=0&&(y)<mapper.size()&&(x)<mapper[(y)].size())
@@ -134,6 +135,54 @@ namespace ld
 		{
 			_Layer<_Layer<bool>> record(mapper.size(), _Layer<bool>(mapper.begin()->size(), false));
 			rDFS_Matrix_4<_PosN, _Layer<_Layer<_KeyTy>>, _Layer<_Layer<bool>>, _Pr>(x, y, mapper, record, pred);
+			return record;
+		}
+#undef __Check__Mapper
+	}
+
+	//bfs
+	namespace algorithm
+	{
+#define __Check__Mapper(x,y) ((x)>=0&&(y)>=0&&(y)<mapper.size()&&(x)<mapper[(y)].size())
+		template<typename _Quene, typename _Mapper, typename _Recorder, typename _Pr>
+		void BFS_Matrix_4(_Quene& quene, _Mapper& mapper, _Recorder& record, _Pr pred)
+		{
+			while (quene.empty() == false)
+			{
+				_Quene next_layer;
+				for (auto&& pos : quene)
+				{
+					auto x = get_left(pos), y = get_right(pos);
+					auto& current = mapper[y][x];
+					if (__Check__Mapper(x, y + 1) && record[y + 1][x] == 0 && pred(current, mapper[y + 1][x], 0, 1))
+					{
+						next_layer.insert(next_layer.end(), { x,y + 1 });
+						record[y + 1][x] = record[y][x] + 1;
+					}
+					if (__Check__Mapper(x, y - 1) && record[y - 1][x] == 0 && pred(current, mapper[y - 1][x], 0, 1))
+					{
+						next_layer.insert(next_layer.end(), { x,y - 1 });
+						record[y - 1][x] = record[y][x] + 1;
+					}
+					if (__Check__Mapper(x + 1, y) && record[y][x + 1] == 0 && pred(current, mapper[y][x + 1], 1, 0))
+					{
+						next_layer.insert(next_layer.end(), { x + 1,y });
+						record[y][x + 1] = record[y][x] + 1;
+					}
+					if (__Check__Mapper(x - 1, y) && record[y][x - 1] == 0 && pred(current, mapper[y][x - 1], -1, 0))
+					{
+						next_layer.insert(next_layer.end(), { x - 1,y });
+						record[y][x - 1] = record[y][x] + 1;
+					}
+				}
+				quene.swap(next_layer);
+			}
+		}
+		template<typename _Quene, template<typename> class _Layer,typename _KeyTy,typename _Pr,typename _RecordTy=int>
+		_Layer<_Layer<_RecordTy>> Get_BFS_Matrix_4(_Quene& quene, _Layer<_Layer<_KeyTy>>& mapper, _Pr pred)
+		{
+			_Layer<_Layer<_RecordTy>> record(mapper.size(), _Layer<_RecordTy>(mapper.begin()->size(), 0));
+			BFS_Matrix_4<_Quene, _Layer<_Layer<_KeyTy>>>(quene, mapper, record, pred);
 			return record;
 		}
 #undef __Check__Mapper
