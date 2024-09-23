@@ -7,6 +7,25 @@
 
 namespace ld
 {
+	template<template<typename> class _Container,typename _Ty>
+	_Container<_Container<_Ty>> transposeVxV(const _Container<_Container<_Ty>>& from)
+	{
+		if (from.size() == 0)return{};
+		_Container<_Container<_Ty>> result(from[0].size());
+		for (size_t i = 0, e = from[0].size(); i < e; i++)
+		{
+			result[i] = std::vector<_Ty>(from.size());
+		}
+		for (size_t i = 0, e = from.size(); i < e; i++)
+		{
+			for (size_t j = 0, ej = from[i].size(); j < ej; j++)
+			{
+				result[j][i] = from[i][j];
+			}
+		}
+		return result;
+	}
+
 	namespace algorithm
 	{
 		template<
@@ -110,7 +129,7 @@ namespace ld
 				DFS_Matrix_4(x - 1, y, mapper, record, pred);
 		}
 		template<typename _PosN, template<typename> class _Layer, typename _KeyTy, typename _Pr>
-		_Layer<_Layer<bool>> Get_DFS_Matrix_4(const _PosN& x, const _PosN& y, _Layer<_Layer<_KeyTy>> mapper, _Pr pred)
+		_Layer<_Layer<bool>> Get_DFS_Matrix_4(const _PosN& x, const _PosN& y, _Layer<_Layer<_KeyTy>>& mapper, _Pr pred)
 		{
 			_Layer<_Layer<bool>> record(mapper.size(), _Layer<bool>(mapper.begin()->size(), false));
 			DFS_Matrix_4<_PosN, _Layer<_Layer<_KeyTy>>, _Layer<_Layer<bool>>, _Pr>(x, y, mapper, record, pred);
@@ -131,13 +150,27 @@ namespace ld
 				rDFS_Matrix_4(x - 1, y, mapper, record, pred);
 		}
 		template<typename _PosN, template<typename> class _Layer, typename _KeyTy, typename _Pr>
-		_Layer<_Layer<bool>> Get_rDFS_Matrix_4(const _PosN& x, const _PosN& y, _Layer<_Layer<_KeyTy>> mapper, _Pr pred)
+		_Layer<_Layer<bool>> Get_rDFS_Matrix_4(const _PosN& x, const _PosN& y, _Layer<_Layer<_KeyTy>>& mapper, _Pr pred)
 		{
 			_Layer<_Layer<bool>> record(mapper.size(), _Layer<bool>(mapper.begin()->size(), false));
 			rDFS_Matrix_4<_PosN, _Layer<_Layer<_KeyTy>>, _Layer<_Layer<bool>>, _Pr>(x, y, mapper, record, pred);
 			return record;
 		}
 #undef __Check__Mapper
+
+		template<typename _PosN, template<typename> class _Layer, typename _KeyTy>
+		_Layer<_Layer<bool>> flood_fill(const _PosN& x, const _PosN& y, _Layer<_Layer<_KeyTy>>& mapper, _KeyTy& setter, const std::function<bool(_KeyTy&, _KeyTy&, const _PosN&, const _PosN&)>& pred)
+		{
+			return Get_DFS_Matrix_4<_PosN,_Layer,_KeyTy, std::function<bool(_KeyTy&, _KeyTy&, const _PosN&, const _PosN&)>>
+			(x, y, mapper, std::function([&pred,&setter](_KeyTy& current, _KeyTy& next, const _PosN& dx, const _PosN& dy)->bool
+				{
+					bool result = pred(current, next, dx, dy);
+					current = setter;
+					if (result)
+						next = setter;
+					return result;
+				}));
+		}
 	}
 
 	//bfs
@@ -178,7 +211,7 @@ namespace ld
 				quene.swap(next_layer);
 			}
 		}
-		template<typename _Quene, template<typename> class _Layer,typename _KeyTy,typename _Pr,typename _RecordTy=int>
+		template<typename _Quene, template<typename> class _Layer, typename _KeyTy, typename _Pr, typename _RecordTy = int>
 		_Layer<_Layer<_RecordTy>> Get_BFS_Matrix_4(_Quene& quene, _Layer<_Layer<_KeyTy>>& mapper, _Pr pred)
 		{
 			_Layer<_Layer<_RecordTy>> record(mapper.size(), _Layer<_RecordTy>(mapper.begin()->size(), 0));

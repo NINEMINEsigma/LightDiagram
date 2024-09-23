@@ -2,6 +2,10 @@
 
 using namespace ld::algorithm;
 
+#include<vector>
+#include<set>
+#include<iostream>
+
 using namespace std;
 
 auto ___auto___ = []()
@@ -12,193 +16,167 @@ auto ___auto___ = []()
 
 using namespace std;
 
-using _CurTy = char;
-constexpr _CurTy wall = 'X';
-constexpr _CurTy able = '+';
-constexpr _CurTy start = 'S';
-constexpr _CurTy target = 'C';
-
-bool check_path(const _CurTy& currnet, const _CurTy& next, const int& dx, const int& dy)
+class node
 {
-    return next != wall;
-}
+	set<int> subj;
+	int weight = 0;
+	int self_weight = 0;
+	map<int, set<node*>> delay_opter;
+public:
+	set<node*> childs;
+	int index;
+	void set_weight(int w)
+	{
+		this->self_weight = w;
+	}
+	int get_weight() const
+	{
+		return this->weight;
+	}
+	int all_weight = 0;
+	int update_weight()
+	{
+		this->weight = this->self_weight;
+		this->all_weight = this->is_enable ? this->self_weight : 0;
+		for (auto& child : childs)
+		{
+			if (child->is_enable)
+			{
+				this->weight += child->update_weight();
+				this->all_weight += child->all_weight;
+			}
+		}
+		return this->weight;
+	}
+	void push_child(const int& parent, node* child)
+	{
+		this->subj.insert(child->index);
+		if (this->index == parent)
+			this->childs.insert(child);
+		else
+		{
+			bool stats = false;
+			for (auto& child_parent : this->childs)
+			{
+				if (child_parent->index == parent || child_parent->subj.count(parent))
+				{
+					child_parent->push_child(parent, child);
+					stats = true;
+					break;
+				}
+			}
+			if (stats == false)
+			{
+				delay_opter[parent].insert(child);
+			}
+		}
+		if (delay_opter.count(child->index))
+		{
+			for (auto&& delay : delay_opter[child->index])
+			{
+				this->push_child(child->index, delay);
+			}
+			delay_opter.erase(child->index);
+		}
+	}
+	int ask_weight = 0;
+	bool is_enable = true;
+	node* update_ask_weight(const int& top_value, bool is_root = true)
+	{
+		node* result = this;
+		for (auto child : childs)
+		{
+			child->ask_weight = abs(child->weight * 2 - top_value);
+		}
+		for (auto child : childs)
+		{
+			if (is_root == false && child->is_enable == false)continue;
+			node* reget = child->update_ask_weight(top_value, false);
+			if (result->is_enable == false && reget->is_enable)
+				result = reget;
+			else if (
+				reget->is_enable &&
+				(result->ask_weight > reget->ask_weight) ||
+				(result->ask_weight == reget->ask_weight && result->index > reget->index))
+				result = reget;
+		}
+		return result;
+	}
+	bool ask(const int& target)
+	{
+		return index == target || subj.count(target);
+	}
+};
 
-
-int sol() 
+int main()
 {
-    //init
-    int n, m, k, d;
-    cin >> n >> m >> k >> d;
-    vector<vector<char>> mapper(n, vector<char>(n, able));
-    vector<vector<int>> values(n, vector<int>(n, 0));
-    vector<pair<int, int>> starts;
-    set<pair<int, int>> ends;
-    while (m--)
-    {
-        int x, y;
-        cin >> x >> y;
-        y--;
-        x--;
-        mapper[y][x] = start;
-        starts.push_back(make_pair(x, y));
-    }
-    while (k--)
-    {
-        int x, y, c;
-        cin >> x >> y >> c;
-        y--;
-        x--;
-        mapper[y][x] = target;
-        values[y][x] += c;
-        ends.insert(make_pair(x, y));
-    }
-    while (d--)
-    {
-        int x, y;
-        cin >> x >> y;
-        y--;
-        x--;
-        mapper[y][x] = wall;
-    }
-    //bfs
-    auto dis_record = Get_BFS_Matrix_4<
-        vector<pair<int, int>>,vector,char,decltype(function(check_path)),int
-    >(starts, mapper, function(check_path));
-    //check
-    for (int i = 0; i < n; i++)
-    {
-        for (int j = 0; j < n; j++)
-        {
-            auto current = mapper[i][j];
-            if (current == wall)
-                cout << ConsoleColor::Red << current;
-            else if (current == start)
-                cout << ConsoleColor::Green << current;
-            else if (current == target)
-                cout << ConsoleColor::Yellow << dis_record[i][j];
-            else
-                cout << ConsoleColor::None << dis_record[i][j];
-            cout << " ";
-        }
-        cout << "\n";
-    }
-    cout << ConsoleColor::None;
-    //result
-    size_t result = 0;
-    for (auto&& [x, y] : ends)
-    {
-        result += values[y][x] * dis_record[y][x];
-    }
-    cout << result << endl;
-    return 0;
-}
-
-#define ll long long
-#define ull unsigned long long
-#define INF 0x3f3f3f3f
-#define inf 0x3f3f3f3f3f3f3f3f
-#define rep(i,a,b) for(auto i=a;i<=b;++i)
-#define bep(i,a,b) for(auto i=a;i>=b;--i)
-#define lowbit(x) x&(-x)
-#define PII pair<int,int>
-#define PLL pair<ll,ll>
-#define PI acos(-1)
-#define pb push_back
-#define eps 1e-6
-const int mod = 1e9 + 7;
-const int MOD = 1e4 + 7;
-const int N = 4e5 + 10;
-const int M = 1111;
-int dx[] = { -1, 0, 1, 0 };
-int dy[] = { 0, 1, 0, -1 };
-int dxy[][2] = { {0,1},{1,0},{1,1},{-1,1} };
-using namespace std;
-
-bool vis[M][M];
-int dis[M][M];
-int con[M * M][3];
-queue<PII> que;
-
-int n, m, k, d;
-
-void BFS() {
-    while (que.size()) {
-        PII top = que.front();
-        que.pop();
-        rep(i, 0, 3) {
-            int x = top.first + dx[i];
-            int y = top.second + dy[i];
-            if (vis[x][y] == 1) {
-                if (dis[x][y] > dis[top.first][top.second] + 1) {
-                    dis[x][y] = dis[top.first][top.second] + 1;
-                    que.push({ x,y });
-                }
-            }
-        }
-    }
-}
-
-void solve() {
-    memset(dis, INF, sizeof(dis));
-    cin >> n >> m >> k >> d;
-    rep(i, 1, n) {
-        rep(j, 1, n) {
-            vis[i][j] = 1;
-        }
-    }
-    while (m--) {
-        int x, y;
-        cin >> x >> y;
-        que.push({ x,y });
-        dis[x][y] = 0;
-    }
-    //rep(i, 0, k - 1) cin >> con[i][0] >> con[i][1] >> con[i][2];
-    map<int, map<int, int>> values;
-    while (k--)
-    {
-        int x, y, c;
-        cin >> x >> y >> c;
-        values[x][y] += c;
-    }
-    while (d--) {
-        int x, y;
-        cin >> x >> y;
-        vis[x][y] = 0;
-    }
-    BFS();
-    //check
-    for (int i = 1; i <= n; i++)
-    {
-        for (int j = 1; j <= n; j++)
-        {
-            if (vis[j][i]==0)
-                cout << ConsoleColor::Red << wall;
-            else
-                cout << ConsoleColor::None << dis[j][i];
-            cout << " ";
-        }
-        cout << "\n";
-    }
-    cout << ConsoleColor::None;
-    //result
-    ll ans = 0;
-    //while (k > 0) 
-    //{
-    //    k--;
-    //    ans += dis[con[k][0]][con[k][1]] * con[k][2];
-    //}
-    for (auto&& [x, item] : values)
-    {
-        for (auto&& [y, count] : item)
-        {
-            ans += dis[x][y] * count;
-        }
-    }
-    cout << ans << endl;
-}
-
-int main() 
-{
-    sol();
-    return 0;
+	//init
+	int n, m;
+	cin >> n >> m;
+	vector<node> mapper(n + 1);
+	for (int i = 1; i <= n; i++)
+	{
+		int a;
+		cin >> a;
+		mapper[i].set_weight(a);
+		mapper[i].index = i;
+	}
+	for (int i = 2; i <= n; i++)
+	{
+		int a;
+		cin >> a;
+		mapper[1].push_child(a, &mapper[i]);
+	}
+	//result
+	vector<vector<int>> results;
+	for (int i = 0; i < m; i++)
+	{
+		results.push_back({});
+		for (auto& i : mapper)
+			i.is_enable = true;
+		int ask;
+		cin >> ask;
+		auto& result = *results.rbegin();
+		node* current;
+		int unable = 0;
+		do
+		{
+			mapper[1].update_weight();
+			mapper[1].ask_weight = mapper[1].get_weight();
+			current = mapper[1].update_ask_weight(mapper[1].all_weight);
+			result.push_back(current->index);
+			if (current->ask(ask))
+			{
+				for (auto& item : mapper)
+				{
+					if (item.is_enable&&current != &item && current->childs.count(&item) == false)
+					{
+						item.is_enable = false;
+						unable++;
+					}
+				}
+			}
+			else
+			{
+				for (auto& item : mapper)
+				{
+					if (item.is_enable && current->childs.count(&item))
+					{
+						item.is_enable = false;
+						unable++;
+					}
+				}
+				current->is_enable = false;
+				unable++;
+			}
+		} while (unable < n);
+	}
+	for (auto&& result : results)
+	{
+		for (auto&& index : result)
+		{
+			cout << index << " ";
+		}
+		cout << "\n";
+	}
 }

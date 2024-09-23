@@ -4,6 +4,15 @@
 
 #include<Core/static_exist.h>
 
+namespace std
+{
+	template <template<typename> class _l, template<typename>  class _r>
+		inline constexpr bool is_same_v<_l,_r> = false; // determine whether arguments are the same type
+	template <class _Ty>
+	inline constexpr bool is_same_v<_Ty, _Ty> = true;
+
+}
+
 #pragma region Typen (Define)
 
 #define _LFramework_Indicator_Def(name,_tag,_value)													\
@@ -52,6 +61,13 @@ _LFramework_Indicator_Def(container, void, true);
 _LFramework_Indicator_Def(config, void, true);
 _LFramework_Indicator_Def(bitmap, void, true);
 _LFramework_Indicator_Def(file, void, true);
+template<typename _Ty>
+struct disable_template_indicator
+{
+	using tag = void;
+	constexpr static bool value = true;
+};
+template< typename indicator> constexpr bool is_disable_template_v = std::is_same_v<indicator, disable_template_indicator>;
 
 #define __Global_Space
 
@@ -136,6 +152,9 @@ _LF_C_API(OStruct) type_list<First, Args...>
 	template<typename Default, typename T>
 	using decltype_type = typename choose_type<!is_type_list_contains_detect<is_type_list_contains<T>(0)>::value, Default, T>::tag;
 };
+
+template< typename... indicators> constexpr bool is_disable_template_v<type_list<indicators...>> = type_list<indicators...>::decltype_type<bad_indicator, disable_template_indicator>::tag::value;
+
 template<typename T>
 constexpr bool is_type_indicator(typename T::type_indicator*) { return true; }
 template<typename T>
