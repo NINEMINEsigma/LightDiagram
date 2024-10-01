@@ -1411,6 +1411,14 @@ namespace ld
 	}
 }
 
+template<typename T>
+T& next(std::istream& s)
+{
+	static T item;
+	s >> item;
+	return item;
+}
+
 #pragma endregion
 
 #pragma region TempRef

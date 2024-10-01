@@ -6,10 +6,6 @@
 
 namespace std
 {
-	template <template<typename> class _l, template<typename>  class _r>
-		inline constexpr bool is_same_v<_l,_r> = false; // determine whether arguments are the same type
-	template <class _Ty>
-	inline constexpr bool is_same_v<_Ty, _Ty> = true;
 
 }
 

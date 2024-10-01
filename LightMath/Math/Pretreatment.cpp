@@ -57,7 +57,7 @@ namespace ld
 
         vector<vector<Number>> _LF_C_API(Func) decenter(const vector<vector<Number>>& data)
         {
-            vector<vector<Number>> result(transposeVxV(data));
+            vector<vector<Number>> result(transposeVxV<vector, Number>(data));
             for (auto& line : result)
             {
                 Number mean = get_mean(line);
@@ -66,7 +66,7 @@ namespace ld
                     item -= mean;
                 }
             }
-            return transposeVxV(result);
+            return transposeVxV<vector, Number>(result);
         }
 
 

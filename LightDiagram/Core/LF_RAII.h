@@ -2008,51 +2008,6 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 
 #pragma endregion
 
-#pragma region Four-way Node
-
-	//four-way ward
-	template<template<typename> class _alloc_instance, typename _upward, typename _downward, typename _leftward, typename _rightward>
-	_LF_C_API(TStruct) __four_way_node_struct
-	{
-		using tag = __four_way_node_struct;
-		template<typename _TyTy>
-		using alloc_instance = typename choose_type<is_disable_template_v<_alloc_instance>, _Ty, _alloc_instance<_TyTy>>::tag;
-		using alloc_up = alloc_instance<_upward>;
-		using alloc_down = alloc_instance<_downward>;
-		using alloc_left = alloc_instance<_leftward>;
-		using alloc_right = alloc_instance<_rightward>;
-		template<typename _Arg1,typename _Arg2,typename _Arg3,typename _Arg4>
-		__four_way_node_struct(_Arg1 && upward, _Arg2 && downward, _Arg3 && leftward, _Arg4 && rightward) :
-			upward(std::forward<_Arg1>(upward)),
-			downward(std::forward<_Arg2>(downward)),
-			leftward(std::forward<_Arg3>(leftward)),
-			rightward(std::forward<_Arg4>(rightward)) {}
-		alloc_up upward;
-		alloc_down downward;
-		alloc_left leftward;
-		alloc_right rightward;
-	}; 
-	template<template<typename> class alloc_instance, typename _Ty>
-	_LF_C_API(TStruct) __four_way_node_struct2: public __four_way_node_struct<alloc_instance, _Ty, _Ty, _Ty, _Ty>
-	{
-		using tag = __four_way_node_struct2;
-		template<typename _Arg1,typename _Arg2,typename _Arg3,typename _Arg4>
-		__four_way_node_struct2(_Arg1&& upward, _Arg2&& downward, _Arg3&& leftward, _Arg4&& rightward) :
-			__four_way_node_struct(std::forward<_Arg1>(upward), std::forward<_Arg2>(downward), std::forward<_Arg3>(leftward), std::forward<_Arg4>(rightward)) {}
-	};
-	template<typename _Node, typename _Ty>
-	_LF_C_API(TStruct) __four_way_node_pair
-	{
-
-	};
-
-	//four-way ward
-	template<template<typename> class alloc_instance,typename _upward,typename _downward,typename _leftward,typename _rightward>
-	_LF_C_API(TClass) instance<type_list<alloc_instance<_upward>, alloc_instance<_downward>, alloc_instance<_leftward>, alloc_instance<_rightward>>>
-
-
-#pragma endregion
-
 }
 
 #pragma region is_ld_instance
