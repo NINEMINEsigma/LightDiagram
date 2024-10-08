@@ -9,6 +9,8 @@
 #include <Core/LF_Exception.h>
 #include <filesystem>
 
+#pragma pack(push, 8)
+
 //*
 //	On this page, each <set>function returns the old value before the change if it returns
 //*
@@ -22,17 +24,25 @@ namespace ld
 	// Referance Counter
 	template<> _LF_C_API(Class) instance<void> Symbol_Push _LF_Inherited(any_class)
 	{
+	public:
+		using tag = void;
+#ifndef instance_size_tag
+		using size_tag = ::size_t;
+#else
+		using size_tag = instance_size_tag;
+#endif
+		using size_indicator = size_tag*;
 	private:
-		size_t* instance_counter;
+		size_indicator instance_counter;
 	protected:
 #pragma region instance_counter Property
-		size_t* get_counter()const
+		size_indicator get_counter()const
 		{
 			return this->instance_counter;
 		}
-		size_t* set_counter(size_t * incounter)
+		size_indicator set_counter(size_indicator incounter)
 		{
-			size_t* result = this->instance_counter;
+			size_indicator result = this->instance_counter;
 			if (result)
 			{
 				(*this->instance_counter)--;
@@ -41,9 +51,9 @@ namespace ld
 			(*this->instance_counter)++;
 			return result;
 		}
-		size_t* set_counter(nullptr_t)
+		size_indicator set_counter(nullptr_t)
 		{
-			size_t* result = this->instance_counter;
+			size_indicator result = this->instance_counter;
 			if (this->instance_counter)
 			{
 				(*this->instance_counter)--;
@@ -67,7 +77,7 @@ namespace ld
 			release_nocallback();
 			this->set_counter(new size_t(1));
 		}
-		instance() :instance_counter(new size_t(1)) {}
+		instance() :instance_counter(new size_tag(1)) {}
 		instance(instance & from) noexcept :instance_counter(from.instance_counter)
 		{
 			(*this->instance_counter)++;
@@ -81,7 +91,7 @@ namespace ld
 			if (this->instance_counter)
 				release_nocallback();
 		}
-		size_t get_count() const noexcept
+		size_tag get_count() const noexcept
 		{
 			return this->instance_counter ? *this->instance_counter : 0;
 		}
@@ -123,15 +133,15 @@ namespace ld
 		{
 			return this->instance_counter == from.instance_counter;
 		}
-		size_t* __interval_get_counter() Symbol_Endl
+		size_indicator __interval_get_counter() Symbol_Endl
 		{
 			return get_counter();
 		}
-		size_t* __interval_set_counter(size_t* incounter) Symbol_Endl
+		size_indicator __interval_set_counter(size_indicator incounter) Symbol_Endl
 		{
 			return set_counter(incounter);
 		}
-		size_t* __interval_set_counter(nullptr_t) Symbol_Endl
+		size_indicator __interval_set_counter(nullptr_t) Symbol_Endl
 		{
 			return set_counter(nullptr);
 		}
@@ -191,9 +201,13 @@ namespace ld
 	//main instance template type to be a shared ptr
 	template<typename Tag> _LF_C_API(TClass) instance : public instance<void>
 	{
+	public:
+		using tag = Tag;
+	private:
 		Tag * instance_ptr;
 	public:
 		instance(Tag* ptr) :instance_ptr(ptr), instance<void>() {}
+		instance(const Tag& data) : instance_ptr(new Tag(data)) {}
 		instance(instance& from) noexcept :instance_ptr(from.instance_ptr), instance<void>(from) {}
 		instance(instance&& from) noexcept :instance_ptr(from.instance_ptr), instance<void>(std::move(from))
 		{
@@ -394,6 +408,7 @@ namespace ld
 	template<typename... Args> _LF_C_API(TClass) instance<type_list<Args...>>  : public instance<type_list_instance_baseclass<Args...>>
 	{
 	public:
+		using tag = type_list_instance_baseclass<Args...>;
 		using type_list_tag = type_list<Args...>;
 		using baseclass_tag = type_list_instance_baseclass<Args...>;
 		using my_type_tag = instance;
@@ -473,7 +488,6 @@ namespace ld
 		{
 			set_value_ptr<index_result_of_type_list<TargetType>>(ptr);
 		}
-
 
 		void swap(my_type_tag& from)noexcept
 		{
@@ -570,6 +584,9 @@ namespace ld
 	// and buffer capacity is BufferSize+1 !!!
 	template<size_t BufferSize, size_t SlotID> _LF_C_API(TClass) instance<long_tag_indicator<long_tag_indicator<void_indicator, BufferSize>, SlotID>> Symbol_Endl
 	{
+	public:
+		using tag = global_indicator;
+	private:
 		static void* buffer_ptr;
 		static void* lock_ptr;
 	public:
@@ -699,6 +716,7 @@ namespace ld
 		instance<type_list<class_indicator, type_list<Modules...>, type_list<Functions...>, type_list<Fields...>>> Symbol_Endl
 	{
 	public:
+		using tag = void_indicator;
 		using base_tag = type_list<type_list<type_list<Modules...>, type_list<Functions...>, type_list<Fields...>>>;
 		using module_list = type_list<Modules...>;
 		using func_list = type_list<Functions...>;
@@ -789,6 +807,7 @@ namespace ld
 		Symbol_Push _LF_Inherited(instance<_Layer_Ty<_Layer_Ty<std::basic_string<_CharTy>>>>) Symbol_Endl
 	{
 	public:
+		using tag = _Layer_Ty<_Layer_Ty<std::basic_string<_CharTy>>>;
 		using inside_char = _CharTy;
 		using string = std::basic_string<inside_char>;
 		using inside_layer = std::basic_string<_CharTy>;
@@ -1107,6 +1126,7 @@ namespace ld
 		Symbol_Push _LF_Inherited(instance<config_map>) Symbol_Endl
 	{
 	public:
+		using tag = config_indicator;
 		instance() :instance<config_map>(new config_map()) {}
 		instance(int argc, char** argv):instance()
 		{
@@ -1184,6 +1204,7 @@ namespace ld
 		Symbol_Push _LF_Inherited(instance<BITMAP_FILE>) Symbol_Endl
 	{
 	public:
+		using tag = BITMAP_FILE;
 		using Bitmap = BITMAP_FILE;
 		using IndexCount = DWORD;
 		using IndexCountN = WORD;
@@ -1558,6 +1579,11 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 			return *this;
 		}
 		virtual ~instance() {}
+
+		const char* ToString() const override
+		{
+			return this->get_ref().string<_CharTy>().c_str();
+		}
 
 		auto get_filesystem_status() const noexcept
 		{
@@ -1995,7 +2021,17 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 		}
 
 #undef mut_of_wchar
-
+		
+		decltype(auto) redirect_cin(const char* mode = "r")
+		{
+			FILE* stream;
+			return std::make_pair(freopen_s(&stream, this->ToString(), mode, stdin), stream);
+		}
+		decltype(auto) redirect_cout(const char* mode = "w")
+		{
+			FILE* stream;
+			return std::make_pair(freopen_s(&stream, this->ToString(), mode, stdout), stream);
+		}
 	};
 	using tool_file_w = instance<type_list<io_tag_indicator, file_indicator, wchar_t>>;
 	using tool_file = instance<type_list<io_tag_indicator, file_indicator, char>>;
@@ -2061,5 +2097,355 @@ _LF_C_API(TStruct) remove_instance<ld::instance<T>>
 template<typename T> using remove_instance_v = typename remove_instance<T>::tag;
 
 #pragma endregion
+
+namespace ld
+{
+	template<typename _Forward,typename T> _LF_C_API(TClass) binding_instance;
+
+#pragma region Basic
+
+	if_type_exist_def(binding_instance_indicator);
+
+	static instance<global_indicator> binding_root(nullptr);
+
+	namespace interval
+	{
+		struct ld_interval_node
+		{
+
+		};
+	}
+
+	_LF_C_API(Class) any_binding_instance
+	{
+		static std::mutex any_binding_instance_locker;
+		static std::set<any_binding_instance*> any_binding_instances;
+		void* real_head_ptr;
+	public:
+		using binding_instance_indicator = true_indicator;
+		any_binding_instance(void* real_head_ptr) : __init(real_head_ptr)
+		{
+			any_binding_instances.insert(this);
+		}
+		virtual ~any_binding_instance()
+		{
+			any_binding_instances.erase(this);
+		}
+		template<typename T>
+		T& to_real() const
+		{
+			return *static_cast<T*>(real_head_ptr);
+		}
+		virtual bool __tool_root_reachable(std::set<void*>& blacktree)
+		{
+			return false;
+		}
+		virtual bool root_reachable()
+		{
+			return false;
+		}
+		static void DrawMemory();
+	protected:
+		// return <is global>
+		virtual bool __forward(void** ptr) const abstract;
+	};
+	std::mutex any_binding_instance::any_binding_instance_locker;
+	std::set<any_binding_instance*> any_binding_instance::any_binding_instances;
+	void any_binding_instance::DrawMemory()
+	{
+		std::lock_guard<decltype(any_binding_instance_locker)> _locker(any_binding_instance_locker);
+		console.LogWarning("--------------------------------------------");
+		console.LogWarning("----ld::any_binding_instance::DrawMemory----");
+		std::map<void*, int> header_counter;
+		for (auto&& item : any_binding_instances)
+		{
+			auto* current = dynamic_cast<any_class*>(item);
+			header_counter[item->real_head_ptr]++;
+			if (item->root_reachable())
+			{
+				std::cout << current->ToString() << "[" << item->real_head_ptr << "], any_class adr: " << current->GetAnyAdr() << "\n";
+			}
+			else
+			{
+				std::cout << ConsoleColor::RedIntensity
+					<< current->ToString() << "[" << item->real_head_ptr << "], any_class adr: " << current->GetAnyAdr() << "\n";
+			}
+			std::cout << ConsoleColor::None;
+		}
+		console.LogWarning("---------------pointer image----------------");
+		for (auto&& item : header_counter)
+		{
+			std::cout << item.first << " ref times: " << item.second << "\n";
+		}
+		console.LogWarning("----ld::any_binding_instance::DrawMemory----");
+		console.LogWarning("--------------------------------------------");
+	}
+
+	// Root
+	template<typename T> 
+	_LF_C_API(TClass) binding_instance<global_indicator, T> 
+		Symbol_Push _LF_Inherited(instance<T>)
+		Symbol_Link _LF_Inherited(any_binding_instance)
+	{
+	public:
+		constexpr static bool is_forward_global = true;
+		using tag = T;
+		using base_instance = instance<T>;
+
+		// init with ptr
+		binding_instance(nullptr_t) :base_instance(nullptr), any_binding_instance(this){}
+		binding_instance(tag* ptr) :base_instance(ptr), any_binding_instance(this){}
+		// build up with move
+		binding_instance(base_instance& ins) noexcept: base_instance(ins), any_binding_instance(this){}
+		binding_instance(base_instance&& ins) noexcept: base_instance(std::move(ins)), any_binding_instance(this){}
+		binding_instance(binding_instance& from) noexcept :base_instance(from), any_binding_instance(this) {}
+		binding_instance(binding_instance&& from) noexcept :base_instance(std::move(from)), any_binding_instance(this) {}
+		// build up with args
+		template<typename... Args>
+		binding_instance(Args&&... args) : base_instance(new T(args...)), any_binding_instance(this){}
+		// de-opt
+		virtual ~binding_instance() {}
+
+		template<typename _OtherForward, typename _SubT>
+		binding_instance& operator=(binding_instance<_OtherForward, _SubT>& from) noexcept
+		{
+			base_instance::operator=(from);
+			return *this;
+		}
+		template<typename _OtherForward, typename _SubT>
+		binding_instance& operator=(binding_instance<_OtherForward, _SubT>&& from) noexcept
+		{
+			base_instance::operator=(std::move(from));
+			return *this;
+		}
+
+		const instance<void>& get_forward() const
+		{
+			return binding_root;
+		}
+		virtual bool __tool_root_reachable(std::set<void*>& blacktree)
+		{
+			return true;
+		}
+		virtual bool root_reachable()
+		{
+			return true;
+		}
+
+		constexpr bool is_init() const
+		{
+			return true;
+		}
+		constexpr inline void detect_init() const {}
+
+		operator T& () const
+		{
+			return this->get_ref();
+		}
+	protected:
+		virtual bool __forward(void** ptr) const
+		{
+			return true;
+		}
+	};
+	template<typename T> using global_variable = binding_instance<global_indicator, T>;
+
+#pragma endregion
+
+
+	// Main
+	template<typename _Forward, typename T>
+	_LF_C_API(TClass) binding_instance final
+		Symbol_Push _LF_Inherited(instance<T>)
+		Symbol_Link _LF_Inherited(any_binding_instance)
+	{
+	private:
+		static_assert(if_type_exist(binding_instance_indicator) < _Forward > || std::is_same_v<_Forward, any_binding_instance>, "_Forward must be binding_instance<>");
+		_Forward* forward;
+	public:
+		constexpr static bool is_forward_global = false;
+		using tag = T;
+		using base_instance = instance<T>;
+
+		void init_forward(_Forward& forward)
+		{
+			if (this->forward)
+				throw LDException("Current binding_instance is initialize multiple times");
+			this->forward = &forward;
+		}
+		// init with ptr
+		binding_instance(nullptr_t) noexcept :base_instance(nullptr), any_binding_instance(this), forward(nullptr) {}
+		binding_instance(T * ptr) :base_instance(ptr), any_binding_instance(this), forward(nullptr) {}
+		binding_instance(_Forward& forward, T * ptr) :base_instance(ptr), any_binding_instance(this), forward(&forward) {}
+		// build up with move
+		binding_instance(base_instance & ins) noexcept:base_instance(ins), any_binding_instance(this), forward(nullptr) {}
+		binding_instance(base_instance && ins) noexcept: base_instance(std::move(ins)), any_binding_instance(this), forward(nullptr) {}
+		binding_instance(_Forward& forward, base_instance& ins) :base_instance(ins), any_binding_instance(this), forward(&forward) {}
+		binding_instance(_Forward& forward, base_instance&& ins) : base_instance(std::move(ins)), any_binding_instance(this), forward(&forward) {}
+		binding_instance(binding_instance& from) noexcept :base_instance(from), any_binding_instance(this), forward(nullptr) {}
+		binding_instance(binding_instance&& from) noexcept :base_instance(std::move(from)), any_binding_instance(this), forward(nullptr) {}
+		binding_instance(_Forward& forward, binding_instance& from) noexcept :base_instance(from), any_binding_instance(this), forward(&forward) {}
+		binding_instance(_Forward& forward, binding_instance&& from) noexcept :base_instance(std::move(from)), any_binding_instance(this), forward(&forward) {}
+		// build up with args
+		template<typename... Args>
+		binding_instance(Args&&... args) : base_instance(new T(args...)), any_binding_instance(this), forward(nullptr) {}
+		template<typename... Args>
+		binding_instance(_Forward& forward, Args&&... args) : base_instance(new T(args...)), any_binding_instance(this), forward(&forward) {}
+		virtual ~binding_instance() {}
+
+		template<typename _OtherForward, typename _SubT>
+		binding_instance& operator=(binding_instance<_OtherForward, _SubT>& from) noexcept
+		{
+			base_instance::operator=(from);
+			return *this;
+		}
+		template<typename _OtherForward, typename _SubT>
+		binding_instance& operator=(binding_instance<_OtherForward, _SubT>&& from) noexcept
+		{
+			base_instance::operator=(std::move(from));
+			return *this;
+		}
+		binding_instance& operator=(binding_instance& from) noexcept
+		{
+			this->forward = from.forward;
+			base_instance::operator=(from);
+			return *this;
+		}
+		binding_instance& operator=(binding_instance&& from) noexcept
+		{
+			this->forward = from.forward;
+			base_instance::operator=(std::move(from));
+			return *this;
+		}
+
+		const _Forward& get_forward() const
+		{
+			return *forward;
+		}
+		virtual bool __tool_root_reachable(std::set<void*>& blacktree) override
+		{
+			if (forward && blacktree.count(forward) == 0)
+			{
+				blacktree.insert(this);
+				return forward->__tool_root_reachable(blacktree);
+			}
+			else return false;
+		}
+		virtual bool root_reachable() override
+		{
+			std::set<void*> buffer;
+			return __tool_root_reachable(buffer);
+		}
+
+		inline bool is_init() const
+		{
+			return forward != nullptr;
+		}
+		inline void detect_init() const
+		{
+			if (this->forward == nullptr)
+			{
+				throw LDException("Current binding_instance is never initialize");
+			}
+		}
+
+		operator T& () const
+		{
+			return this->get_ref();
+		}
+	protected:
+		virtual bool __forward(void** ptr) const
+		{
+			ptr = this->forward;
+			return false;
+		}
+	};
+
+	if_func_exist_def(init_class);
+
+	template<typename _T, typename... Args>
+	decltype(auto) make_binding_instance_g(Args... args)
+	{
+		auto result = binding_instance<global_indicator, _T>(args...);
+		if constexpr (if_func_exist(init_class) < _T, void(const decltype(result)&) > )
+		{
+			result.get_ref().init_class(result);
+		}
+		else if constexpr (if_func_exist(init_class) < _T, void(decltype(result)&) > )
+		{
+			result.get_ref().init_class(result);
+		}
+		return result;
+	}
+	template<typename _T, typename _Forward, typename... Args>
+	decltype(auto) make_binding_instance(_Forward& forward, Args... args)
+	{
+		if constexpr (is_global_indicator_v<_Forward>)
+		{
+			return std::move(make_binding_instance_g(args...));
+		}
+		else
+		{
+			auto result = binding_instance<_Forward, _T>(forward, args...);
+			if constexpr (if_func_exist(init_class) < _T, void(const decltype(result)&) >)
+			{
+				result.get_ref().init_class(result);
+			}
+			else if constexpr (if_func_exist(init_class) < _T, void(decltype(result)&) > )
+			{
+				result.get_ref().init_class(result);
+			}
+			return result;
+		}
+	}
+	template<typename T>
+	decltype(auto) build_binding_instance_g(T* instance)
+	{
+		auto result = binding_instance<global_indicator, T>(instance);
+		if constexpr(if_func_exist(init_class) < T, void(const decltype(result)&) > )
+		{
+			result.get_ref().init_class(result);
+		}
+		else if constexpr (if_func_exist(init_class) < T, void(decltype(result)&) > )
+		{
+			result.get_ref().init_class(result);
+		}
+		return result;
+	}
+	template<typename _Forward, typename T>
+	decltype(auto) build_binding_instance(_Forward& forward, T* instance)
+	{
+		if constexpr (is_global_indicator_v<_Forward>)
+		{
+			return std::move(build_binding_instance_g(instance));
+		}
+		else
+		{
+			auto result = binding_instance<_Forward, T>(forward, instance);
+			if constexpr (if_func_exist(init_class) < T, void(const decltype(result)&) > )
+			{
+				result.get_ref().init_class(result);
+			}
+			else if constexpr (if_func_exist(init_class) < T, void(decltype(result)&) > )
+			{
+				result.get_ref().init_class(result);
+			}
+			return result;
+		}
+	}
+#define init_class_symbol(type)\
+	using __type__ = type;\
+	using __class__ = binding_instance<_Forward, type>;\
+	using __forward__ = binding_instance<_Forward, type>
+#define init_binding_instance(member) member(member)
+#define that_binding_instance __forward__
+#define declare_binding_instance(type, member)\
+	binding_instance<__class__, type> member = binding_instance<__class__, type>(nullptr)
+#define defined_binding_instance(forward, member) member.init_forward(forward)
+#define forward_variable(forward,T) binding_instance<forward, T>
+
+}
+
+#pragma pack(pop)
 
 #endif // !__FILE_LF_RAII

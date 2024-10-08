@@ -282,6 +282,10 @@ public:
 		{
 			current_value = 0;
 		}
+		else
+		{
+			current_value = nullptr;
+		}
 	}
 	template<typename LvTag>
 	class_component_indicatior(LvTag&& first) :current_value(first) {}

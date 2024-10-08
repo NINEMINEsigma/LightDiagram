@@ -2,138 +2,87 @@
 
 #include<LightDiagram.h>
 
-using namespace std;
 using namespace ld;
 using namespace ld::resources;
+using namespace std;
 
-static auto __auto__ = []()
-	{
-		cin.tie(0);
-		cout.tie(0);
-		ios::sync_with_stdio(false);
-		return 0;
-	};
+sync_with_stdio_false(__auto__);
 
-class item
+template<typename T>
+struct Ts : public any_class
 {
-public:
-	vector<int> component;
-	vector<int> translateFrom;
-	int cost = 0;
-
-	int get_cost(vector<item>& items)
+	using tag = remove_cv_t<T>;
+	tag value;
+	Ts(const tag& value) :value(value)
 	{
-		if (cost)
-		{
-			return cost;
-		}
-		else
-		{
-			int sum = 0;
-			for (auto&& i : component)
-			{
-				sum += items[i].get_cost(items);
-			}
-			for (auto&& i : translateFrom)
-			{
-				sum = min(sum, items[i].get_cost(items));
-			}
-			return sum;
-		}
+		stringstream ss;
+		ss << typeid(Ts).name() << "[" << this->GetAnyAdr() << "] is in constructor" << endl;
+		console.LogError(next_line(ss) + "\n");
+	}
+	Ts(const Ts& value) :value(value.value)
+	{
+		stringstream ss;
+		ss << typeid(Ts).name() << "[" << this->GetAnyAdr() << "] is in constructor(move)" << endl;
+		console.LogError(next_line(ss) + "\n");
+	}
+	~Ts()
+	{
+		stringstream ss;
+		ss << "Ts{" << value << "} is de-opt" << endl;
+		console.LogError(next_line(ss) + "\n");
+	}
+	operator tag& ()
+	{
+		return value;
 	}
 };
 
-class package
+template<typename _Forward = global_indicator>
+class bitest : public any_class
 {
+	init_class_symbol(bitest);
 public:
-	set<int> items;
-	int cost;
+	declare_binding_instance(Ts<int>, index);
+	declare_binding_instance(Ts<string>, name);
+	declare_binding_instance(bitest<bitest>, next);
+	bitest(int index, string name) :__init(index), __init(name)
+	{
+		stringstream ss;
+		ss << "bitest[" << this->GetAnyAdr() << "] is in constructor" << endl;
+		console.LogWarning(next_line(ss) + "\n");
+	}
+	virtual ~bitest()
+	{
+		stringstream ss;
+		ss << "bitest{" << index << "," << name << "} is de-opt" << endl;
+		console.LogWarning(next_line(ss) + "\n");
+	}
+
+	void init_class(__class__& that)
+	{
+		index.init_forward(that);
+		name.init_forward(that);
+		next.init_forward(that);
+	}
+
+	virtual const char* ToString() const
+	{
+		return static_cast<string&>(name.get_ref()).c_str();
+	}
+	operator int() const
+	{
+		return static_cast<int&>(index.get_ref());
+	}
 };
-
-void init_result(item& result, int length)
-{
-	while (length--)
-	{
-		result.component.push_back(next<int>(cin));
-	}
-}
-
-void init_costitems(vector<item>& items,int length)
-{
-	for (int i = 1; i <= length; i++)
-	{
-		auto& item = items[i];
-		int temp = next<int>(cin);
-		if (temp == 0)
-		{
-			item.cost = next<int>(cin);
-		}
-		else
-		{
-			while (temp--)
-			{
-				item.component.push_back(next<int>(cin));
-			}
-		}
-	}
-}
-
-void init_translateFrom(vector<item>& items,int length)
-{
-	while (length--)
-	{
-		int from, to;
-		cin >> from >> to;
-		items[to].translateFrom.push_back(from);
-	}
-}
-
-void init_pack(vector<package>& packages, int length)
-{
-	while (length--)
-	{
-		int count;
-		cin >> count >> packages[length].cost;
-		while (count--)
-		{
-			packages[length].items.insert(next<int>(cin));
-		}
-	}
-}
-
-void solve()
-{
-	int n, m, p, q;
-	cin >> n >> m >> p >> q;
-	vector<item> items(m + 1);
-	item& result = items[0];
-	vector<package> packages(q);
-	init_result(result, n);
-	init_costitems(items, m);
-	init_translateFrom(items, p);
-	init_pack(packages, q);
-	cout << result.get_cost(items) << endl;
-}
 
 int main()
 {
-	string path = "D:/CCSP/2023/decorate/data/";
-	for (int i = 1, e = 20; i <= e; i++)
-	{
-		cout << "QUES" << i << ":" << endl;
-		string fileindex = to_string(i);
-		string filein = path + fileindex + ".in";
-		freopen(filein.c_str(), "r", stdin);
-		solve();
-		string fileout = path + fileindex + ".ans";
-		cout << "ANS:" << endl;
-		ifstream fs(fileout.c_str());
-		char buffer[1024] = {};
-		while (fs.eof() == false)
-		{
-			fs.getline(buffer, 1024);
-			cout << buffer;
-		}
-		console.LogMessage("\n---------------------------------------");
-	}
+	auto that = make_binding_instance_g<bitest<>>(1, string("test"));
+	console.LogMessage(string((const char*)(bitest<>&)that) + "\n");
+	console.LogMessage(to_string((int)(bitest<>&)that) + "\n");
+	console.LogMessage("Create next instance\n");
+	auto& next_that = that.get_ref().next = make_binding_instance<bitest<decltype(that)>>(that, 99, string("next test"));
+	console.LogMessage(string(next_that.get_ref().ToString()) + "\n");
+	console.LogMessage(to_string((int)next_that.get_ref()) + "\n");
+	any_binding_instance::DrawMemory();
 }

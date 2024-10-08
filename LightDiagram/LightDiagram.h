@@ -53,6 +53,7 @@
 #include<Core/LF_RAII.h>
 #include<Core/LF_Container.h>
 #include<Core/algorithm.h>
+#include<Core/anygraph.h>
 
 _LF_C_API(OClass) ld_test
 {

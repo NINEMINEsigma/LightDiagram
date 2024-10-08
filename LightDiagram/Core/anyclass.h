@@ -1,7 +1,9 @@
-#ifndef __FILE_ANY_CLASS
+﻿#ifndef __FILE_ANY_CLASS
 #define __FILE_ANY_CLASS
 
 #include<Core/LF_Config.h>
+
+#pragma pack(push, 1)
 
 #pragma region is_base_of_template
 
@@ -136,10 +138,26 @@ class any_class;
 template<typename T> class null_package;
 template<typename T> _LF_C_API(TDLL) null_package<T> make_null_package(any_class* ptr);
 
-_LF_C_API(Class)	any_class
+_LF_C_API(Class)
+any_class
 {
 public:
+	inline const void* GetAnyAdr() const
+	{
+		return static_cast<const void*>(this);
+	}
+#if (is_monitor_the_constructor_of_anyclass)
+	any_class()
+	{
+		std::cout << "\n" << typeid(*this).name() << "[" << static_cast<const void*>(this) << "] is in constructor\n";
+	}
+	virtual ~any_class()
+	{
+		std::cout << "\n" << typeid(*this).name() << "[" << static_cast<const void*>(this) << "] is in destructor\n";
+	}
+#else
 	virtual ~any_class() {}
+#endif
 	template<typename T> T& AsRef()
 	{
 		return *static_cast<T*>(this);
@@ -180,7 +198,7 @@ public:
 		return this;
 	}
 
-	const type_info& GetType() const
+	virtual const type_info& GetType() const
 	{
 		return typeid(*this);
 	}
@@ -191,6 +209,11 @@ public:
 	virtual any_class* GetClone() const
 	{
 		return nullptr;
+	}
+
+	virtual operator const char* () const
+	{
+		return this->ToString();
 	}
 
 	//template<typename T> any_class* IfIam(void(*foo)(T*))
@@ -429,6 +452,20 @@ private:
 using noncopyable = copy_disable;
 
 using config_map = std::map<std::string, std::string>;
+
+using vptr_t = intptr_t**;
+template<typename _T>
+vptr_t get_vptr(_T* from)
+{
+	return reinterpret_cast<vptr_t>(from);
+}
+template<typename _T>
+void set_vptr(_T* from, vptr_t vptr)
+{
+	*reinterpret_cast<vptr_t>(from) = vptr;
+}
+
+#pragma pack(pop)
 
 #endif // !__FILE_ANY_CLASS
 

@@ -2,6 +2,23 @@
 
 #define __FILE_LF_CONFIG
 
+#pragma region config defined
+
+//#define not_monitor_the_constructor_of_anyclass
+#if defined(_DEBUG)
+#ifdef not_monitor_the_constructor_of_anyclass
+#define is_monitor_the_constructor_of_anyclass false
+#else
+#define is_monitor_the_constructor_of_anyclass true
+#endif // !not_monitor_the_constructor_of_anyclass
+#else
+#define is_monitor_the_constructor_of_anyclass false
+#endif // _DEBUG
+
+
+#pragma endregion
+
+
 //release:	std::type_info to global namespace
 
 #pragma region easyx
@@ -1418,6 +1435,13 @@ T& next(std::istream& s)
 	s >> item;
 	return item;
 }
+template<typename _Is>
+std::string next_line(_Is& s)
+{
+	static char buffer[1024];
+	s.getline(buffer, 1024);
+	return buffer;
+}
 
 #pragma endregion
 
@@ -1707,6 +1731,24 @@ _T Clamp(const _T& t, const _T& min, const _T& max)
 	else if (t < min)return 0;
 	else return t;
 }
+
+#pragma endregion
+
+#pragma region Kit
+
+#define sync_with_stdio_false(name)			\
+auto name = []()							\
+{											\
+	std::cin.tie(0);						\
+	std::cout.tie(0);						\
+	std::ios::sync_with_stdio(false);		\
+	return 0;								\
+}											\
+
+#ifndef __init
+#define __init(member) member(member)
+#endif // !__init
+
 
 #pragma endregion
 
