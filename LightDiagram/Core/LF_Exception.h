@@ -84,6 +84,7 @@ namespace ld
         using wstring = std::wstring;
 
         symbol_t Message, Warning, Error;
+        ConsoleColor MessageC, WarningC, ErrorC;
         ConsoleColor FC;
         ConsoleBackgroundColor BC;
 

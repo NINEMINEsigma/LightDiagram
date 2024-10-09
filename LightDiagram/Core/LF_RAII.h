@@ -1305,7 +1305,7 @@ namespace ld
 			_In_opt_ Bitmap::PaletteBuffer palette = nullptr,
 			size_t paletteSize = 0,
 			IndexCount ClrUsed = 0,
-			IndexCount ClrImportant = 0) :instance<Bitmap>(new Bitmap())
+			IndexCount ClrImportant = 0) :instance_any_class, instance<Bitmap>(new Bitmap())
 		{
 			CreateBitMap(this->get_ptr(), bitCount, height, width, palette, paletteSize, ClrUsed, ClrImportant);
 		}
@@ -1582,11 +1582,6 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 			BOOL c = DrawBitmapLine(x3, y3, x, y, width, valueR, valueG, valueB, type);
 			return (a == TRUE && b == TRUE && c == TRUE) ? TRUE : FALSE;
 		}
-
-		virtual std::string SymbolName() const override
-		{
-			return typeid(*this).name();
-		}
 	};
 #undef _RGBGET
 #undef _i_GaussianBlurBlock
@@ -1630,9 +1625,9 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 		}
 		virtual ~instance() {}
 
-		const char* ToString() const override
+		std::string ToString() const override
 		{
-			return this->get_ref().string<_CharTy>().c_str();
+			return this->get_ref().string<_CharTy>();
 		}
 
 		auto get_filesystem_status() const noexcept
@@ -2155,15 +2150,16 @@ template<typename T> using remove_instance_v = typename remove_instance<T>::tag;
 
 namespace ld
 {
-	template<typename _Forward,typename T> _LF_C_API(TClass) binding_instance;
+	template<typename _Forward, typename T> _LF_C_API(TClass) binding_instance;
 
 #pragma region Basic
 
 	if_type_exist_def(binding_instance_indicator);
+	if_func_exist_def(ToString);
 
 	static instance<global_indicator> binding_root(nullptr);
 
-	_LF_C_API(Class) any_binding_instance
+	_LF_C_API(Class) any_binding_instance : public virtual any_class
 	{
 		static std::mutex any_binding_instance_locker;
 		static std::set<any_binding_instance*> any_binding_instances;
@@ -2183,6 +2179,7 @@ namespace ld
 	protected:
 		// return <is global>
 		virtual bool __forward(void** ptr) const abstract;
+		virtual void* __get_instance_ptr() const abstract;
 	};
 
 	// Root
@@ -2249,12 +2246,28 @@ namespace ld
 	protected:
 		virtual bool __forward(void** ptr) const
 		{
+			*ptr = binding_root.get_ptr();
 			return true;
+		}
+		virtual void* __get_instance_ptr() const override
+		{
+			return this->get_ptr();
 		}
 	public:
 		virtual std::string SymbolName() const override
 		{
-			return typeid(*this).name();
+			return std::string("global<") + typeid(T).name() + ">";
+		}
+		virtual std::string ToString() const override
+		{
+			if constexpr (if_func_exist(ToString) < T, std::string () > )
+			{
+				return this->get_ref().ToString();
+			}
+			else
+			{
+				return GetType().name();
+			}
 		}
 	};
 	template<typename T> using global_variable = binding_instance<global_indicator, T>;
@@ -2270,13 +2283,13 @@ namespace ld
 	{
 	private:
 		static_assert(if_type_exist(binding_instance_indicator) < _Forward > || std::is_same_v<_Forward, any_binding_instance>, "_Forward must be binding_instance<> or any_binding_instance");
-		_Forward* forward;
+		any_binding_instance* forward;
 	public:
 		constexpr static bool is_forward_global = false;
 		using tag = T;
 		using base_instance = instance<T>;
 
-		void init_forward(_Forward& forward)
+		void init_forward(any_binding_instance & forward)
 		{
 			if (this->forward)
 				throw LDException("Current binding_instance is initialize multiple times");
@@ -2314,22 +2327,21 @@ namespace ld
 			base_instance::operator=(std::move(from));
 			return *this;
 		}
-		binding_instance& operator=(binding_instance& from) noexcept
-		{
-			this->forward = from.forward;
-			base_instance::operator=(from);
-			return *this;
-		}
-		binding_instance& operator=(binding_instance&& from) noexcept
-		{
-			this->forward = from.forward;
-			base_instance::operator=(std::move(from));
-			return *this;
-		}
+		//	binding_instance& operator=(binding_instance& from) noexcept
+		//	{
+		//		base_instance::operator=(from);
+		//		return *this;
+		//	}
+		//	binding_instance& operator=(binding_instance&& from) noexcept
+		//	{
+		//		base_instance::operator=(std::move(from));
+		//		return *this;
+		//	}
 
 		const _Forward& get_forward() const
 		{
-			return *forward;
+			detect_init();
+			return *static_cast<_Forward*>(forward);
 		}
 		virtual bool __tool_root_reachable(std::set<void*>& blacktree) override
 		{
@@ -2342,6 +2354,7 @@ namespace ld
 		}
 		virtual bool root_reachable() override
 		{
+			detect_init();
 			std::set<void*> buffer;
 			return __tool_root_reachable(buffer);
 		}
@@ -2365,14 +2378,35 @@ namespace ld
 	protected:
 		virtual bool __forward(void** ptr) const
 		{
-			*ptr = this->forward;
+			detect_init();
+			*ptr = this->forward->GetAnyAdr();
 			return false;
 		}
+		virtual void* __get_instance_ptr() const override
+		{
+			detect_init();
+			return this->get_ptr();
+		}
 	public:
-			virtual std::string SymbolName() const override
+		virtual std::string SymbolName() const override
+		{
+			detect_init();
+			return std::string("binding<") + typeid(T).name() + ">";
+		}
+		virtual std::string ToString() const override
+		{
+			detect_init();
+			if constexpr (if_func_exist(ToString) < T, std::string () > )
 			{
-				return typeid(*this).name();
+				if (this->empty())
+					return "nullptr";
+				return this->get_ref().ToString();
 			}
+			else
+			{
+				return GetType().name();
+			}
+		}
 	};
 
 	if_func_exist_def(init_class);
@@ -2401,11 +2435,11 @@ namespace ld
 		else
 		{
 			auto result = binding_instance<_Forward, T>(forward, args...);
-			if constexpr (if_func_exist(init_class) < T, void(const decltype(result)&) >)
+			if constexpr (if_func_exist(init_class) < T, void(const any_binding_instance&) >)
 			{
 				result.get_ref().init_class(result);
 			}
-			else if constexpr (if_func_exist(init_class) < T, void(decltype(result)&) > )
+			else if constexpr (if_func_exist(init_class) < T, void(any_binding_instance&) > )
 			{
 				result.get_ref().init_class(result);
 			}
@@ -2458,6 +2492,14 @@ namespace ld
 #define defined_binding_instance(forward, member) member.init_forward(forward)
 #define forward_variable(forward,T) binding_instance<forward, T>
 
+#ifdef binding_instance_manager
+#define binding_member(member,belong,...) \
+	do\
+	{\
+	auto& __temp__ = member = make_binding_instance<decltype(member)>(belong,__VA_ARGS__);\
+	__temp__.get_ref().init_class(__temp__);\
+	}while(false)
+#endif
 }
 
 #pragma pack(pop)

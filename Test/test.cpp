@@ -1,6 +1,7 @@
 ﻿#define _CRT_SECURE_NO_WARNINGS
 
 #define is_monitor_the_constructor_of_anyclass true
+#define binding_instance_manager
 
 #include<LightDiagram.h>
 
@@ -19,19 +20,19 @@ struct Ts final: public any_class
 	{
 		stringstream ss;
 		ss << typeid(Ts).name() << "[" << this->GetAnyAdr() << "] is in constructor" << endl;
-		console.LogError(next_line(ss) + "\n");
+		console.LogError(next_line(ss));
 	}
 	Ts(const Ts& value) :value(value.value)
 	{
 		stringstream ss;
 		ss << typeid(Ts).name() << "[" << this->GetAnyAdr() << "] is in constructor(move)" << endl;
-		console.LogError(next_line(ss) + "\n");
+		console.LogError(next_line(ss));
 	}
 	~Ts()
 	{
 		stringstream ss;
 		ss << "Ts{" << value << "} is de-opt" << endl;
-		console.LogError(next_line(ss) + "\n");
+		console.LogError(next_line(ss));
 	}
 	operator tag& ()
 	{
@@ -41,6 +42,13 @@ struct Ts final: public any_class
 	virtual std::string SymbolName() const override
 	{
 		return typeid(*this).name();
+	}
+	virtual string ToString() const override
+	{
+		if constexpr (enable_to_string<tag> && std::is_same_v < tag, void > == false)
+			return to_string(value);
+		else
+			return GetType().name();
 	}
 };
 
@@ -56,23 +64,23 @@ public:
 	{
 		stringstream ss;
 		ss << "bitest[" << this->GetAnyAdr() << "] is in constructor" << endl;
-		console.LogWarning(next_line(ss) + "\n");
+		console.LogWarning(next_line(ss));
 	}
 	virtual ~bitest()
 	{
 		stringstream ss;
-		ss << "bitest{" << index << "," << name << "} is de-opt" << endl;
-		console.LogWarning(next_line(ss) + "\n");
+		ss << "bitest{" << index.ToString() << "," << name.ToString() << "} is de-opt" << endl;
+		console.LogWarning(next_line(ss));
 	}
 
-	void init_class(__class__& that)
+	void init_class(any_binding_instance& that)
 	{
 		index.init_forward(that);
 		name.init_forward(that);
 		next.init_forward(that);
 	}
 
-	virtual const char* ToString() const
+	virtual string ToString() const
 	{
 		return static_cast<string&>(name.get_ref()).c_str();
 	}
@@ -90,11 +98,13 @@ public:
 int main()
 {
 	auto that = make_binding_instance_g<bitest<>>(1, string("test"));
-	console.LogMessage(string((const char*)(bitest<>&)that) + "\n");
-	console.LogMessage(to_string((int)(bitest<>&)that) + "\n");
-	console.LogMessage("Create next instance\n");
-	auto& next_that = that.get_ref().next = make_binding_instance<decltype(that.get_ref().next)>(that, 99, string("next test"));
-	console.LogMessage(string(next_that.get_ref().ToString()) + "\n");
-	console.LogMessage(to_string((int)next_that.get_ref()) + "\n");
+	console.LogMessage(static_cast<bitest<>&>(that).ToString());
+	console.LogMessage(to_string((int)(bitest<>&)that));
+	console.LogMessage("Create next instance");
+	binding_member(that.get_ref().next, that, 99, string("next test"));
+	auto& next_that = that.get_ref().next;
+	//next_that.get_ref().init_class(next_that);
+	console.LogMessage(next_that.get_ref().ToString());
+	console.LogMessage(to_string((int)next_that.get_ref()));
 	any_binding_instance::DrawMemory();
 }

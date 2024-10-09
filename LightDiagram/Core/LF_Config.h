@@ -1,4 +1,4 @@
-#ifndef __FILE_LF_CONFIG
+﻿#ifndef __FILE_LF_CONFIG
 
 #define __FILE_LF_CONFIG
 
@@ -17,6 +17,9 @@
 #endif // _DEBUG
 
 #endif // !is_monitor_the_constructor_of_anyclass
+
+#pragma warning(disable : 4267)
+#pragma warning(disable : 4244)
 
 #pragma endregion
 
@@ -1437,11 +1440,11 @@ T& next(std::istream& s)
 	s >> item;
 	return item;
 }
-template<typename _Is>
+template<typename _Is, size_t _BufferSize = 2048>
 std::string next_line(_Is& s)
 {
-	static char buffer[1024];
-	s.getline(buffer, 1024);
+	static char buffer[_BufferSize];
+	s.getline(buffer, _BufferSize);
 	return buffer;
 }
 
@@ -1631,6 +1634,30 @@ inline std::string back_to_string(const char* input)
 {
 	return to_string(to_wstring(input));
 }
+
+inline std::string& to_string(std::string& str)
+{
+	return str;
+}
+inline std::wstring& to_wstring(std::wstring& str)
+{
+	return str;
+}
+inline std::string to_string(const std::string& str)
+{
+	return str;
+}
+inline std::wstring to_string(std::wstring& str)
+{
+	return str;
+}
+
+template<typename T> constexpr bool enable_to_string =
+std::is_arithmetic_v<T>
+|| std::is_same_v< std::remove_cv_t<T>, std::string>
+|| std::is_same_v< std::remove_cv_t<T>, std::wstring>
+|| std::is_same_v< T, const char*>
+|| std::is_same_v< T, char*>;
 
 inline bool isGBK(unsigned char* data, int len) 
 {

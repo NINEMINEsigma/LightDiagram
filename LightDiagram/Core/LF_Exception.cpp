@@ -265,9 +265,13 @@ namespace ld
 	}
 
 	ConsolePro::ConsolePro()
-		: Message(0), Warning(1), Error(2), FC(ConsoleColor::None), BC(ConsoleBackgroundColor::None) {}
+		: Message(0), Warning(1), Error(2)
+		, MessageC(ConsoleColor::Blue), WarningC(ConsoleColor::Yellow), ErrorC(ConsoleColor::Red)
+		, FC(ConsoleColor::None), BC(ConsoleBackgroundColor::None) {}
 	ConsolePro::ConsolePro(const ConsolePro& from)
-		: Message(from.Message), Warning(from.Warning), Error(from.Error), FC(from.FC), BC(from.BC) {}
+		: Message(from.Message), Warning(from.Warning), Error(from.Error)
+		, MessageC(from.MessageC), WarningC(from.WarningC), ErrorC(from.ErrorC)
+		, FC(from.FC), BC(from.BC) {}
 	ConsolePro::~ConsolePro() {}
 
 	const ConsolePro& ConsolePro::Log(const ConsolePro::string& message, const ConsolePro::string& label, const ConsolePro::string& tail, const ConsolePro::symbol_t& type) const
@@ -275,11 +279,11 @@ namespace ld
 		if (is_log_message_to_cout)
 		{
 			if (type == this->Warning)
-				std::cout << ConsoleColor::Yellow << message << std::endl << this->FC;
+				std::cout << this->WarningC << message << std::endl << this->FC;
 			else if (type == this->Error)
-				std::cout << ConsoleColor::Red << message << std::endl << this->FC;
+				std::cout << this->ErrorC << message << std::endl << this->FC;
 			else if (type == this->Message)
-				std::cout << ConsoleColor::Blue << message << std::endl << this->FC;
+				std::cout << this->MessageC << message << std::endl << this->FC;
 			else
 				std::cout << message << std::endl;
 		}
@@ -338,11 +342,11 @@ namespace ld
 		if (is_log_message_to_cout)
 		{
 			if (type == this->Warning)
-				std::wcout << ConsoleColor::Yellow << message << std::endl << this->FC;
+				std::wcout << this->WarningC << message << std::endl << this->FC;
 			else if (type == this->Error)
-				std::wcout << ConsoleColor::Red << message << std::endl << this->FC;
+				std::wcout << this->ErrorC << message << std::endl << this->FC;
 			else if (type == this->Message)
-				std::wcout << ConsoleColor::Blue << message << std::endl << this->FC;
+				std::wcout << this->MessageC << message << std::endl << this->FC;
 			else
 				std::wcout << message << std::endl;
 		}
