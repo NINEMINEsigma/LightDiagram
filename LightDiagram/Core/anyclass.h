@@ -139,7 +139,16 @@ template<typename T> class null_package;
 template<typename T> _LF_C_API(TDLL) null_package<T> make_null_package(any_class* ptr);
 
 _LF_C_API(Class)
-any_class
+type_class
+{
+public:
+	virtual const type_info& GetType() const abstract;
+	virtual const char* ToString() const abstract;
+	virtual std::string SymbolName() const abstract;
+	virtual any_class* GetClone() const abstract;
+};
+_LF_C_API(Class)
+any_class : public virtual type_class
 {
 public:
 	inline const void* GetAnyAdr() const
@@ -147,17 +156,28 @@ public:
 		return static_cast<const void*>(this);
 	}
 #if (is_monitor_the_constructor_of_anyclass)
-	any_class()
+#ifndef is_monitor_the_constructor_of_instance
+#define is_monitor_the_constructor_of_instance false
+#endif // !is_monitor_the_constructor_of_instance
+	bool __is_log = true;
+	template<typename _B>
+	any_class(_B is_log) :__is_log(is_log)
 	{
-		std::cout << "\n" << typeid(*this).name() << "[" << static_cast<const void*>(this) << "] is in constructor\n";
+		if (is_log)
+			std::cout << "\n" << this->AsDynamicPtr<type_class>()->SymbolName() << "[" << static_cast<const void*>(this) << "] is in constructor\n";
 	}
+	any_class() :any_class(true) {}
 	virtual ~any_class()
 	{
-		std::cout << "\n" << typeid(*this).name() << "[" << static_cast<const void*>(this) << "] is in destructor\n";
+		if (__is_log)
+			std::cout << "\n" << this->AsDynamicPtr<type_class>()->SymbolName() << "[" << static_cast<const void*>(this) << "] is in destructor\n";
 	}
 #else
+#undef is_monitor_the_constructor_of_instance
+#define is_monitor_the_constructor_of_instance
 	virtual ~any_class() {}
 #endif
+#define instance_any_class any_class(is_monitor_the_constructor_of_instance)
 	template<typename T> T& AsRef()
 	{
 		return *static_cast<T*>(this);
@@ -204,7 +224,11 @@ public:
 	}
 	virtual const char* ToString() const
 	{
-		return typeid(*this).name();
+		return GetType().name();
+	}
+	virtual std::string SymbolName() const
+	{
+		return GetType().name();
 	}
 	virtual any_class* GetClone() const
 	{

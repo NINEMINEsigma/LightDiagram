@@ -4,7 +4,8 @@
 
 #pragma region config defined
 
-//#define not_monitor_the_constructor_of_anyclass
+#ifndef is_monitor_the_constructor_of_anyclass
+
 #if defined(_DEBUG)
 #ifdef not_monitor_the_constructor_of_anyclass
 #define is_monitor_the_constructor_of_anyclass false
@@ -15,6 +16,7 @@
 #define is_monitor_the_constructor_of_anyclass false
 #endif // _DEBUG
 
+#endif // !is_monitor_the_constructor_of_anyclass
 
 #pragma endregion
 
@@ -1677,6 +1679,28 @@ inline auto to_value(const std::string& str)
 		static_assert(std::is_same_v<_ReTy, void > == true, "not support for this type");
 		return;
 	}
+}
+
+template<typename _Str, typename _CharFirst>
+_Str trim(const _Str& str, _CharFirst ch)
+{
+	size_t size = str.size();
+	if (size == 0)
+		return _Str();
+	bool start = str.front() == ch, last = str.back() == ch;
+	if (size == 1)
+		return start ? str : _Str();
+	if (start == false && last == false)
+		return str;
+	size_t offset = 
+		start 
+		? (std::distance(str.cbegin(), std::find_if_not(str.cbegin(), str.cend(), [ch](const _CharFirst& _c) {return ch == _c; }))) 
+		: 0;
+	size_t roffset =
+		last 
+		? (std::distance(str.crbegin(), std::find_if_not(str.crbegin(), str.crend(), [ch](const _CharFirst& _c) {return ch == _c; }))) 
+		: (size - offset);
+	return str.substr(offset, size - offset - roffset);
 }
 
 #pragma endregion

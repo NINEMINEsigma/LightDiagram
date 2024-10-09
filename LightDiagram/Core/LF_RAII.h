@@ -206,10 +206,10 @@ namespace ld
 	private:
 		Tag * instance_ptr;
 	public:
-		instance(Tag* ptr) :instance_ptr(ptr), instance<void>() {}
-		instance(const Tag& data) : instance_ptr(new Tag(data)) {}
-		instance(instance& from) noexcept :instance_ptr(from.instance_ptr), instance<void>(from) {}
-		instance(instance&& from) noexcept :instance_ptr(from.instance_ptr), instance<void>(std::move(from))
+		instance(Tag* ptr) :instance_any_class, instance_ptr(ptr), instance<void>() {}
+		instance(const Tag& data) :instance_any_class, instance_ptr(new Tag(data)) {}
+		instance(instance& from) noexcept :instance_any_class, instance_ptr(from.instance_ptr), instance<void>(from) {}
+		instance(instance&& from) noexcept :instance_any_class, instance_ptr(from.instance_ptr), instance<void>(std::move(from))
 		{
 			from.instance_ptr = nullptr;
 		}
@@ -401,6 +401,11 @@ namespace ld
 		{
 			return this->instance_ptr == nullptr;
 		}
+
+		virtual std::string SymbolName() const override
+		{
+			return typeid(*this).name();
+		}
 	};
 
 	template<typename... Args> using type_list_instance_baseclass = std::array<void*, sizeof...(Args)>;
@@ -532,6 +537,11 @@ namespace ld
 		{
 			return base_type_tag::operator==(from);
 		}
+
+		virtual std::string SymbolName() const override
+		{
+			return typeid(*this).name();
+		}
 	};
 	// pseudo class, all argument type add pointer to ptr-type
 	template<typename... Args> using instance_pseudo_class = instance<type_list<std::add_pointer_t<Args>...>>;
@@ -574,6 +584,11 @@ namespace ld
 		constexpr bool operator==(const instance<ConstexprCount<OtherMax>>&from) const noexcept
 		{
 			return Max == OtherMax;
+		}
+
+		virtual std::string SymbolName() const override
+		{
+			return typeid(*this).name();
 		}
 	};
 	// limited-ref-count shared ptr, throw bad when over count
@@ -696,6 +711,11 @@ namespace ld
 			}
 			else throw ld::LDException("muti-source buffer use release");
 		}
+
+		virtual std::string SymbolName() const override
+		{
+			return typeid(*this).name();
+		}
 	};
 	// memeory alloc buffer, for temp or long time
 	// bug warning, the delete-constructor is not triggered on this type's delete-constructor
@@ -752,6 +772,11 @@ namespace ld
 		{
 			 this->_m_fields.set_value<index>(std::forward<_T>(right));
 		}
+
+		virtual std::string SymbolName() const override
+		{
+			return typeid(*this).name();
+		}
 	};
 	template<typename ModulesList, typename FunctionsList, typename FieldsList > using meta_instance = instance<type_list<class_indicator, ModulesList, FunctionsList, FieldsList>>;
 
@@ -771,6 +796,11 @@ namespace ld
 		{
 			::free(this->get_ptr()->get_head());
 		}
+
+		virtual std::string SymbolName() const override
+		{
+			return typeid(*this).name();
+		}
 	};
 	//array target type buffer
 	template<typename AccTy, class AccContainerType> _LF_C_API(TClass)
@@ -786,6 +816,11 @@ namespace ld
 		virtual ~instance()
 		{
 			::free(this->get_ptr()->get_head());
+		}
+
+		virtual std::string SymbolName() const override
+		{
+			return typeid(*this).name();
 		}
 	};
 	template<typename VoidContainerType> using void_container_instance = instance<type_list<container_indicator, void_indicator, VoidContainerType>>;
@@ -1112,6 +1147,11 @@ namespace ld
 			out_file.flush();
 		}
 
+		virtual std::string SymbolName() const override
+		{
+			return typeid(*this).name();
+		}
+
 	private:
 
 	};
@@ -1190,6 +1230,11 @@ namespace ld
 		std::string& get_value(const std::string& key) const
 		{
 			return (*this->get_ptr())[key];
+		}
+
+		virtual std::string SymbolName() const override
+		{
+			return typeid(*this).name();
 		}
 	};
 	using config_instance = instance<type_list<io_tag_indicator, config_indicator, char>>;
@@ -1536,6 +1581,11 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 			BOOL b = DrawBitmapLine(x2, y2, x3, y3, width, valueR, valueG, valueB, type);
 			BOOL c = DrawBitmapLine(x3, y3, x, y, width, valueR, valueG, valueB, type);
 			return (a == TRUE && b == TRUE && c == TRUE) ? TRUE : FALSE;
+		}
+
+		virtual std::string SymbolName() const override
+		{
+			return typeid(*this).name();
 		}
 	};
 #undef _RGBGET
@@ -2032,6 +2082,11 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 			FILE* stream;
 			return std::make_pair(freopen_s(&stream, this->ToString(), mode, stdout), stream);
 		}
+
+		virtual std::string SymbolName() const override
+		{
+			return typeid(*this).name();
+		}
 	};
 	using tool_file_w = instance<type_list<io_tag_indicator, file_indicator, wchar_t>>;
 	using tool_file = instance<type_list<io_tag_indicator, file_indicator, char>>;
@@ -2108,14 +2163,6 @@ namespace ld
 
 	static instance<global_indicator> binding_root(nullptr);
 
-	namespace interval
-	{
-		struct ld_interval_node
-		{
-
-		};
-	}
-
 	_LF_C_API(Class) any_binding_instance
 	{
 		static std::mutex any_binding_instance_locker;
@@ -2123,63 +2170,20 @@ namespace ld
 		void* real_head_ptr;
 	public:
 		using binding_instance_indicator = true_indicator;
-		any_binding_instance(void* real_head_ptr) : __init(real_head_ptr)
-		{
-			any_binding_instances.insert(this);
-		}
-		virtual ~any_binding_instance()
-		{
-			any_binding_instances.erase(this);
-		}
+		any_binding_instance(void* real_head_ptr);
+		virtual ~any_binding_instance();
 		template<typename T>
 		T& to_real() const
 		{
 			return *static_cast<T*>(real_head_ptr);
 		}
-		virtual bool __tool_root_reachable(std::set<void*>& blacktree)
-		{
-			return false;
-		}
-		virtual bool root_reachable()
-		{
-			return false;
-		}
+		virtual bool __tool_root_reachable(std::set<void*>& blacktree);
+		virtual bool root_reachable();
 		static void DrawMemory();
 	protected:
 		// return <is global>
 		virtual bool __forward(void** ptr) const abstract;
 	};
-	std::mutex any_binding_instance::any_binding_instance_locker;
-	std::set<any_binding_instance*> any_binding_instance::any_binding_instances;
-	void any_binding_instance::DrawMemory()
-	{
-		std::lock_guard<decltype(any_binding_instance_locker)> _locker(any_binding_instance_locker);
-		console.LogWarning("--------------------------------------------");
-		console.LogWarning("----ld::any_binding_instance::DrawMemory----");
-		std::map<void*, int> header_counter;
-		for (auto&& item : any_binding_instances)
-		{
-			auto* current = dynamic_cast<any_class*>(item);
-			header_counter[item->real_head_ptr]++;
-			if (item->root_reachable())
-			{
-				std::cout << current->ToString() << "[" << item->real_head_ptr << "], any_class adr: " << current->GetAnyAdr() << "\n";
-			}
-			else
-			{
-				std::cout << ConsoleColor::RedIntensity
-					<< current->ToString() << "[" << item->real_head_ptr << "], any_class adr: " << current->GetAnyAdr() << "\n";
-			}
-			std::cout << ConsoleColor::None;
-		}
-		console.LogWarning("---------------pointer image----------------");
-		for (auto&& item : header_counter)
-		{
-			std::cout << item.first << " ref times: " << item.second << "\n";
-		}
-		console.LogWarning("----ld::any_binding_instance::DrawMemory----");
-		console.LogWarning("--------------------------------------------");
-	}
 
 	// Root
 	template<typename T> 
@@ -2193,16 +2197,16 @@ namespace ld
 		using base_instance = instance<T>;
 
 		// init with ptr
-		binding_instance(nullptr_t) :base_instance(nullptr), any_binding_instance(this){}
-		binding_instance(tag* ptr) :base_instance(ptr), any_binding_instance(this){}
+		binding_instance(nullptr_t) : instance_any_class, base_instance(nullptr), any_binding_instance(this){}
+		binding_instance(tag* ptr) : instance_any_class, base_instance(ptr), any_binding_instance(this){}
 		// build up with move
-		binding_instance(base_instance& ins) noexcept: base_instance(ins), any_binding_instance(this){}
-		binding_instance(base_instance&& ins) noexcept: base_instance(std::move(ins)), any_binding_instance(this){}
-		binding_instance(binding_instance& from) noexcept :base_instance(from), any_binding_instance(this) {}
-		binding_instance(binding_instance&& from) noexcept :base_instance(std::move(from)), any_binding_instance(this) {}
+		binding_instance(base_instance& ins) noexcept: instance_any_class, base_instance(ins), any_binding_instance(this){}
+		binding_instance(base_instance&& ins) noexcept: instance_any_class, base_instance(std::move(ins)), any_binding_instance(this){}
+		binding_instance(binding_instance& from) noexcept : instance_any_class, base_instance(from), any_binding_instance(this) {}
+		binding_instance(binding_instance&& from) noexcept : instance_any_class, base_instance(std::move(from)), any_binding_instance(this) {}
 		// build up with args
 		template<typename... Args>
-		binding_instance(Args&&... args) : base_instance(new T(args...)), any_binding_instance(this){}
+		binding_instance(Args&&... args) : instance_any_class, base_instance(new T(args...)), any_binding_instance(this){}
 		// de-opt
 		virtual ~binding_instance() {}
 
@@ -2247,6 +2251,11 @@ namespace ld
 		{
 			return true;
 		}
+	public:
+		virtual std::string SymbolName() const override
+		{
+			return typeid(*this).name();
+		}
 	};
 	template<typename T> using global_variable = binding_instance<global_indicator, T>;
 
@@ -2260,7 +2269,7 @@ namespace ld
 		Symbol_Link _LF_Inherited(any_binding_instance)
 	{
 	private:
-		static_assert(if_type_exist(binding_instance_indicator) < _Forward > || std::is_same_v<_Forward, any_binding_instance>, "_Forward must be binding_instance<>");
+		static_assert(if_type_exist(binding_instance_indicator) < _Forward > || std::is_same_v<_Forward, any_binding_instance>, "_Forward must be binding_instance<> or any_binding_instance");
 		_Forward* forward;
 	public:
 		constexpr static bool is_forward_global = false;
@@ -2274,23 +2283,23 @@ namespace ld
 			this->forward = &forward;
 		}
 		// init with ptr
-		binding_instance(nullptr_t) noexcept :base_instance(nullptr), any_binding_instance(this), forward(nullptr) {}
-		binding_instance(T * ptr) :base_instance(ptr), any_binding_instance(this), forward(nullptr) {}
-		binding_instance(_Forward& forward, T * ptr) :base_instance(ptr), any_binding_instance(this), forward(&forward) {}
+		binding_instance(nullptr_t) noexcept : instance_any_class, base_instance(nullptr), any_binding_instance(this), forward(nullptr) {}
+		binding_instance(T * ptr) : instance_any_class, base_instance(ptr), any_binding_instance(this), forward(nullptr) {}
+		binding_instance(_Forward& forward, T * ptr) : instance_any_class, base_instance(ptr), any_binding_instance(this), forward(&forward) {}
 		// build up with move
-		binding_instance(base_instance & ins) noexcept:base_instance(ins), any_binding_instance(this), forward(nullptr) {}
-		binding_instance(base_instance && ins) noexcept: base_instance(std::move(ins)), any_binding_instance(this), forward(nullptr) {}
-		binding_instance(_Forward& forward, base_instance& ins) :base_instance(ins), any_binding_instance(this), forward(&forward) {}
-		binding_instance(_Forward& forward, base_instance&& ins) : base_instance(std::move(ins)), any_binding_instance(this), forward(&forward) {}
-		binding_instance(binding_instance& from) noexcept :base_instance(from), any_binding_instance(this), forward(nullptr) {}
-		binding_instance(binding_instance&& from) noexcept :base_instance(std::move(from)), any_binding_instance(this), forward(nullptr) {}
-		binding_instance(_Forward& forward, binding_instance& from) noexcept :base_instance(from), any_binding_instance(this), forward(&forward) {}
-		binding_instance(_Forward& forward, binding_instance&& from) noexcept :base_instance(std::move(from)), any_binding_instance(this), forward(&forward) {}
+		binding_instance(base_instance & ins) noexcept: instance_any_class, base_instance(ins), any_binding_instance(this), forward(nullptr) {}
+		binding_instance(base_instance && ins) noexcept: instance_any_class, base_instance(std::move(ins)), any_binding_instance(this), forward(nullptr) {}
+		binding_instance(_Forward& forward, base_instance& ins) : instance_any_class, base_instance(ins), any_binding_instance(this), forward(&forward) {}
+		binding_instance(_Forward& forward, base_instance&& ins) : instance_any_class, base_instance(std::move(ins)), any_binding_instance(this), forward(&forward) {}
+		binding_instance(binding_instance& from) noexcept : instance_any_class, base_instance(from), any_binding_instance(this), forward(nullptr) {}
+		binding_instance(binding_instance&& from) noexcept : instance_any_class, base_instance(std::move(from)), any_binding_instance(this), forward(nullptr) {}
+		binding_instance(_Forward& forward, binding_instance& from) noexcept : instance_any_class, base_instance(from), any_binding_instance(this), forward(&forward) {}
+		binding_instance(_Forward& forward, binding_instance&& from) noexcept : instance_any_class, base_instance(std::move(from)), any_binding_instance(this), forward(&forward) {}
 		// build up with args
 		template<typename... Args>
-		binding_instance(Args&&... args) : base_instance(new T(args...)), any_binding_instance(this), forward(nullptr) {}
+		binding_instance(Args&&... args) : instance_any_class, base_instance(new T(args...)), any_binding_instance(this), forward(nullptr) {}
 		template<typename... Args>
-		binding_instance(_Forward& forward, Args&&... args) : base_instance(new T(args...)), any_binding_instance(this), forward(&forward) {}
+		binding_instance(_Forward& forward, Args&&... args) : instance_any_class, base_instance(new T(args...)), any_binding_instance(this), forward(&forward) {}
 		virtual ~binding_instance() {}
 
 		template<typename _OtherForward, typename _SubT>
@@ -2356,42 +2365,47 @@ namespace ld
 	protected:
 		virtual bool __forward(void** ptr) const
 		{
-			ptr = this->forward;
+			*ptr = this->forward;
 			return false;
 		}
+	public:
+			virtual std::string SymbolName() const override
+			{
+				return typeid(*this).name();
+			}
 	};
 
 	if_func_exist_def(init_class);
 
-	template<typename _T, typename... Args>
+	template<typename T, typename... Args>
 	decltype(auto) make_binding_instance_g(Args... args)
 	{
-		auto result = binding_instance<global_indicator, _T>(args...);
-		if constexpr (if_func_exist(init_class) < _T, void(const decltype(result)&) > )
+		auto result = binding_instance<global_indicator, T>(args...);
+		if constexpr (if_func_exist(init_class) < T, void(const decltype(result)&) > )
 		{
 			result.get_ref().init_class(result);
 		}
-		else if constexpr (if_func_exist(init_class) < _T, void(decltype(result)&) > )
+		else if constexpr (if_func_exist(init_class) < T, void(decltype(result)&) > )
 		{
 			result.get_ref().init_class(result);
 		}
 		return result;
 	}
-	template<typename _T, typename _Forward, typename... Args>
+	template<typename T, typename _Forward, typename... Args>
 	decltype(auto) make_binding_instance(_Forward& forward, Args... args)
 	{
 		if constexpr (is_global_indicator_v<_Forward>)
 		{
-			return std::move(make_binding_instance_g(args...));
+			return std::move(make_binding_instance_g<T>(args...));
 		}
 		else
 		{
-			auto result = binding_instance<_Forward, _T>(forward, args...);
-			if constexpr (if_func_exist(init_class) < _T, void(const decltype(result)&) >)
+			auto result = binding_instance<_Forward, T>(forward, args...);
+			if constexpr (if_func_exist(init_class) < T, void(const decltype(result)&) >)
 			{
 				result.get_ref().init_class(result);
 			}
-			else if constexpr (if_func_exist(init_class) < _T, void(decltype(result)&) > )
+			else if constexpr (if_func_exist(init_class) < T, void(decltype(result)&) > )
 			{
 				result.get_ref().init_class(result);
 			}

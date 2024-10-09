@@ -1,5 +1,7 @@
 ﻿#define _CRT_SECURE_NO_WARNINGS
 
+#define is_monitor_the_constructor_of_anyclass true
+
 #include<LightDiagram.h>
 
 using namespace ld;
@@ -9,7 +11,7 @@ using namespace std;
 sync_with_stdio_false(__auto__);
 
 template<typename T>
-struct Ts : public any_class
+struct Ts final: public any_class
 {
 	using tag = remove_cv_t<T>;
 	tag value;
@@ -35,16 +37,21 @@ struct Ts : public any_class
 	{
 		return value;
 	}
+
+	virtual std::string SymbolName() const override
+	{
+		return typeid(*this).name();
+	}
 };
 
 template<typename _Forward = global_indicator>
-class bitest : public any_class
+class bitest final: public any_class
 {
 	init_class_symbol(bitest);
 public:
 	declare_binding_instance(Ts<int>, index);
 	declare_binding_instance(Ts<string>, name);
-	declare_binding_instance(bitest<bitest>, next);
+	declare_binding_instance(bitest<any_binding_instance>, next);
 	bitest(int index, string name) :__init(index), __init(name)
 	{
 		stringstream ss;
@@ -73,6 +80,11 @@ public:
 	{
 		return static_cast<int&>(index.get_ref());
 	}
+
+	virtual std::string SymbolName() const override
+	{
+		return typeid(*this).name();
+	}
 };
 
 int main()
@@ -81,7 +93,7 @@ int main()
 	console.LogMessage(string((const char*)(bitest<>&)that) + "\n");
 	console.LogMessage(to_string((int)(bitest<>&)that) + "\n");
 	console.LogMessage("Create next instance\n");
-	auto& next_that = that.get_ref().next = make_binding_instance<bitest<decltype(that)>>(that, 99, string("next test"));
+	auto& next_that = that.get_ref().next = make_binding_instance<decltype(that.get_ref().next)>(that, 99, string("next test"));
 	console.LogMessage(string(next_that.get_ref().ToString()) + "\n");
 	console.LogMessage(to_string((int)next_that.get_ref()) + "\n");
 	any_binding_instance::DrawMemory();
