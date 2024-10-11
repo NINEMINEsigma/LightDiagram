@@ -4,13 +4,44 @@ using namespace std;
 
 namespace ld
 {
+	static stack<size_indicator> size_indicators;
+	static std::mutex size_indicator_locker;
+	static size_t size_indicator_count = 0;
+	size_indicator obtain_size_indicator()
+	{
+		lock_guard locker(size_indicator_locker);
+		if (size_indicators.empty())
+		{
+			size_indicator_count = Max(size_indicators.size(), ++size_indicator_count);
+			return new size_tag(1);
+		}
+		else
+		{
+			auto result = size_indicators.top();
+			size_indicators.pop();
+			return result;
+		}
+	}
+	void free_size_indicator(_In_ size_indicator ptr)
+	{
+		lock_guard locker(size_indicator_locker);
+		*ptr = 1;
+		size_indicators.push(ptr);
+	}
+	size_t get_size_indicator_count()
+	{
+		return size_indicator_count;
+	}
+
 	namespace
 	{
 		class interval_any_binding_instance_image
 		{
 		public:
 			void* ptr = nullptr;
+			bool is_lost_root = false;
 			vector<const void*> to;
+			string code_str;
 			void draw(
 				ConsolePro& console,
 				map<const void*, interval_any_binding_instance_image>& mapper,
@@ -22,7 +53,7 @@ namespace ld
 				{
 					ss << "--";
 				}
-				ss << "|--" << ptr;
+				ss << "|--" << ptr << string(Max(0, 60 - layer * 2), ' ') << code_str;
 				if (blacktree.count(this) != 0)
 				{
 					console.MessageC = ConsoleColor::Yellow;
@@ -31,14 +62,20 @@ namespace ld
 				}
 				else
 				{
-					if (layer == 0)
+					if (is_lost_root)
+					{
+						console.MessageC = ConsoleColor::Red;
+						console.LogMessage(next_line(ss));
+						console.MessageC = ConsoleColor::None;
+					}
+					else if (layer == 0)
 					{
 						console.MessageC = ConsoleColor::Green;
 						console.LogMessage(next_line(ss));
 						console.MessageC = ConsoleColor::None;
 					}
 					else
-						console.LogMessage(next_line(ss) + string(to.size() == 0 ? "*" : ""));
+						console.LogMessage(next_line(ss));
 					blacktree.insert(this);
 					for (auto&& item : to)
 					{
@@ -57,6 +94,11 @@ namespace ld
 		std::lock_guard<decltype(any_binding_instance_locker)> _locker(any_binding_instance_locker);
 		ConsolePro console(::console);
 		console.MessageC = ConsoleColor::None;
+		if (any_binding_instances.empty())
+		{
+			console.LogWarning("\n----ld::any_binding_instance::DrawMemory<any_binding_instances is empty>----\n");
+			return;
+		}
 		console.LogWarning("\n--------------------------------------------");
 		console.LogWarning("----ld::any_binding_instance::DrawMemory----");
 		std::map<const void*, int> header_counter;
@@ -66,10 +108,15 @@ namespace ld
 		for (auto&& item : any_binding_instances)
 		{
 			auto* current = item->GetAnyAdr();
+			string code_str = item->ToString();
 			header_counter[current]++;
 			ss << "binding " << current << " to " << item->__get_instance_ptr() << ", symbol="
 				<< item->SymbolName() << ", \""
-				<< item->ToString() << "\"\n";
+				<< code_str << "\"\n";
+			if (code_str.length() > 25)
+				mapper[current].code_str = code_str.substr(0, 20) + "...";
+			else
+				mapper[current].code_str = code_str;
 			if (item->root_reachable())
 			{
 				console.LogMessage(next_line(ss));
@@ -77,6 +124,7 @@ namespace ld
 			else
 			{
 				console.LogError(next_line(ss));
+				mapper[current].is_lost_root = true;
 			}
 			void* temp;
 			if (item->__forward(&temp))

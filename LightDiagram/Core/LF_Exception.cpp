@@ -400,6 +400,23 @@ namespace ld
 		static ConsolePro::wstring label(L"error");
 		return WcoutError(message, label, label);
 	}
+
+	const type_info& ConsolePro::GetType() const 
+	{
+		return typeid(*this);
+	}
+	std::string ConsolePro::ToString() const 
+	{
+		return "Console";
+	}
+	std::string ConsolePro::SymbolName() const 
+	{
+		return "Console";
+	}
+	any_class* ConsolePro::GetClone() const 	
+	{
+		return new ConsolePro(*this);
+	}
 }
 
 ld::ConsolePro console;

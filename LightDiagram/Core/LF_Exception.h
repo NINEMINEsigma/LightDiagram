@@ -109,7 +109,19 @@ namespace ld
         const ConsolePro& WcoutMessage(const wstring & message) const;
         const ConsolePro& WcoutWarning(const wstring & message) const;
         const ConsolePro& WcoutError(const wstring & message) const;
+
+        virtual const type_info& GetType() const override;
+        virtual std::string ToString() const override;
+        virtual std::string SymbolName() const override;
+        virtual any_class* GetClone() const override;
     };
+
+    template<typename _Message>
+    const ConsolePro& operator<<(const ConsolePro& console, _Message&& message)
+    {
+        std::cout << std::forward<_Message>(message);
+        return console;
+    }
 }
 
 extern ld::ConsolePro console;
@@ -119,7 +131,7 @@ catch(const LDException& ex)                            \
 {                                                       \
     ConsolePro console;                                 \
     func;                                               \
-    console.LogError(ex.message());}
+    console.LogError(ex.message);}
 
 #define CatchingSTDException(func)                      \
 catch(const std::exception ex)                          \
@@ -134,5 +146,10 @@ catch(...)                                              \
     ConsolePro console;                                 \
     func;                                               \
     console.LogError(string(__FILE__)+" "+_STR_LINE_+": "+"Unknown Error");}
+
+#define ThrowLDException(message) throw LDException(string(__FILE__)+" "+_STR_LINE_+": "+message)
+
+#define GlobalExceptionInit try{
+#define GlobalExcpetionApply }CatchingLDException();
 
 #endif // !__FILE_LF_EXCEPTION

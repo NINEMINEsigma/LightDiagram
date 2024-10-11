@@ -17,21 +17,26 @@
 
 namespace ld
 {
+#ifndef instance_size_tag
+		using size_tag = size_t;
+#else
+		using size_tag = instance_size_tag;
+#endif
+		using size_indicator = size_tag*;
+
 	template<typename T> _LF_C_API(Class) instance;
 
 #pragma region Basic
+
+	extern size_indicator obtain_size_indicator();
+	extern void free_size_indicator(_In_ size_indicator ptr);
+	extern size_t get_size_indicator_count();
 
 	// Referance Counter
 	template<> _LF_C_API(Class) instance<void> Symbol_Push _LF_Inherited(any_class)
 	{
 	public:
 		using tag = void;
-#ifndef instance_size_tag
-		using size_tag = ::size_t;
-#else
-		using size_tag = instance_size_tag;
-#endif
-		using size_indicator = size_tag*;
 	private:
 		size_indicator instance_counter;
 	protected:
@@ -67,7 +72,7 @@ namespace ld
 			(*this->instance_counter)--;
 			if (*this->instance_counter == 0)
 			{
-				delete this->instance_counter;
+				free_size_indicator(this->instance_counter);
 			}
 			this->instance_counter = nullptr;
 		}
@@ -77,7 +82,7 @@ namespace ld
 			release_nocallback();
 			this->set_counter(new size_t(1));
 		}
-		instance() :instance_counter(new size_tag(1)) {}
+		instance() :instance_counter(obtain_size_indicator()) {}
 		instance(instance & from) noexcept :instance_counter(from.instance_counter)
 		{
 			(*this->instance_counter)++;
@@ -555,7 +560,7 @@ namespace ld
 		void CheckStatus() const
 		{
 			if (this->get_count() >= Max)
-				throw ld::LDException("over count");
+				ThrowLDException("over count");
 		}
 		using Tag = ConstexprCount<Max>;
 	public:
@@ -633,7 +638,7 @@ namespace ld
 			}
 			else
 			{
-				throw ld::LDException("The capacity is not sufficient to accommodate the target object");
+				ThrowLDException("The capacity is not sufficient to accommodate the target object");
 			}
 		}
 		//generate buffer but not create instance of target
@@ -697,7 +702,7 @@ namespace ld
 				create();
 				return *new(this->get_buffer()) TargetType(args...);
 			}
-			else throw ld::LDException("muti-source buffer use create");
+			else ThrowLDException("muti-source buffer use create");
 		}
 		//release target and lock on single buffer
 		template<class TargetType> void release_target(size_t offset = 0)
@@ -709,7 +714,7 @@ namespace ld
 					this->get_address_like_array<TargetType>(offset)->~TargetType();
 				}
 			}
-			else throw ld::LDException("muti-source buffer use release");
+			else ThrowLDException("muti-source buffer use release");
 		}
 
 		virtual std::string SymbolName() const override
@@ -2070,12 +2075,12 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 		decltype(auto) redirect_cin(const char* mode = "r")
 		{
 			FILE* stream;
-			return std::make_pair(freopen_s(&stream, this->ToString(), mode, stdin), stream);
+			return std::make_pair(freopen_s(&stream, this->ToString().c_str(), mode, stdin), stream);
 		}
 		decltype(auto) redirect_cout(const char* mode = "w")
 		{
 			FILE* stream;
-			return std::make_pair(freopen_s(&stream, this->ToString(), mode, stdout), stream);
+			return std::make_pair(freopen_s(&stream, this->ToString().c_str(), mode, stdout), stream);
 		}
 
 		virtual std::string SymbolName() const override
@@ -2224,11 +2229,11 @@ namespace ld
 		{
 			return binding_root;
 		}
-		virtual bool __tool_root_reachable(std::set<void*>& blacktree)
+		virtual bool __tool_root_reachable(std::set<void*>& blacktree) override
 		{
 			return true;
 		}
-		virtual bool root_reachable()
+		virtual bool root_reachable() override
 		{
 			return true;
 		}
@@ -2289,11 +2294,11 @@ namespace ld
 		using tag = T;
 		using base_instance = instance<T>;
 
-		void init_forward(any_binding_instance & forward)
+		void init_forward(any_binding_instance* forward)
 		{
 			if (this->forward)
-				throw LDException("Current binding_instance is initialize multiple times");
-			this->forward = &forward;
+				ThrowLDException("Current binding_instance is initialize multiple times");
+			this->forward = forward;
 		}
 		// init with ptr
 		binding_instance(nullptr_t) noexcept : instance_any_class, base_instance(nullptr), any_binding_instance(this), forward(nullptr) {}
@@ -2367,7 +2372,7 @@ namespace ld
 		{
 			if (this->forward == nullptr)
 			{
-				throw LDException("Current binding_instance is never initialize");
+				ThrowLDException("Current binding_instance is never initialize");
 			}
 		}
 
@@ -2414,73 +2419,24 @@ namespace ld
 	template<typename T, typename... Args>
 	decltype(auto) make_binding_instance_g(Args... args)
 	{
-		auto result = binding_instance<global_indicator, T>(args...);
-		if constexpr (if_func_exist(init_class) < T, void(const decltype(result)&) > )
-		{
-			result.get_ref().init_class(result);
-		}
-		else if constexpr (if_func_exist(init_class) < T, void(decltype(result)&) > )
-		{
-			result.get_ref().init_class(result);
-		}
-		return result;
+		return binding_instance<global_indicator, T>(args...);
 	}
 	template<typename T, typename _Forward, typename... Args>
 	decltype(auto) make_binding_instance(_Forward& forward, Args... args)
 	{
-		if constexpr (is_global_indicator_v<_Forward>)
-		{
-			return std::move(make_binding_instance_g<T>(args...));
-		}
-		else
-		{
-			auto result = binding_instance<_Forward, T>(forward, args...);
-			if constexpr (if_func_exist(init_class) < T, void(const any_binding_instance&) >)
-			{
-				result.get_ref().init_class(result);
-			}
-			else if constexpr (if_func_exist(init_class) < T, void(any_binding_instance&) > )
-			{
-				result.get_ref().init_class(result);
-			}
-			return result;
-		}
+		return binding_instance<_Forward, T>(forward, args...);
 	}
 	template<typename T>
 	decltype(auto) build_binding_instance_g(T* instance)
 	{
-		auto result = binding_instance<global_indicator, T>(instance);
-		if constexpr(if_func_exist(init_class) < T, void(const decltype(result)&) > )
-		{
-			result.get_ref().init_class(result);
-		}
-		else if constexpr (if_func_exist(init_class) < T, void(decltype(result)&) > )
-		{
-			result.get_ref().init_class(result);
-		}
-		return result;
+		return binding_instance<global_indicator, T>(instance);
 	}
 	template<typename _Forward, typename T>
 	decltype(auto) build_binding_instance(_Forward& forward, T* instance)
 	{
-		if constexpr (is_global_indicator_v<_Forward>)
-		{
-			return std::move(build_binding_instance_g(instance));
-		}
-		else
-		{
-			auto result = binding_instance<_Forward, T>(forward, instance);
-			if constexpr (if_func_exist(init_class) < T, void(const decltype(result)&) > )
-			{
-				result.get_ref().init_class(result);
-			}
-			else if constexpr (if_func_exist(init_class) < T, void(decltype(result)&) > )
-			{
-				result.get_ref().init_class(result);
-			}
-			return result;
-		}
+		return binding_instance<_Forward, T>(forward, instance);
 	}
+#ifdef binding_instance_manager
 #define init_class_symbol(type)\
 	using __type__ = type;\
 	using __class__ = binding_instance<_Forward, type>;\
@@ -2489,18 +2445,100 @@ namespace ld
 #define that_binding_instance __forward__
 #define declare_binding_instance(type, member)\
 	binding_instance<__class__, type> member = binding_instance<__class__, type>(nullptr)
-#define defined_binding_instance(forward, member) member.init_forward(forward)
+#define defined_binding_instance(forward, member) member.init_forward(&forward)
+#define defined_global_binding_instance(type,name,...)\
+	auto name = make_binding_instance_g<type>(__VA_ARGS__);\
+	name.get_ref().init_class(&name)
+#define declare_global_binding_instance(type,name)\
+	auto name = make_binding_instance_g<type>(nullptr)
 #define forward_variable(forward,T) binding_instance<forward, T>
 
-#ifdef binding_instance_manager
-#define binding_member(member,belong,...) \
-	do\
-	{\
-	auto& __temp__ = member = make_binding_instance<decltype(member)>(belong,__VA_ARGS__);\
-	__temp__.get_ref().init_class(__temp__);\
-	}while(false)
+	template<
+		typename _Member,
+		typename _Forward,
+		typename... Args>
+	decltype(auto) binding(
+		_Member& member,
+		_Forward& forward,
+		Args... args)
+	{
+		using T = typename _Member::tag;
+		member = make_binding_instance<T>(forward, args...);
+		static_assert(if_func_exist(init_class) < T, void(any_binding_instance*) > ,
+			"member's instance type need function void init_class(any_binding_instance*)");
+		member.get_ref().init_class(&member);
+		return member;
+	}
+	template<
+		typename _Property,
+		typename... Args>
+	decltype(auto) binding(
+		_Property& property,
+		global_indicator __temp__,
+		Args... args)
+	{
+		using T = typename _Property::tag;
+		property = make_binding_instance_g<T>(args...);
+		static_assert(if_func_exist(init_class) < T, void(any_binding_instance*) > ,
+			"member's instance type need function void init_class(any_binding_instance*)");
+		property.get_ref().init_class(&property);
+		return property;
+	}
+
+	template<typename T, typename _Forward = any_binding_instance>
+	struct Binding
+	{
+		using tag = binding_instance<_Forward, T>;
+		using type = tag;
+	};
+	template<typename T, typename _Forward = any_binding_instance>
+	using BindingType = Binding<T, _Forward>;
+#define easy_binding(type) BindingType<type>
+	void __tool_easy_init(any_binding_instance* __that__) {}
+	template<typename T>
+	void __tool_easy_init(any_binding_instance* __that__, T& field)
+	{
+		field.init_forward(__that__);
+	}
+	template<typename First,typename... Args>
+	void __tool_easy_init(any_binding_instance* __that__, First& field, Args&... fields)
+	{
+		__tool_easy_init(__that__, field);
+		__tool_easy_init(__that__, fields...);
+	}
+#define easy_init(...)\
+	void init_class(any_binding_instance* __that__){__tool_easy_init(__that__,__VA_ARGS__);}
+#else
+#define init_class_symbol(type)
+#define init_binding_instance(member) member(member)
+#define that_binding_instance
+#define declare_binding_instance(type, member) type> member
+#define defined_binding_instance(forward, member)
+#define defined_global_binding_instance(type,name,...) type name(__VA_ARGS__)
+#define declare_global_binding_instance(type,name) defined_global_binding_instance(type,name)
+#define forward_variable(forward,T) T
+
+	template<typename _Member, typename _Forward, typename... Args>
+	decltype(auto) binding_member(_Member& member, _Forward& forward, Args... args)
+	{
+		return member = _Member(args...);
+	}
+
+	template<typename T, typename _Forward = any_binding_instance>
+	struct Binding
+	{
+		using tag = T;
+		using type = tag;
+	};
+	template<typename T, typename _Forward = any_binding_instance>
+	using BindingType = Binding<T, _Forward>;
+#define easy_binding(type) type
+#define easy_init(...) void init_class(any_binding_instance* __that__){}
 #endif
 }
+
+#undef GlobalExcpetionApply
+#define GlobalExcpetionApply any_binding_instance::DrawMemory();}CatchingLDException()
 
 #pragma pack(pop)
 
