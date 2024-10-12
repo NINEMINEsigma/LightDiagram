@@ -1433,8 +1433,8 @@ namespace ld
 	}
 }
 
-template<typename T>
-T& next(std::istream& s)
+template<typename T = std::string, typename _Is>
+T& next(_Is& s)
 {
 	static T item;
 	s >> item;
@@ -1446,6 +1446,27 @@ std::string next_line(_Is& s)
 	static char buffer[_BufferSize];
 	s.getline(buffer, _BufferSize);
 	return buffer;
+}
+template<class _Mapper,typename _Is>
+decltype(auto) next_group(_Mapper& mapper, _Is& s)
+{
+	for (auto&& i : mapper)
+	{
+		if (static_cast<bool>(s >> i) == false)
+			return false;
+	}
+	return static_cast<bool>(s);
+}
+template<class _Mapper,  typename _Is>
+decltype(auto) next_matrix(_Mapper& mapper, _Is& s)
+{
+	for (auto&& i : mapper)
+	{
+		for (auto&& j : i)
+			if (static_cast<bool>(s >> j) == false)
+				return false;
+	}
+	return static_cast<bool>(s);
 }
 
 #pragma endregion
