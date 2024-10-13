@@ -2466,7 +2466,6 @@ namespace ld
 		return binding_instance<_Forward, T>(forward, instance);
 	}
 
-#ifdef binding_instance_manager
 	template<typename _BI>
 	inline void try_init_class(_BI& from)
 	{
@@ -2549,33 +2548,6 @@ namespace ld
 	}
 #define easy_init(...)\
 	void init_class(any_binding_instance* __that__){__tool_easy_init(__that__,__VA_ARGS__);}
-#else
-#define init_class_symbol(type)
-#define init_binding_instance(member) member(member)
-#define that_binding_instance
-#define declare_binding_instance(type, member) type> member
-#define defined_binding_instance(forward, member)
-#define defined_global_binding_instance(type,name,...) type name(__VA_ARGS__)
-#define declare_global_binding_instance(type,name) defined_global_binding_instance(type,name)
-#define forward_variable(forward,T) T
-
-	template<typename _Member, typename _Forward, typename... Args>
-	decltype(auto) binding_member(_Member& member, _Forward& forward, Args... args)
-	{
-		return member = _Member(args...);
-	}
-
-	template<typename T, typename _Forward = any_binding_instance>
-	struct Binding
-	{
-		using tag = T;
-		using type = tag;
-	};
-	template<typename T, typename _Forward = any_binding_instance>
-	using BindingType = Binding<T, _Forward>;
-#define easy_binding(type) type
-#define easy_init(...) void init_class(any_binding_instance* __that__){}
-#endif
 }
 
 #undef GlobalExcpetionApply
