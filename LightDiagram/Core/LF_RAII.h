@@ -2201,18 +2201,17 @@ namespace ld
 		using tag = T;
 		using base_instance = instance<T>;
 
+		// build up with args
+		binding_instance(T&& value) : base_instance(new T(std::move(value))), init_ab_instance() {}
 		// init with ptr
-		binding_instance(nullptr_t) : init_ab_instance() {}
-		binding_instance() noexcept : init_ab_instance() {}
-		binding_instance(tag* ptr) : init_ab_instance() {}
+		binding_instance(nullptr_t) : base_instance(nullptr), init_ab_instance() {}
+		binding_instance() noexcept : base_instance(nullptr), init_ab_instance() {}
+		binding_instance(tag* ptr) : base_instance(ptr), init_ab_instance() {}
 		// build up with move
 		binding_instance(base_instance& ins) noexcept : base_instance(ins), init_ab_instance() {}
 		binding_instance(base_instance&& ins) noexcept : base_instance(std::move(ins)), init_ab_instance() {}
 		binding_instance(binding_instance& from) noexcept : base_instance(from), init_ab_instance() {}
 		binding_instance(binding_instance&& from) noexcept : base_instance(std::move(from)), init_ab_instance() {}
-		// build up with args
-		template<typename... Args>
-		binding_instance(Args&&... args) : base_instance(new T(args...)), init_ab_instance() {}
 		// de-opt
 		virtual ~binding_instance() {}
 
@@ -2236,6 +2235,11 @@ namespace ld
 		binding_instance& operator=(binding_instance&& from) noexcept
 		{
 			base_instance::operator=(std::move(from));
+			return *this;
+		}
+		binding_instance& operator=(tag* ptr) noexcept
+		{
+			base_instance::operator=(ptr);
 			return *this;
 		}
 
@@ -2279,6 +2283,8 @@ namespace ld
 		}
 		virtual std::string ToString() const override
 		{
+			if (this->empty())
+				return "nullptr";
 			if constexpr (if_func_exist(ToString) < T, std::string() > )
 			{
 				return this->get_ref().ToString();
@@ -2314,7 +2320,7 @@ namespace ld
 
 		void init_forward(any_binding_instance* forward)
 		{
-			if (this->forward)
+			if (this->forward && this->forward != forward)
 				ThrowLDException("Current binding_instance is initialize multiple times");
 			this->forward = forward;
 		}
@@ -2361,16 +2367,12 @@ namespace ld
 			base_instance::operator=(std::move(from));
 			return *this;
 		}
-		//	binding_instance& operator=(binding_instance& from) noexcept
-		//	{
-		//		base_instance::operator=(from);
-		//		return *this;
-		//	}
-		//	binding_instance& operator=(binding_instance&& from) noexcept
-		//	{
-		//		base_instance::operator=(std::move(from));
-		//		return *this;
-		//	}
+
+		binding_instance operator=(T* ptr)
+		{
+			base_instance::operator=(ptr);
+			return *this;
+		}
 
 		const _Forward& get_forward() const
 		{
@@ -2436,6 +2438,10 @@ namespace ld
 					return "nullptr";
 				return this->get_ref().ToString();
 			}
+			else if constexpr (enable_to_string<T>)
+			{
+				return std::to_string(this->get_ref());
+			}
 			else
 			{
 				return this->GetType().name();
@@ -2444,6 +2450,7 @@ namespace ld
 	};
 
 	if_func_exist_def(init_class);
+	if_func_exist_def(init_forward);
 
 	template<typename T, typename... Args>
 	decltype(auto) make_binding_instance_g(Args... args)
@@ -2471,7 +2478,13 @@ namespace ld
 	{
 		if constexpr (if_func_exist(init_class) < decltype(from.get_ref()), void(any_binding_instance*) > )
 		{
+			if (from.get_ref().is_init())return;
 			from.get_ref().init_class(&from);
+		}
+		else if constexpr (if_func_exist(init_forward) < decltype(from.get_ref()), void(any_binding_instance*) > )
+		{
+			if (from.get_ref().is_init())return;
+			from.get_ref().init_forward(&from);
 		}
 	}
 
@@ -2502,9 +2515,6 @@ namespace ld
 	{
 		using T = typename _Member::tag;
 		member = make_binding_instance<T>(forward, args...);
-		//static_assert(if_func_exist(init_class) < T, void(any_binding_instance*) > ,
-		//	"member's instance type need function void init_class(any_binding_instance*)");
-		//member.get_ref().init_class(&member);
 		try_init_class(member);
 		return member;
 	}
@@ -2518,9 +2528,6 @@ namespace ld
 	{
 		using T = typename _Property::tag;
 		property = make_binding_instance_g<T>(args...);
-		//static_assert(if_func_exist(init_class) < T, void(any_binding_instance*) > ,
-		//	"member's instance type need function void init_class(any_binding_instance*)");
-		//property.get_ref().init_class(&property);
 		try_init_class(property);
 		return property;
 	}
@@ -2534,7 +2541,6 @@ namespace ld
 	template<typename T, typename _Forward = any_binding_instance>
 	using BindingType = Binding<T, _Forward>;
 #define easy_binding(type) BindingType<type>
-	void __tool_easy_init(any_binding_instance* __that__) {}
 	template<typename T>
 	void __tool_easy_init(any_binding_instance* __that__, T& field)
 	{

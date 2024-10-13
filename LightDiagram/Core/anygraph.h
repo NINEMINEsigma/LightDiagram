@@ -19,35 +19,30 @@ namespace ld
 		private:
 			binding_instance<any_binding_instance, any_binding_tree> branch[out_degree];
 		public:
+			void init_class(any_binding_instance* forward)
+			{
+				this->init_forward(forward);
+			}
+
 			using _Forward = any_binding_instance;
 			using base_instance = binding_instance<any_binding_instance, T>;
 #define branch_init\
 				for (auto&& item : branch)\
 				{\
-					ld::binding(item, *this, nullptr);\
+					item.init_forward(this);\
 				}
-#define branch_init_with_args\
-				for (auto&& item : branch)\
-				{\
-					ld::binding(item, *this, args...);\
-				}
+			// build up with init value
+			any_binding_tree(T&& value) : base_instance(new T(std::move(value))) { branch_init }
+			any_binding_tree(T& value) : base_instance(new T(value)) { branch_init }
+			any_binding_tree(_Forward& forward, T&& value) : base_instance(forward, new T(std::move(value))) { branch_init }
 			// init with ptr
 			any_binding_tree(T* ptr = nullptr) : base_instance(ptr) { branch_init }
 			any_binding_tree(_Forward& forward, T* ptr = nullptr) : base_instance(forward, ptr) { branch_init }
 			// build up with move
-			any_binding_tree(any_binding_tree& ins) noexcept : base_instance(ins) { branch_init }
-			any_binding_tree(any_binding_tree&& ins) noexcept : base_instance(std::move(ins)) { branch_init }
-			any_binding_tree(_Forward& forward, any_binding_tree& ins) : base_instance(forward, ins) { branch_init }
-			any_binding_tree(_Forward& forward, any_binding_tree&& ins) : base_instance(forward, std::move(ins)) { branch_init }
 			any_binding_tree(any_binding_tree& from) noexcept : base_instance(from) { branch_init }
 			any_binding_tree(any_binding_tree&& from) noexcept : base_instance(std::move(from)) { branch_init }
 			any_binding_tree(_Forward& forward, any_binding_tree& from) noexcept : base_instance(forward, from) { branch_init }
 			any_binding_tree(_Forward& forward, any_binding_tree&& from) noexcept : base_instance(forward, std::move(from)) { branch_init }
-			// build up with args
-			template<typename... Args>
-			any_binding_tree(Args&&... args) : base_instance(new T(args...)) { branch_init }
-			template<typename... Args>
-			any_binding_tree(_Forward& forward, Args&&... args) : base_instance(forward, new T(args...)) { branch_init }
 			virtual ~any_binding_tree() {}
 
 			T& value()
@@ -60,18 +55,49 @@ namespace ld
 				return static_cast<_Val>(this->get_ref());
 			}
 
+			any_binding_tree& operator=(any_binding_tree& from) noexcept
+			{
+				base_instance::operator=(from);
+				return *this;
+			}
+			any_binding_tree& operator=(any_binding_tree&& from) noexcept
+			{
+				base_instance::operator=(std::move(from));
+				return *this;
+			}
+			any_binding_tree operator=(T* ptr)
+			{
+				base_instance::operator=(ptr);
+				return *this;
+			}
+
+
 	#define ptr_array_at_index\
-			inline decltype(auto) at(size_t index) const\
+			inline decltype(auto) at(size_t index)\
 			{\
 				if (index >= out_degree)\
 					ThrowLDException("index is overflow");\
 				return branch[index];\
 			}\
-			decltype(auto) operator[](size_t index) const\
+			decltype(auto) operator[](size_t index)\
 			{\
 				return branch[index % out_degree];\
 			}
 		public:
+			virtual std::string SymbolName() const override
+			{
+				return std::to_string(out_degree) + "-tree<" + typeid(T).name() + ">";
+			}
+			virtual std::string ToString() const override
+			{
+				auto result = base_instance::ToString() + "{";
+				for (size_t i = 0; i < out_degree; i++)
+				{
+					result += branch[i].ToString() + (i + 1 < out_degree ? ", " : "");
+				}
+				result += "}";
+				return result;
+			}
 			ptr_array_at_index
 		};
 
@@ -91,26 +117,20 @@ namespace ld
 		template<typename... Args>\
 		type(any_binding_instance& forward, Args&&... args) : base_instance(forward, new T(args...)) {}
 
+#pragma region linear
+
 		template<typename T>
-		_LF_C_API(TClass) list
-			Symbol_Push public any_binding_tree<T, 1> Symbol_Endl
+		using linear_iter = any_binding_tree<T, 2>;
+		constexpr static size_t linear_front = 0;
+		constexpr static size_t linear_back = 1;
+		template<typename T,typename...Args>
+		void push_back(linear_iter<T>& iter, Args... args)
 		{
-		public:
-			any_binding_tree_init(list) Symbol_Endl;
-			virtual ~list() {}
-			decltype(auto) next_bi() const
-			{
-				return this->at(0);
-			}
-			decltype(auto) next() const
-			{
-				return this->at(0).get_ref();
-			}
-			decltype(auto) next_value() const
-			{
-				return this->at(0).get_ref().get_ref();
-			}
-		};
+			auto& back = binding(iter.at(linear_back), iter, args...);
+			binding(back.get_ref().at(linear_front), back.get_ref(), iter);
+		}
+
+#pragma endregion
 	}
 }
 

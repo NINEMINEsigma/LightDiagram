@@ -71,19 +71,11 @@ public:
 	}
 };
 
+using namespace ld::graph;
+
 int main()
 {
-	//GlobalExceptionInit
-		defined_global_binding_instance(layer, root, 0);
-	auto& left = binding(root.get_ref().left, root, -5);
-	binding(left.get_ref().left, left, -10);
-	binding(left.get_ref().right, left, -1);
-	auto& right = binding(root.get_ref().right, root, 5);
-	binding(right.get_ref().left, right, 1);
-	binding(right.get_ref().right, right, 10);
-	defined_global_binding_instance(layer, root2, 0);
-	binding(root2.get_ref().left, root2, left);
-	binding(root2.get_ref().right, root2, right);
+	defined_global_binding_instance(linear_iter<int>, root, 1);
+	push_back(root.get_ref(), root.get_ref());
 	any_binding_instance::DrawMemory();
-	//GlobalExcpetionApply
 }
