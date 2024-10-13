@@ -48,4 +48,42 @@ void solve(ifstream& anss)
 	check_ans(__env__.result);
 }
 
-try_solve_io_ques(ques_path)
+//try_solve_io_ques(ques_path)
+
+class layer : public any_class
+{
+	using _Forward = any_binding_instance;
+	init_class_symbol(layer);
+public:
+	layer(int index) :__init(index) {}
+	declare_binding_instance(layer, left);
+	declare_binding_instance(layer, right);
+	int index;
+	void init_class(any_binding_instance* from)
+	{
+		left.init_forward(from);
+		right.init_forward(from);
+	}
+
+	virtual string ToString() const override
+	{
+		return to_string(index);
+	}
+};
+
+int main()
+{
+	//GlobalExceptionInit
+		defined_global_binding_instance(layer, root, 0);
+	auto& left = binding(root.get_ref().left, root, -5);
+	binding(left.get_ref().left, left, -10);
+	binding(left.get_ref().right, left, -1);
+	auto& right = binding(root.get_ref().right, root, 5);
+	binding(right.get_ref().left, right, 1);
+	binding(right.get_ref().right, right, 10);
+	defined_global_binding_instance(layer, root2, 0);
+	binding(root2.get_ref().left, root2, left);
+	binding(root2.get_ref().right, root2, right);
+	any_binding_instance::DrawMemory();
+	//GlobalExcpetionApply
+}

@@ -148,7 +148,7 @@ public:
 	virtual any_class* GetClone() const abstract;
 };
 _LF_C_API(Class)
-any_class : public virtual type_class
+any_class : public type_class
 {
 public:
 	inline decltype(auto) GetAnyAdr()

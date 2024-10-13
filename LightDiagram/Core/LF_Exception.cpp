@@ -350,7 +350,7 @@ namespace ld
 			else
 				std::wcout << message << std::endl;
 		}
-		(*clog) << "<" << to_string(label) << ">" << to_string(trim(message, L'\n')) << "<!" << to_string(tail) << ">" << std::endl;
+		(*clog) << "<" << std::to_string(label) << ">" << std::to_string(trim(message, L'\n')) << "<!" << std::to_string(tail) << ">" << std::endl;
 		return *this;
 	}
 

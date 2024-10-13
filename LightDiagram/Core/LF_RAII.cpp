@@ -107,12 +107,22 @@ namespace ld
 		stringstream ss;
 		for (auto&& item : any_binding_instances)
 		{
-			auto* current = item->GetAnyAdr();
-			string code_str = item->ToString();
-			header_counter[current]++;
-			ss << "binding " << current << " to " << item->__get_instance_ptr() << ", symbol="
-				<< item->SymbolName() << ", \""
-				<< code_str << "\"\n";
+			auto* current = item->any_head_ptr->GetAnyAdr();
+			string code_str = item->any_head_ptr->ToString();
+			auto* inst_ptr = item->__get_instance_ptr();
+			if (inst_ptr)
+				header_counter[inst_ptr]++;
+			if (inst_ptr)
+			{
+				ss << "binding " << current << " to " <<  inst_ptr
+					<< ", symbol=" << item->any_head_ptr->SymbolName()
+					<< ", \"" << code_str << "\"\n";
+			}
+			else
+			{
+				ss << "binding " << current << " to nullptr"
+					<< ", symbol=" << item->any_head_ptr->SymbolName() << "\n";
+			}
 			if (code_str.length() > 25)
 				mapper[current].code_str = code_str.substr(0, 20) + "...";
 			else
@@ -157,7 +167,7 @@ namespace ld
 		console.LogWarning("----ld::any_binding_instance::DrawMemory----");
 		console.LogWarning("--------------------------------------------\n");
 	}
-	any_binding_instance::any_binding_instance(void* real_head_ptr) : instance_any_class, __init(real_head_ptr)
+	any_binding_instance::any_binding_instance(void* real_head_ptr, any_class* any_head_ptr) : __init(real_head_ptr), __init(any_head_ptr)
 	{
 		any_binding_instances.insert(this);
 	}
