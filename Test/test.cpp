@@ -50,32 +50,15 @@ void solve(ifstream& anss)
 
 //try_solve_io_ques(ques_path)
 
-class layer : public any_class
-{
-	using _Forward = any_binding_instance;
-	init_class_symbol(layer);
-public:
-	layer(int index) :__init(index) {}
-	declare_binding_instance(layer, left);
-	declare_binding_instance(layer, right);
-	int index;
-	void init_class(any_binding_instance* from)
-	{
-		left.init_forward(from);
-		right.init_forward(from);
-	}
-
-	virtual string ToString() const override
-	{
-		return to_string(index);
-	}
-};
-
 using namespace ld::graph;
 
 int main()
 {
-	defined_global_binding_instance(linear_iter<int>, root, 1);
-	push_back(root.get_ref(), root.get_ref());
+	defined_global_binding_instance(stack_iter<int>, root, 0);
+
+	auto& right = push(root, 1);
+	auto& end = push(right, 2);
 	any_binding_instance::DrawMemory();
+
+	cout << get_size_indicator_count();
 }

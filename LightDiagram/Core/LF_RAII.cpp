@@ -53,35 +53,45 @@ namespace ld
 				{
 					ss << "--";
 				}
-				ss << "|--" << ptr << string(Max(0, 60 - layer * 2), ' ') << code_str;
-				if (blacktree.count(this) != 0)
+				ss << "|--" << ptr;
+				if (code_str == "nullptr")
 				{
-					console.MessageC = ConsoleColor::Yellow;
+					console.MessageC = ConsoleColor::Cyan;
 					console.LogMessage(next_line(ss));
 					console.MessageC = ConsoleColor::None;
 				}
 				else
 				{
-					if (is_lost_root)
+					ss << "  " << string(Max(0, 60 - layer * 2), ' ') << code_str;
+					if (blacktree.count(this) != 0)
 					{
-						console.MessageC = ConsoleColor::Red;
-						console.LogMessage(next_line(ss));
-						console.MessageC = ConsoleColor::None;
-					}
-					else if (layer == 0)
-					{
-						console.MessageC = ConsoleColor::Green;
+						console.MessageC = ConsoleColor::Yellow;
 						console.LogMessage(next_line(ss));
 						console.MessageC = ConsoleColor::None;
 					}
 					else
-						console.LogMessage(next_line(ss));
-					blacktree.insert(this);
-					for (auto&& item : to)
 					{
-						mapper[item].draw(console, mapper, blacktree, layer + 1);
+						if (is_lost_root)
+						{
+							console.MessageC = ConsoleColor::Red;
+							console.LogMessage(next_line(ss));
+							console.MessageC = ConsoleColor::None;
+						}
+						else if (layer == 0)
+						{
+							console.MessageC = ConsoleColor::Green;
+							console.LogMessage(next_line(ss));
+							console.MessageC = ConsoleColor::None;
+						}
+						else
+							console.LogMessage(next_line(ss));
+						blacktree.insert(this);
+						for (auto&& item : to)
+						{
+							mapper[item].draw(console, mapper, blacktree, layer + 1);
+						}
+						blacktree.erase(this);
 					}
-					blacktree.erase(this);
 				}
 			}
 		};
@@ -123,11 +133,16 @@ namespace ld
 				ss << "binding " << current << " to nullptr"
 					<< ", symbol=" << item->any_head_ptr->SymbolName() << "\n";
 			}
-			if (code_str.length() > 25)
-				mapper[current].code_str = code_str.substr(0, 20) + "...";
+			if (code_str.length() > 50)
+				mapper[current].code_str = code_str.substr(0, 45) + "...";
 			else
 				mapper[current].code_str = code_str;
-			if (item->root_reachable())
+			if (item->is_init() == false)
+			{
+				console.LogWarning(next_line(ss));
+				mapper[current].is_lost_root = true;
+			}
+			else if (item->root_reachable())
 			{
 				console.LogMessage(next_line(ss));
 			}

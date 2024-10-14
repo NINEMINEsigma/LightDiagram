@@ -80,7 +80,7 @@ namespace ld
 		void release()
 		{
 			release_nocallback();
-			this->set_counter(new size_t(1));
+			free_size_indicator(this->set_counter(new size_t(1)));
 		}
 		instance() : instance_any_class, instance_counter(obtain_size_indicator()) {}
 		instance(instance& from) noexcept : instance_any_class, instance_counter(from.instance_counter) Symbol_Endl
@@ -100,19 +100,19 @@ namespace ld
 		{
 			return this->instance_counter ? *this->instance_counter : 0;
 		}
-		void swap(instance<void>&from)
+		void swap(instance<void>& from)
 		{
-			size_t* tempcat = this->instance_counter;
+			auto tempcat = this->instance_counter;
 			this->instance_counter = from.instance_counter;
 			from.instance_counter = tempcat;
 		}
 		void swap(instance<void> && from)
 		{
-			size_t* cat = this->instance_counter;
+			auto cat = this->instance_counter;
 			this->instance_counter = from.instance_counter;
 			if (cat && *cat == 1)
 			{
-				delete cat;
+				free_size_indicator(cat);
 			}
 			from.instance_counter = nullptr;
 		}
@@ -203,6 +203,8 @@ namespace ld
 
 #pragma region Memory X kit
 
+	if_func_exist_def(get_ref);
+
 	//main instance template type to be a shared ptr
 	template<typename Tag> _LF_C_API(TClass) instance : public instance<void>
 	{
@@ -233,6 +235,10 @@ namespace ld
 		Tag& get_ref() const
 		{
 			return *instance_ptr;
+		}
+		Tag* operator->() const
+		{
+			return instance_ptr;
 		}
 		void swap(instance<Tag>& from)noexcept
 		{
@@ -413,6 +419,15 @@ namespace ld
 			return typeid(*this).name();
 		}
 	};
+
+	template<typename Ty,typename _InsTy>
+	decltype(auto) ref(const instance<_InsTy>& ins)
+	{
+		if constexpr (std::is_same_v<Ty, _InsTy>)
+			return ins.get_ref();
+		else
+			return ref<Ty>(ins.get_ref());
+	}
 
 	template<typename... Args> using type_list_instance_baseclass = std::array<void*, sizeof...(Args)>;
 	// long arguments package, and need all value is ptr
@@ -2184,11 +2199,14 @@ namespace ld
 		virtual bool __tool_root_reachable(std::set<void*>& blacktree);
 		virtual bool root_reachable();
 		static void DrawMemory();
+		virtual bool is_init() const abstract;
 	protected:
 		// return <is global>
 		virtual bool __forward(void** ptr) const abstract;
 		virtual void* __get_instance_ptr() const abstract;
 	};
+
+	if_func_exist_def(empty);
 
 	// Root
 	template<typename T> 
@@ -2256,7 +2274,7 @@ namespace ld
 			return true;
 		}
 
-		constexpr bool is_init() const
+		virtual bool is_init() const override
 		{
 			return true;
 		}
@@ -2287,11 +2305,11 @@ namespace ld
 				return "nullptr";
 			if constexpr (if_func_exist(ToString) < T, std::string() > )
 			{
-				return this->get_ref().ToString();
+				return this->get_ref().ToString() + "<binding::global>";
 			}
 			else if constexpr (enable_to_string<T>)
 			{
-				return std::to_string(this->get_ref());
+				return std::to_string(this->get_ref()) + "<binding::global>";
 			}
 			else
 			{
@@ -2381,6 +2399,7 @@ namespace ld
 		}
 		virtual bool __tool_root_reachable(std::set<void*>& blacktree) override
 		{
+			detect_init();
 			if (forward && blacktree.count(forward) == 0)
 			{
 				blacktree.insert(this);
@@ -2395,7 +2414,7 @@ namespace ld
 			return __tool_root_reachable(buffer);
 		}
 
-		inline bool is_init() const
+		virtual bool is_init() const override
 		{
 			return forward != nullptr;
 		}
@@ -2426,16 +2445,14 @@ namespace ld
 	public:
 		virtual std::string SymbolName() const override
 		{
-			detect_init();
 			return std::string("binding<") + typeid(T).name() + ">";
 		}
 		virtual std::string ToString() const override
 		{
-			detect_init();
+			if (this->empty())
+				return "nullptr";
 			if constexpr (if_func_exist(ToString) < T, std::string() > )
 			{
-				if (this->empty())
-					return "nullptr";
 				return this->get_ref().ToString();
 			}
 			else if constexpr (enable_to_string<T>)
@@ -2449,16 +2466,17 @@ namespace ld
 		}
 	};
 
+	if_func_exist_def(is_init);
 	if_func_exist_def(init_class);
 	if_func_exist_def(init_forward);
 
 	template<typename T, typename... Args>
-	decltype(auto) make_binding_instance_g(Args... args)
+	decltype(auto) make_binding_instance_g(Args&&... args)
 	{
 		return binding_instance<global_indicator, T>(args...);
 	}
 	template<typename T, typename _Forward, typename... Args>
-	decltype(auto) make_binding_instance(_Forward& forward, Args... args)
+	decltype(auto) make_binding_instance(_Forward& forward, Args&&... args)
 	{
 		return binding_instance<_Forward, T>(forward, args...);
 	}
@@ -2478,12 +2496,18 @@ namespace ld
 	{
 		if constexpr (if_func_exist(init_class) < decltype(from.get_ref()), void(any_binding_instance*) > )
 		{
-			if (from.get_ref().is_init())return;
+			if constexpr (if_func_exist(is_init) < decltype(from.get_ref()), bool() > )
+			{
+				if (from.get_ref().is_init())return;
+			}
 			from.get_ref().init_class(&from);
 		}
 		else if constexpr (if_func_exist(init_forward) < decltype(from.get_ref()), void(any_binding_instance*) > )
 		{
-			if (from.get_ref().is_init())return;
+			if constexpr (if_func_exist(is_init) < decltype(from.get_ref()), bool() > )
+			{
+				if (from.get_ref().is_init())return;
+			}
 			from.get_ref().init_forward(&from);
 		}
 	}
@@ -2511,7 +2535,7 @@ namespace ld
 	decltype(auto) binding(
 		_Member& member,
 		_Forward& forward,
-		Args... args)
+		Args&&... args)
 	{
 		using T = typename _Member::tag;
 		member = make_binding_instance<T>(forward, args...);
@@ -2524,7 +2548,7 @@ namespace ld
 	decltype(auto) binding(
 		_Property& property,
 		global_indicator __temp__,
-		Args... args)
+		Args&&... args)
 	{
 		using T = typename _Property::tag;
 		property = make_binding_instance_g<T>(args...);
