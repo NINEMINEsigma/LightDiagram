@@ -80,7 +80,7 @@ namespace ld
 		void release()
 		{
 			release_nocallback();
-			free_size_indicator(this->set_counter(new size_t(1)));
+			this->set_counter(new size_t(1));
 		}
 		instance() : instance_any_class, instance_counter(obtain_size_indicator()) {}
 		instance(instance& from) noexcept : instance_any_class, instance_counter(from.instance_counter) Symbol_Endl
@@ -236,7 +236,7 @@ namespace ld
 		{
 			return *instance_ptr;
 		}
-		Tag* operator->() const
+		constexpr Tag* operator->() const
 		{
 			return instance_ptr;
 		}
@@ -2171,16 +2171,14 @@ template<typename T> using remove_instance_v = typename remove_instance<T>::tag;
 
 namespace ld
 {
-	template<typename _Forward, typename T> _LF_C_API(TClass) binding_instance;
+	template<typename T> _LF_C_API(TClass) binding_instance;
 
 #pragma region Basic
 
 	if_type_exist_def(binding_instance_indicator);
 	if_func_exist_def(ToString);
 
-	static instance<global_indicator> binding_root(nullptr);
-
-	_LF_C_API(Class) any_binding_instance// Symbol_Push public virtual any_class Symbol_Endl
+	_LF_C_API(Class) any_binding_instance
 	{
 		static std::mutex any_binding_instance_locker;
 		static std::set<any_binding_instance*> any_binding_instances;
@@ -2208,163 +2206,86 @@ namespace ld
 
 	if_func_exist_def(empty);
 
-	// Root
-	template<typename T> 
-	_LF_C_API(TClass) binding_instance<global_indicator, T>
-		Symbol_Push public instance<T>
-		Symbol_Link public any_binding_instance
-	{
-	public:
-		constexpr static bool is_forward_global = true;
-		using tag = T;
-		using base_instance = instance<T>;
-
-		// build up with args
-		binding_instance(T&& value) : base_instance(new T(std::move(value))), init_ab_instance() {}
-		// init with ptr
-		binding_instance(nullptr_t) : base_instance(nullptr), init_ab_instance() {}
-		binding_instance() noexcept : base_instance(nullptr), init_ab_instance() {}
-		binding_instance(tag* ptr) : base_instance(ptr), init_ab_instance() {}
-		// build up with move
-		binding_instance(base_instance& ins) noexcept : base_instance(ins), init_ab_instance() {}
-		binding_instance(base_instance&& ins) noexcept : base_instance(std::move(ins)), init_ab_instance() {}
-		binding_instance(binding_instance& from) noexcept : base_instance(from), init_ab_instance() {}
-		binding_instance(binding_instance&& from) noexcept : base_instance(std::move(from)), init_ab_instance() {}
-		// de-opt
-		virtual ~binding_instance() {}
-
-		template<typename _OtherForward, typename _SubT>
-		binding_instance& operator=(binding_instance<_OtherForward, _SubT>& from) noexcept
-		{
-			base_instance::operator=(from);
-			return *this;
-		}
-		binding_instance& operator=(binding_instance& from) noexcept
-		{
-			base_instance::operator=(from);
-			return *this;
-		}
-		template<typename _OtherForward, typename _SubT>
-		binding_instance& operator=(binding_instance<_OtherForward, _SubT>&& from) noexcept
-		{
-			base_instance::operator=(std::move(from));
-			return *this;
-		}
-		binding_instance& operator=(binding_instance&& from) noexcept
-		{
-			base_instance::operator=(std::move(from));
-			return *this;
-		}
-		binding_instance& operator=(tag* ptr) noexcept
-		{
-			base_instance::operator=(ptr);
-			return *this;
-		}
-
-		const instance<void>& get_forward() const
-		{
-			return binding_root;
-		}
-		virtual bool __tool_root_reachable(std::set<void*>& blacktree) override
-		{
-			return true;
-		}
-		virtual bool root_reachable() override
-		{
-			return true;
-		}
-
-		virtual bool is_init() const override
-		{
-			return true;
-		}
-		constexpr inline void detect_init() const {}
-
-		operator T& () const
-		{
-			return this->get_ref();
-		}
-	protected:
-		virtual bool __forward(void** ptr) const
-		{
-			*ptr = binding_root.get_ptr();
-			return true;
-		}
-		virtual void* __get_instance_ptr() const override
-		{
-			return this->get_ptr();
-		}
-	public:
-		virtual std::string SymbolName() const override
-		{
-			return std::string("global<") + typeid(T).name() + ">";
-		}
-		virtual std::string ToString() const override
-		{
-			if (this->empty())
-				return "nullptr";
-			if constexpr (if_func_exist(ToString) < T, std::string() > )
-			{
-				return this->get_ref().ToString() + "<binding::global>";
-			}
-			else if constexpr (enable_to_string<T>)
-			{
-				return std::to_string(this->get_ref()) + "<binding::global>";
-			}
-			else
-			{
-				return this->GetType().name();
-			}
-		}
-	};
-	template<typename T> using global_variable = binding_instance<global_indicator, T>;
+	static global_indicator __global_root__;
 
 #pragma endregion
 
-
 	// Main
-	template<typename _Forward, typename T>
+	template<typename T>
 	_LF_C_API(TClass) binding_instance
 		Symbol_Push public instance<T>
 		Symbol_Link public any_binding_instance
 	{
 	private:
-		static_assert(if_type_exist(binding_instance_indicator) < _Forward > || std::is_same_v<_Forward, any_binding_instance>, "_Forward must be binding_instance<> or any_binding_instance");
-		any_binding_instance* forward;
+		any_binding_instance* forward = nullptr;
+		bool is_global_root = false;
 	public:
-		constexpr static bool is_forward_global = false;
 		using tag = T;
 		using base_instance = instance<T>;
+#define multiple_init_error_message "Current binding_instance is initialize multiple times"
 
 		void init_forward(any_binding_instance* forward)
 		{
+			if(is_global_root)
+				ThrowLDException(multiple_init_error_message);
 			if (this->forward && this->forward != forward)
-				ThrowLDException("Current binding_instance is initialize multiple times");
+				ThrowLDException(multiple_init_error_message);
 			this->forward = forward;
+			this->is_global_root = false;
 		}
+		void init_forward(const global_indicator& forward)
+		{
+			if (is_global_root)
+				ThrowLDException(multiple_init_error_message);
+			if (this->forward)
+				ThrowLDException(multiple_init_error_message);
+			this->forward = nullptr;
+			this->is_global_root = true;
+		}
+#define empty_init()  forward(nullptr), is_global_root(false) 
 		// init with ptr
-		binding_instance(nullptr_t) : base_instance(nullptr), init_ab_instance(), forward(nullptr) {}
-		binding_instance() noexcept : base_instance(nullptr), init_ab_instance(), forward(nullptr) {}
-		binding_instance(T* ptr) : base_instance(ptr), init_ab_instance(), forward(nullptr) {}
-		binding_instance(_Forward& forward, T* ptr) : base_instance(ptr), init_ab_instance(), forward(&forward) {}
+		binding_instance(nullptr_t) : base_instance(nullptr), init_ab_instance(), empty_init() {}
+		binding_instance() noexcept : base_instance(nullptr), init_ab_instance(), empty_init() {}
+		binding_instance(T* ptr) : base_instance(ptr), init_ab_instance(), empty_init() {}
+		binding_instance(any_binding_instance& forward, T* ptr)
+			: base_instance(ptr), init_ab_instance(), forward(&forward), is_global_root(false) {}
+		binding_instance(const global_indicator& forward, T* ptr) 
+			: base_instance(ptr), init_ab_instance(), forward(nullptr), is_global_root(true) {}
 		// build up with move
-		binding_instance(base_instance& ins) noexcept : base_instance(ins), init_ab_instance(), forward(nullptr) {}
-		binding_instance(base_instance&& ins) noexcept : base_instance(std::move(ins)), init_ab_instance(), forward(nullptr) {}
-		binding_instance(_Forward& forward, base_instance& ins) : base_instance(ins), init_ab_instance(), forward(&forward) {}
-		binding_instance(_Forward& forward, base_instance&& ins) : base_instance(std::move(ins)), init_ab_instance(), forward(&forward) {}
-		binding_instance(binding_instance& from) noexcept : base_instance(from), init_ab_instance(), forward(nullptr) {}
-		binding_instance(binding_instance&& from) noexcept : base_instance(std::move(from)), init_ab_instance(), forward(nullptr) {}
-		binding_instance(_Forward& forward, binding_instance& from) noexcept : base_instance(from), init_ab_instance(), forward(&forward) {}
-		binding_instance(_Forward& forward, binding_instance&& from) noexcept : base_instance(std::move(from)), init_ab_instance(), forward(&forward) {}
+		binding_instance(base_instance& ins) noexcept : base_instance(ins), init_ab_instance(), empty_init() {}
+		binding_instance(base_instance&& ins) noexcept : base_instance(std::move(ins)), init_ab_instance(), empty_init() {}
+		binding_instance(any_binding_instance& forward, base_instance& ins) 
+			: base_instance(ins), init_ab_instance(), forward(&forward), is_global_root(false) {}
+		binding_instance(any_binding_instance& forward, base_instance&& ins)
+			: base_instance(std::move(ins)), init_ab_instance(), forward(&forward), is_global_root(false) {}
+		binding_instance(const global_indicator& forward, base_instance& ins) 
+			: base_instance(ins), init_ab_instance(), forward(nullptr), is_global_root(true) {}
+		binding_instance(const global_indicator& forward, base_instance&& ins)
+			: base_instance(std::move(ins)), init_ab_instance(), forward(nullptr), is_global_root(true) {}
+		binding_instance(binding_instance& from) noexcept : base_instance(from), init_ab_instance(), empty_init() {}
+		binding_instance(binding_instance&& from) noexcept : base_instance(std::move(from)), init_ab_instance(), empty_init() {}
+		binding_instance(any_binding_instance& forward, binding_instance& from) noexcept
+			: base_instance(from), init_ab_instance(), forward(&forward), is_global_root(false) {}
+		binding_instance(any_binding_instance& forward, binding_instance&& from) noexcept 
+			: base_instance(std::move(from)), init_ab_instance(), forward(&forward), is_global_root(false) {}
+		binding_instance(const global_indicator& forward, binding_instance& from) noexcept
+			: base_instance(from), init_ab_instance(), forward(nullptr), is_global_root(true) {}
+		binding_instance(const global_indicator& forward, binding_instance&& from) noexcept
+			: base_instance(std::move(from)), init_ab_instance(), forward(nullptr), is_global_root(true) {}
 		// build up with args
 		template<typename... Args>
-		binding_instance(Args&&... args) : base_instance(new T(args...)), init_ab_instance(), forward(nullptr) {}
+		binding_instance(nullptr_t, Args&&... args) : base_instance(new T(args...)), init_ab_instance(), empty_init() {}
 		template<typename... Args>
-		binding_instance(_Forward& forward, Args&&... args) : base_instance(new T(args...)), init_ab_instance(), forward(&forward) {}
+		binding_instance(any_binding_instance& forward, Args&&... args)
+			: base_instance(new T(args...)), init_ab_instance(), forward(&forward), is_global_root(false) {}
+		template<typename... Args>
+		binding_instance(const global_indicator& forward, Args&&... args)
+			: base_instance(new T(args...)), init_ab_instance(), forward(nullptr), is_global_root(true) {}
 		virtual ~binding_instance() {}
+#undef empty_init
 
-		template<typename _OtherForward, typename _SubT>
-		binding_instance& operator=(binding_instance<_OtherForward, _SubT>& from) noexcept
+		template< typename _SubT>
+		binding_instance& operator=(binding_instance<_SubT>& from) noexcept
 		{
 			base_instance::operator=(from);
 			return *this;
@@ -2374,8 +2295,8 @@ namespace ld
 			base_instance::operator=(from);
 			return *this;
 		}
-		template<typename _OtherForward, typename _SubT>
-		binding_instance& operator=(binding_instance<_OtherForward, _SubT>&& from) noexcept
+		template<typename _SubT>
+		binding_instance& operator=(binding_instance<_SubT>&& from) noexcept
 		{
 			base_instance::operator=(std::move(from));
 			return *this;
@@ -2391,16 +2312,24 @@ namespace ld
 			base_instance::operator=(ptr);
 			return *this;
 		}
+		//binding_instance operator=(nullptr_t)
+		//{
+		//	base_instance::operator=(nullptr);
+		//	return *this;
+		//}
 
-		const _Forward& get_forward() const
+		any_binding_instance* get_forward() const
 		{
 			detect_init();
-			return *static_cast<_Forward*>(forward);
+			return forward;
 		}
 		virtual bool __tool_root_reachable(std::set<void*>& blacktree) override
 		{
-			detect_init();
-			if (forward && blacktree.count(forward) == 0)
+			if (is_global_root)
+			{
+				return true;
+			}
+			else if (forward && blacktree.count(forward) == 0)
 			{
 				blacktree.insert(this);
 				return forward->__tool_root_reachable(blacktree);
@@ -2416,11 +2345,11 @@ namespace ld
 
 		virtual bool is_init() const override
 		{
-			return forward != nullptr;
+			return forward != nullptr != is_global_root;
 		}
 		inline void detect_init() const
 		{
-			if (this->forward == nullptr)
+			if (is_init() == false)
 			{
 				ThrowLDException("Current binding_instance is never initialize");
 			}
@@ -2434,8 +2363,15 @@ namespace ld
 		virtual bool __forward(void** ptr) const
 		{
 			detect_init();
-			*ptr = this->forward->any_head_ptr->GetAnyAdr();
-			return false;
+			if (is_global_root)
+			{
+				*ptr = &__global_root__;
+			}
+			else
+			{
+				*ptr = this->forward->any_head_ptr->GetAnyAdr();
+			}
+			return is_global_root;
 		}
 		virtual void* __get_instance_ptr() const override
 		{
@@ -2470,25 +2406,10 @@ namespace ld
 	if_func_exist_def(init_class);
 	if_func_exist_def(init_forward);
 
-	template<typename T, typename... Args>
-	decltype(auto) make_binding_instance_g(Args&&... args)
-	{
-		return binding_instance<global_indicator, T>(args...);
-	}
 	template<typename T, typename _Forward, typename... Args>
-	decltype(auto) make_binding_instance(_Forward& forward, Args&&... args)
+	inline decltype(auto) make_binding_instance(_Forward&& forward, Args&&... args)
 	{
-		return binding_instance<_Forward, T>(forward, args...);
-	}
-	template<typename T>
-	decltype(auto) build_binding_instance_g(T* instance)
-	{
-		return binding_instance<global_indicator, T>(instance);
-	}
-	template<typename _Forward, typename T>
-	decltype(auto) build_binding_instance(_Forward& forward, T* instance)
-	{
-		return binding_instance<_Forward, T>(forward, instance);
+		return binding_instance<T>(std::forward<_Forward>(forward), args...);
 	}
 
 	template<typename _BI>
@@ -2514,19 +2435,14 @@ namespace ld
 
 #define init_class_symbol(type)\
 	using __type__ = type;\
-	using __class__ = binding_instance<_Forward, type>;\
-	using __forward__ = binding_instance<_Forward, type>
-#define init_binding_instance(member) member(member)
-#define that_binding_instance __forward__
+	using __class__ = binding_instance<type>;
 #define declare_binding_instance(type, member)\
-	binding_instance<__class__, type> member = binding_instance<__class__, type>(nullptr)
-#define defined_binding_instance(forward, member) member.init_forward(&forward)
-#define defined_global_binding_instance(type,name,...)\
-	auto name = make_binding_instance_g<type>(__VA_ARGS__);\
-	try_init_class(name)
+	binding_instance<type> member;
 #define declare_global_binding_instance(type,name)\
-	auto name = make_binding_instance_g<type>(nullptr)
-#define forward_variable(forward,T) binding_instance<forward, T>
+	auto name = make_binding_instance<type>(global_indicator{},nullptr)
+#define defined_global_binding_instance(type,name,...)\
+	auto name = make_binding_instance<type>(global_indicator{},__VA_ARGS__);\
+	try_init_class(name)
 
 	template<
 		typename _Member,
@@ -2534,37 +2450,15 @@ namespace ld
 		typename... Args>
 	decltype(auto) binding(
 		_Member& member,
-		_Forward& forward,
+		_Forward&& forward,
 		Args&&... args)
 	{
 		using T = typename _Member::tag;
-		member = make_binding_instance<T>(forward, args...);
+		member = make_binding_instance<T>(std::forward<_Forward>(forward), args...);
 		try_init_class(member);
 		return member;
 	}
-	template<
-		typename _Property,
-		typename... Args>
-	decltype(auto) binding(
-		_Property& property,
-		global_indicator __temp__,
-		Args&&... args)
-	{
-		using T = typename _Property::tag;
-		property = make_binding_instance_g<T>(args...);
-		try_init_class(property);
-		return property;
-	}
 
-	template<typename T, typename _Forward = any_binding_instance>
-	struct Binding
-	{
-		using tag = binding_instance<_Forward, T>;
-		using type = tag;
-	};
-	template<typename T, typename _Forward = any_binding_instance>
-	using BindingType = Binding<T, _Forward>;
-#define easy_binding(type) BindingType<type>
 	template<typename T>
 	void __tool_easy_init(any_binding_instance* __that__, T& field)
 	{

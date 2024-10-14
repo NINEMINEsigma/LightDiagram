@@ -147,7 +147,11 @@ catch(...)                                              \
     func;                                               \
     console.LogError(string(__FILE__)+" "+_STR_LINE_+": "+"Unknown Error");}
 
+#ifdef clear_ThrowLDException
+#define ThrowLDException(message) do{}while(false)
+#else
 #define ThrowLDException(message) throw LDException(string(__FILE__)+" "+_STR_LINE_+": "+message)
+#endif // clear_ThrowLDException
 
 #define GlobalExceptionInit try{
 #define GlobalExcpetionApply }CatchingLDException();

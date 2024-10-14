@@ -54,10 +54,20 @@ using namespace ld::graph;
 
 int main()
 {
-	defined_global_binding_instance(stack_iter<int>, root, 0);
+	defined_global_binding_instance(linear_iter<int>, root, 0);
 
-	auto& right = push(root, 1);
-	auto& end = push(right, 2);
+	push_back(root, 1);
+	push_back(root, 2);
+	push_front(root, -1);
+	push_front(root, -2);
+	any_binding_instance::DrawMemory();
+
+	pop_back(root);
+	pop_front(root);
+	any_binding_instance::DrawMemory();
+
+	pop_back(root);
+	pop_front(root);
 	any_binding_instance::DrawMemory();
 
 	cout << get_size_indicator_count();

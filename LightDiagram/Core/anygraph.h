@@ -17,7 +17,7 @@ namespace ld
 			using tag = T;
 			constexpr static size_t OD = out_degree;
 		private:
-			binding_instance<any_binding_instance, any_binding_tree> branch[out_degree];
+			binding_instance<any_binding_tree> branch[out_degree];
 			tag value_instance;
 		public:
 			void init_class(any_binding_instance* forward)
@@ -81,18 +81,6 @@ namespace ld
 				return *this;
 			}
 
-
-	#define ptr_array_at_index\
-			inline decltype(auto) at(size_t index)\
-			{\
-				if (index >= out_degree)\
-					ThrowLDException("index is overflow");\
-				return branch[index];\
-			}\
-			decltype(auto) operator[](size_t index)\
-			{\
-				return branch[index % out_degree];\
-			}
 		private:
 		public:
 			virtual std::string SymbolName() const override
@@ -114,69 +102,46 @@ namespace ld
 					return this->GetType().name();
 				}
 			}
-			static binding_instance<any_binding_instance, any_binding_tree>& sentinel();
-			ptr_array_at_index
+			decltype(auto) at(size_t index) 
+			{
+				if (index >= out_degree)
+					ThrowLDException("index is overflow");
+				return branch[index];
+			}
+			decltype(auto) operator[](size_t index) 
+			{
+				return branch[index % out_degree];
+			}
 		};
-		template<typename T, size_t out_degree>
-		binding_instance<any_binding_instance, any_binding_tree<T, out_degree>>& any_binding_tree<T, out_degree>::sentinel()
-		{
-			static binding_instance<any_binding_instance, any_binding_tree<T, out_degree>> __sentinel__(nullptr);
-			return __sentinel__;
-		}
-
-#define any_binding_tree_init(type)\
-		type(T* ptr = nullptr) : base_instance(ptr) {}\
-		type(any_binding_instance& forward, T* ptr = nullptr) : base_instance(forward, ptr) {}\
-		type(type& ins) noexcept : base_instance(ins) {}\
-		type(type&& ins) noexcept : base_instance(std::move(ins)) {}\
-		type(any_binding_instance& forward, type& ins) : base_instance(forward, ins) {}\
-		type(any_binding_instance& forward, type&& ins) : base_instance(forward, std::move(ins)) {}\
-		type(type& from) noexcept : base_instance(from) {}\
-		type(type&& from) noexcept : base_instance(std::move(from)) {}\
-		type(any_binding_instance& forward, type& from) noexcept : base_instance(forward, from) {}\
-		type(any_binding_instance& forward, type&& from) noexcept : base_instance(forward, std::move(from)) {}\
-		template<typename... Args>\
-		type(Args&&... args) : base_instance(new T(args...)) {}\
-		template<typename... Args>\
-		type(any_binding_instance& forward, Args&&... args) : base_instance(forward, new T(args...)) {}
 
 		template<size_t index, typename T, size_t _OD>
-		decltype(auto) bounding(binding_instance<any_binding_instance, any_binding_tree<T, _OD>>& iter)
+		decltype(auto) bounding(binding_instance<any_binding_tree<T, _OD>>& iter)
 		{
 			static_assert(index < _OD, "index cannt larger than _OD(out degree)");
-			auto& current = iter;
-			while (current.get_ref().at(index).empty() == false)
+			auto* current = &iter;
+			while ((*current)->at(index).empty() == false)
 			{
-				current = current.get_ref().at(index);
+				current = &((*current)->at(index));
 			}
-			return current;
+			return *current;
 		}
 		template<size_t index, typename T, size_t _OD>
-		decltype(auto) bounding(binding_instance<global_indicator, any_binding_tree<T, _OD>>& iter)
+		decltype(auto) bounding_pr(binding_instance<any_binding_tree<T, _OD>>& iter)
 		{
 			static_assert(index < _OD, "index cannt larger than _OD(out degree)");
-			if (iter.get_ref().at(index).empty()) return any_binding_tree<T, _OD>::sentinel();
-			else return bounding<index>(iter->at(index));
-		}
-		template<size_t index, typename T, size_t _OD>
-		decltype(auto) bounding_pr(binding_instance<any_binding_instance, any_binding_tree<T, _OD>>& iter)
-		{
-			static_assert(index < _OD, "index cannt larger than _OD(out degree)");
-			if (iter.empty() || iter->at(index).empty())return any_binding_tree<T, _OD >::sentinel();
-			auto& current = iter;
-			while (current.get_ref().at(index).get_ref().at(index).empty() == false)
+			if (iter.empty() || iter->at(index).empty())
 			{
-				current = current.get_ref().at(index);
+				ThrowLDException("index is overflow");
 			}
-			return current;
-		}
-		template<size_t index, typename T, size_t _OD>
-		decltype(auto) bounding_pr(binding_instance<global_indicator, any_binding_tree<T, _OD>>& iter)
-		{
-			static_assert(index < _OD, "index cannt larger than _OD(out degree)");
-			if (iter.empty() || iter->at(index).empty())return any_binding_tree<T, _OD >::sentinel();
-			else if (iter->at(index)->at(index).empty())return iter->at(index);
-			else return bounding_pr(iter->at(index));
+			else
+			{
+				auto* current = &iter;
+				while ((*current)->at(index)->at(index).empty() == false)
+				{
+					current = &((*current)->at(index));
+				}
+				return *current;
+			}
 		}
 
 #pragma region linear
@@ -184,30 +149,62 @@ namespace ld
 		template<typename T>
 		using stack_iter = any_binding_tree<T, 1>;
 		constexpr static size_t stack_next = 0;
-		template<typename T, typename _Forward, typename...Args>
-		decltype(auto) link(binding_instance<_Forward, stack_iter<T>>& iter, Args&&... args)
+		template<typename T, typename...Args>
+		decltype(auto) link(binding_instance<stack_iter<T>>& iter, Args&&... args)
 		{
-			return binding(iter->.at(stack_next), iter, args...);
+			return binding(iter->at(stack_next), iter, args...);
 		}
-		template<typename T, typename _Forward>
-		decltype(auto) back(binding_instance<_Forward, stack_iter<T>>& iter)
+		template<typename T>
+		decltype(auto) back(binding_instance<stack_iter<T>>& iter)
 		{
 			return bounding<stack_next>(iter);
 		}
-		template<typename T, typename _Forward>
-		decltype(auto) back_pr(binding_instance<_Forward, stack_iter<T>>& iter)
+		template<typename T>
+		decltype(auto) back_pr(binding_instance<stack_iter<T>>& iter)
 		{
 			return bounding_pr<stack_next>(iter);
 		}
-		template<typename T, typename _Forward, typename...Args>
-		decltype(auto) push(binding_instance<_Forward, stack_iter<T>>& iter, Args&&...args)
+		template<typename T, typename...Args>
+		decltype(auto) push(binding_instance<stack_iter<T>>& iter, Args&&...args)
 		{
 			return link(back(iter), args...);
 		}
-		template<typename T, typename _Forward>
-		decltype(auto) pop(binding_instance<_Forward, stack_iter<T>>& iter)
+		template<typename T, bool is_move = true>
+		decltype(auto) pop(binding_instance<stack_iter<T>>& iter)
 		{
-			return link(back_pr(iter), nullptr);
+			if (iter.empty())
+				ThrowLDException("index is overflow");
+			if (iter->at(stack_next).empty())
+			{
+				if constexpr (is_move)
+				{
+					auto&& result = std::move(iter->value());
+					iter = nullptr;
+					return std::move(result);
+				}
+				else
+				{
+					auto result = iter->value();
+					iter = nullptr;
+					return result;
+				}
+			}
+			else
+			{
+				auto& pr = back_pr(iter);
+				if constexpr (is_move)
+				{
+					auto&& result = std::move(pr->at(stack_next)->value());
+					pr->at(stack_next) = nullptr;
+					return std::move(result);
+				}
+				else
+				{
+					auto result = pr->at(stack_next)->value();
+					pr->at(stack_next) = nullptr;
+					return result;
+				}
+			}
 		}
 
 
@@ -215,12 +212,123 @@ namespace ld
 		using linear_iter = any_binding_tree<T, 2>;
 		constexpr static size_t linear_front = 0;
 		constexpr static size_t linear_back = 1;
-		template<typename T,typename _Forward,typename...Args>
-		decltype(auto) link(binding_instance<_Forward,linear_iter<T>>& iter, Args&&... args)
+		template<typename T, typename...Args>
+		decltype(auto) link(binding_instance<linear_iter<T>>& iter, Args&&... args)
 		{
 			auto& back = binding(iter.get_ref().at(linear_back), iter, args...);
 			binding(back.get_ref().at(linear_front), back, iter);
 			return back;
+		}
+		template<typename T, typename...Args>
+		decltype(auto) rlink(binding_instance<linear_iter<T>>& iter, Args&&... args)
+		{
+			auto& back = binding(iter->at(linear_front), iter, args...);
+			binding(back->at(linear_back), back, iter);
+			return back;
+		}
+		template<typename T>
+		decltype(auto) back(binding_instance<linear_iter<T>>& iter)
+		{
+			return bounding<linear_back>(iter);
+		}
+		template<typename T>
+		decltype(auto) front(binding_instance<linear_iter<T>>& iter)
+		{
+			return bounding<linear_front>(iter);
+		}
+		template<typename T>
+		decltype(auto) back_pr(binding_instance<linear_iter<T>>& iter)
+		{
+			return bounding_pr<linear_back>(iter);
+		}
+		template<typename T>
+		decltype(auto) front_pr(binding_instance<linear_iter<T>>& iter)
+		{
+			return bounding_pr<linear_front>(iter);
+		}
+		template<typename T, typename...Args>
+		decltype(auto) push_back(binding_instance<linear_iter<T>>& iter, Args&&...args)
+		{
+			return link(back(iter), args...);
+		}
+		template<typename T, typename...Args>
+		decltype(auto) push_front(binding_instance<linear_iter<T>>& iter, Args&&...args)
+		{
+			return rlink(front(iter), args...);
+		}
+		template<typename T, bool is_move = true>
+		decltype(auto) pop_back(binding_instance<linear_iter<T>>& iter)
+		{
+			if (iter.empty())
+				ThrowLDException("index is overflow");
+			if (iter->at(linear_back).empty())
+			{
+				if constexpr (is_move)
+				{
+					auto&& result = std::move(iter->value());
+					iter = nullptr;
+					return std::move(result);
+				}
+				else
+				{
+					auto result = iter->value();
+					iter = nullptr;
+					return result;
+				}
+			}
+			else
+			{
+				auto& pr = back_pr(iter);
+				if constexpr (is_move)
+				{
+					auto&& result = std::move(pr->at(linear_back)->value());
+					pr->at(linear_back) = nullptr;
+					return std::move(result);
+				}
+				else
+				{
+					auto result = pr->at(linear_back)->value();
+					pr->at(linear_back) = nullptr;
+					return result;
+				}
+			}
+		}
+		template<typename T, bool is_move = true>
+		decltype(auto) pop_front(binding_instance<linear_iter<T>>& iter)
+		{
+			if (iter.empty())
+				ThrowLDException("index is overflow");
+			if (iter->at(linear_front).empty())
+			{
+				if constexpr (is_move)
+				{
+					auto&& result = std::move(iter->value());
+					iter = nullptr;
+					return std::move(result);
+				}
+				else
+				{
+					auto result = iter->value();
+					iter = nullptr;
+					return result;
+				}
+			}
+			else
+			{
+				auto& pr = front_pr(iter);
+				if constexpr (is_move)
+				{
+					auto&& result = std::move(pr->at(linear_front)->value());
+					pr->at(linear_front) = nullptr;
+					return std::move(result);
+				}
+				else
+				{
+					auto result = pr->at(linear_front)->value();
+					pr->at(linear_front) = nullptr;
+					return result;
+				}
+			}
 		}
 
 #pragma endregion
