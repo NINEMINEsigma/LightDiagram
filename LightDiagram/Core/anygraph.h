@@ -143,6 +143,18 @@ namespace ld
 				return *current;
 			}
 		}
+		template<size_t index, typename T, size_t _OD>
+		decltype(auto) iter_at(binding_instance<any_binding_tree<T, _OD>>& iter, size_t _index)
+		{
+			auto* current = &iter;
+			while (_index--)
+			{
+				if (current->empty())
+					ThrowLDException("index is overflow");
+				current = &((*current)->at(index));
+			}
+			return *current;
+		}
 
 #pragma region linear
 
@@ -206,7 +218,6 @@ namespace ld
 				}
 			}
 		}
-
 
 		template<typename T>
 		using linear_iter = any_binding_tree<T, 2>;
@@ -331,7 +342,117 @@ namespace ld
 			}
 		}
 
+		template<typename T>
+		using vector_iter = any_binding_tree<T, 2>;
+		constexpr static size_t vector_begin = 0;
+		constexpr static size_t vector_back = 1;
+		template<typename T>
+		decltype(auto) vecbegin(binding_instance<vector_iter<T>>& iter)
+		{
+			if (iter.empty())return iter;
+			if (iter->at(vector_begin).empty())return iter;
+			return iter->at(vector_begin);
+		}
+		template<typename T>
+		decltype(auto) vecback(binding_instance<vector_iter<T>>& iter)
+		{
+			return bounding<vector_back>(iter);
+		}
+		template<typename T, typename...Args>
+		decltype(auto) vecinsert(binding_instance<vector_iter<T>>& iter, Args&&...args)
+		{
+			if (iter.empty())
+			{
+				iter->value() = T{args...};
+				return iter;
+			}
+			else if (iter->at(vector_back).empty())
+				return link(iter, args...);
+			else
+			{
+				auto* ptr = new vector_iter<T>(args...);
+				ptr->at(vector_back) = iter->at(vector_back);
+				ptr->at(vector_begin) = vecbegin(iter);
+				return binding(iter->at(vector_back), ptr);
+			}
+
+		}
+		template<typename T, typename Right>
+		decltype(auto) vecinsert(binding_instance<vector_iter<T>>& iter, Right&& right)
+		{
+			if (iter.empty())
+			{
+				iter.get_ref() = std::forward<Right>(right);
+				return iter;
+			}
+			else if (iter->at(vector_back).empty())
+				return link(iter, std::forward<Right>(right));
+			else
+			{
+				auto* ptr = new vector_iter<T>(std::forward<Right>(right));
+				ptr->at(vector_back) = iter->at(vector_back);
+				ptr->at(vector_begin) = vecbegin(iter);
+				return binding(iter->at(vector_back), ptr);
+			}
+
+		}
+		template<typename T, typename...Args>
+		decltype(auto) vecpush(binding_instance<vector_iter<T>>& iter, Args&&...args)
+		{
+			return vecinsert(vecback(iter), args...);
+		}
+		template<typename T>
+		decltype(auto) vecback_pr(binding_instance<linear_iter<T>>& iter)
+		{
+			return bounding_pr<vector_back>(iter);
+		}
+		template<typename T, bool is_move = true>
+		decltype(auto) vecpop(binding_instance<linear_iter<T>>& iter)
+		{
+			if (iter.empty())
+				ThrowLDException("index is overflow");
+			if (iter->at(vector_back).empty())
+			{
+				if constexpr (is_move)
+				{
+					auto&& result = std::move(iter->value());
+					iter = nullptr;
+					return std::move(result);
+				}
+				else
+				{
+					auto result = iter->value();
+					iter = nullptr;
+					return result;
+				}
+			}
+			else
+			{
+				auto& pr = vecback_pr(iter);
+				if constexpr (is_move)
+				{
+					auto&& result = std::move(pr->at(vector_back)->value());
+					pr->at(vector_back) = nullptr;
+					return std::move(result);
+				}
+				else
+				{
+					auto result = pr->at(vector_back)->value();
+					pr->at(vector_back) = nullptr;
+					return result;
+				}
+			}
+		}
+		template<typename T>
+		decltype(auto) vec_at(binding_instance<vector_iter<T>>& iter, size_t index)
+		{
+			return iter_at<vector_back>(iter, index);
+		}
+
+
 #pragma endregion
+
+
 	}
 }
 

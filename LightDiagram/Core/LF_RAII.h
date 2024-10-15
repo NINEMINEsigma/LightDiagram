@@ -420,7 +420,7 @@ namespace ld
 		}
 	};
 
-	template<typename Ty,typename _InsTy>
+	template<typename Ty, typename _InsTy>
 	decltype(auto) ref(const instance<_InsTy>& ins)
 	{
 		if constexpr (std::is_same_v<Ty, _InsTy>)
@@ -2455,6 +2455,28 @@ namespace ld
 	{
 		using T = typename _Member::tag;
 		member = make_binding_instance<T>(std::forward<_Forward>(forward), args...);
+		try_init_class(member);
+		return member;
+	}
+	template<
+		typename _Member,
+		typename ArgPtr>
+	decltype(auto) binding(
+		_Member& member,
+		ArgPtr* ptr)
+	{
+		member = ptr;
+		try_init_class(member);
+		return member;
+	}
+	template<
+		typename _Member,
+		typename ArgRef>
+	decltype(auto) binding(
+		_Member& member,
+		ArgRef&& arg)
+	{
+		member.get_ref() = std::forward<ArgRef>(arg);
 		try_init_class(member);
 		return member;
 	}

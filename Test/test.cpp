@@ -54,21 +54,17 @@ using namespace ld::graph;
 
 int main()
 {
-	defined_global_binding_instance(linear_iter<int>, root, 0);
+	defined_global_binding_instance(vector_iter<int>, root, 0);
 
-	push_back(root, 1);
-	push_back(root, 2);
-	push_front(root, -1);
-	push_front(root, -2);
+	vecpush(root, 1);
+	vecpush(root, 2);
+	vecpush(root, root);
+
+	cout << vec_at(root, 0)->value() << "\n";
+	cout << vec_at(root, 1)->value() << "\n";
+	cout << vec_at(root, 2)->value() << "\n";
+	cout << vec_at(root, 3)->value() << "\n";
+
 	any_binding_instance::DrawMemory();
-
-	pop_back(root);
-	pop_front(root);
-	any_binding_instance::DrawMemory();
-
-	pop_back(root);
-	pop_front(root);
-	any_binding_instance::DrawMemory();
-
 	cout << get_size_indicator_count();
 }
