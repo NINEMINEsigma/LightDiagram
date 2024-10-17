@@ -91,6 +91,10 @@ namespace ld
 		{
 			from.instance_counter = nullptr;
 		}
+		instance(const instance& from) noexcept : instance_any_class, instance_counter(from.instance_counter) Symbol_Endl
+		{
+			(*this->instance_counter)++;
+		}
 		virtual ~instance()
 		{
 			if (this->instance_counter)
@@ -106,7 +110,7 @@ namespace ld
 			this->instance_counter = from.instance_counter;
 			from.instance_counter = tempcat;
 		}
-		void swap(instance<void> && from)
+		void swap(instance<void>&& from)
 		{
 			auto cat = this->instance_counter;
 			this->instance_counter = from.instance_counter;
@@ -121,14 +125,23 @@ namespace ld
 			size_t* cat = this->set_counter(from.instance_counter);
 			if (cat && *cat == 0)
 			{
-				delete cat;
+				free_size_indicator(cat);
 			}
 			return *this;
 		}
-		instance<void>& operator=(instance<void> && from) noexcept
+		instance<void>& operator=(instance<void>&& from) noexcept
 		{
 			this->swap(std::move(from));
 			return  *this;
+		}
+		instance<void>& operator=(const instance<void>& from) noexcept
+		{
+			size_t* cat = this->set_counter(from.instance_counter);
+			if (cat && *cat == 0)
+			{
+				free_size_indicator(cat);
+			}
+			return *this;
 		}
 		bool operator==(const instance<void>&from) const noexcept
 		{
@@ -191,6 +204,11 @@ namespace ld
 			instance<void>::operator=(std::move(from));
 			return *this;
 		}
+		instance<nullptr_t>& operator=(const instance<nullptr_t>& from) noexcept
+		{
+			instance<void>::operator=(from);
+			return *this;
+		}
 		bool operator==(const instance<nullptr_t>& from) const noexcept
 		{
 			return instance<void>::operator==(from);
@@ -221,6 +239,7 @@ namespace ld
 		{
 			from.instance_ptr = nullptr;
 		}
+		instance(const instance& from) noexcept : instance_ptr(from.instance_ptr), instance<void>(from) {}
 		virtual ~instance()
 		{
 			if (this->get_count() <= 1)
@@ -274,6 +293,16 @@ namespace ld
 			from.instance_ptr = nullptr;
 			return *this;
 		}
+		instance<Tag>& operator=(const instance<Tag>& from) noexcept
+		{
+			if (this->get_count() <= 1)
+			{
+				delete this->instance_ptr;
+			}
+			instance<void>::operator=(from);
+			this->instance_ptr = from.instance_ptr;
+			return *this;
+		}
 		instance<Tag>& operator=(Tag* from) noexcept
 		{
 			if (this->get_count() <= 1)
@@ -284,13 +313,45 @@ namespace ld
 			this->instance_ptr = from;
 			return *this;
 		}
+		instance<Tag>& operator=(nullptr_t) noexcept
+		{
+			if (this->get_count() <= 1)
+			{
+				delete this->instance_ptr;
+			}
+			instance<void>::release();
+			return *this;
+		}
+		instance<Tag>& operator=(Tag&& from)
+		{
+			if (this->empty())
+				return operator=(new Tag(std::move(from)));
+			else
+			{
+				this->get_ref() = std::move(from);
+			}
+		}
+		instance<Tag>& operator=(const Tag& from)
+		{
+			if (this->empty())
+				return operator=(new Tag(from));
+			else
+			{
+				this->get_ref() = from;
+			}
+		}
+		instance<Tag>& operator=(Tag& from)
+		{
+			if (this->empty())
+				return operator=(new Tag(from));
+			else
+			{
+				this->get_ref() = from;
+			}
+		}
 		bool operator==(const instance<Tag>& from) const noexcept
 		{
 			return instance<void>::operator==(from);
-		}
-		bool operator==(nullptr_t) const noexcept
-		{
-			return this->instance_ptr == nullptr;
 		}
 		bool equals(const instance<Tag>& from) const noexcept
 		{
@@ -388,6 +449,10 @@ namespace ld
 		{
 			return this->get_ref();
 		}
+		operator bool()
+		{
+			return this->empty();
+		}
 
 		//reboxing operator
 		template<typename OtherTag>
@@ -416,7 +481,32 @@ namespace ld
 
 		virtual std::string SymbolName() const override
 		{
-			return typeid(*this).name();
+			if constexpr (if_tc_SymbolName_exist<Tag>)
+			{
+				if (this->empty())
+					return GetType().name();
+				else
+					return this->get_ref().SymbolName();
+			}
+			else
+				return GetType().name();
+		}
+		virtual std::string ToString() const override
+		{
+			if (this->empty())
+				return "nullptr";
+			if constexpr (if_func_exist(ToString) < Tag, std::string() > )
+			{
+				return this->get_ref().ToString();
+			}
+			else if constexpr (enable_to_string<Tag>)
+			{
+				return std::to_string(this->get_ref());
+			}
+			else
+			{
+				return this->GetType().name();
+			}
 		}
 	};
 
@@ -2264,15 +2354,23 @@ namespace ld
 			: base_instance(std::move(ins)), init_ab_instance(), forward(nullptr), is_global_root(true) {}
 		binding_instance(binding_instance& from) noexcept : base_instance(from), init_ab_instance(), empty_init() {}
 		binding_instance(binding_instance&& from) noexcept : base_instance(std::move(from)), init_ab_instance(), empty_init() {}
+		binding_instance(const binding_instance& from) noexcept : base_instance(from), init_ab_instance(), empty_init() {}
 		binding_instance(any_binding_instance& forward, binding_instance& from) noexcept
 			: base_instance(from), init_ab_instance(), forward(&forward), is_global_root(false) {}
 		binding_instance(any_binding_instance& forward, binding_instance&& from) noexcept 
 			: base_instance(std::move(from)), init_ab_instance(), forward(&forward), is_global_root(false) {}
+		binding_instance(any_binding_instance& forward, const binding_instance& from) noexcept
+			: base_instance(from), init_ab_instance(), forward(&forward), is_global_root(false) {}
 		binding_instance(const global_indicator& forward, binding_instance& from) noexcept
 			: base_instance(from), init_ab_instance(), forward(nullptr), is_global_root(true) {}
 		binding_instance(const global_indicator& forward, binding_instance&& from) noexcept
 			: base_instance(std::move(from)), init_ab_instance(), forward(nullptr), is_global_root(true) {}
+		binding_instance(const global_indicator& forward, const binding_instance& from) noexcept
+			: base_instance(from), init_ab_instance(), forward(nullptr), is_global_root(true) {}
 		// build up with args
+		binding_instance(T& arg) : base_instance(arg), init_ab_instance(), empty_init() {}
+		binding_instance(T&& arg) : base_instance(std::move(arg)), init_ab_instance(), empty_init() {}
+		binding_instance(const T& arg) : base_instance(arg), init_ab_instance(), empty_init() {}
 		template<typename... Args>
 		binding_instance(nullptr_t, Args&&... args) : base_instance(new T(args...)), init_ab_instance(), empty_init() {}
 		template<typename... Args>
@@ -2285,7 +2383,7 @@ namespace ld
 #undef empty_init
 
 		template< typename _SubT>
-		binding_instance& operator=(binding_instance<_SubT>& from) noexcept
+		binding_instance& operator=(const binding_instance<_SubT>& from) noexcept
 		{
 			base_instance::operator=(from);
 			return *this;
@@ -2312,11 +2410,11 @@ namespace ld
 			base_instance::operator=(ptr);
 			return *this;
 		}
-		//binding_instance operator=(nullptr_t)
-		//{
-		//	base_instance::operator=(nullptr);
-		//	return *this;
-		//}
+		binding_instance operator=(nullptr_t)
+		{
+			base_instance::operator=(nullptr);
+			return *this;
+		}
 
 		any_binding_instance* get_forward() const
 		{
@@ -2381,7 +2479,15 @@ namespace ld
 	public:
 		virtual std::string SymbolName() const override
 		{
-			return std::string("binding<") + typeid(T).name() + ">";
+			if constexpr (if_tc_SymbolName_exist<T>)
+			{
+				if (this->empty())
+					return std::string("binding<") + typeid(T).name() + ", nullptr>";
+				else
+					return std::string("binding<") + this->get_ref().SymbolName() + ">";
+			}
+			else
+				return std::string("binding<") + typeid(T).name() + ">";
 		}
 		virtual std::string ToString() const override
 		{

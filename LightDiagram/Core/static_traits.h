@@ -886,4 +886,16 @@ struct extension_func_traits<type_list<ThisType, ResultType(Belong::*)(Args...) 
 
 #pragma endregion
 
+#define define_any_exist(funcname,func) \
+if_func_exist_def(funcname);\
+template<typename T>\
+constexpr auto if_tc_##funcname##_exist = if_func_exist(funcname) < T, func > ;
+
+define_any_exist(GetType, const type_info&());
+define_any_exist(ToString, std::string());
+define_any_exist(SymbolName, std::string());
+define_any_exist(GetClone, any_class*());
+
+#undef define_any_exist
+
 #endif // !__FILE_STATIC_TRAITS

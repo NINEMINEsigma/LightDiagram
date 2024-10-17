@@ -85,7 +85,12 @@ namespace ld
 		public:
 			virtual std::string SymbolName() const override
 			{
-				return std::to_string(out_degree) + "-tree<" + typeid(T).name() + ">";
+				if constexpr (if_tc_SymbolName_exist<T>)
+				{
+					return std::to_string(out_degree) + "-tree<" + this->value_instance.SymbolName() + ">";
+				}
+				else
+					return std::to_string(out_degree) + "-tree<" + typeid(T).name() + ">";
 			}
 			virtual std::string ToString() const override
 			{
@@ -154,6 +159,97 @@ namespace ld
 				current = &((*current)->at(index));
 			}
 			return *current;
+		}
+		template<size_t index, typename T, size_t _OD>
+		decltype(auto) iter_at(const binding_instance<any_binding_tree<T, _OD>>& iter, size_t _index)
+		{
+			auto* current = &iter;
+			while (_index--)
+			{
+				if (current->empty())
+					ThrowLDException("index is overflow");
+				current = &((*current)->at(index));
+			}
+			return *current;
+		}
+		template<size_t index, typename T, size_t _OD>
+		size_t length(const binding_instance<any_binding_tree<T, _OD>>& iter)
+		{
+			auto* current = &iter;
+			std::set<decltype(current)> mapper;
+			size_t result = 0;
+			for (; current->empty() == false; result++)
+			{
+				mapper.insert(current);
+				current = &((*current)->at(index));
+				if (mapper.count(current))
+					break;
+			}
+			return result;
+		}
+		template<size_t index, typename T, size_t _OD>
+		decltype(auto) find(const binding_instance<any_binding_tree<T, _OD>>& iter, std::function<bool(T&)> pr)
+		{
+			auto* current = &iter;
+			std::set<decltype(current)> mapper;
+			while (current->empty() == false)
+			{
+				if (pr(current->get_ref().value()))
+					return *current;
+				mapper.insert(current);
+				current = &((*current)->at(index));
+				if (mapper.count(current))
+					break;
+			}
+			ThrowLDException("not find");
+		}
+		template<size_t index, typename T, size_t _OD>
+		decltype(auto) find(const binding_instance<any_binding_tree<T, _OD>>& iter, T& t)
+		{
+			auto* current = &iter;
+			std::set<decltype(current)> mapper;
+			while (current->empty() == false)
+			{
+				if (t == current->get_ref().value())
+					return *current;
+				mapper.insert(current);
+				current = &((*current)->at(index));
+				if (mapper.count(current))
+					break;
+			}
+			ThrowLDException("not find");
+		}
+		template<size_t index, typename T, size_t _OD>
+		int find_at(const binding_instance<any_binding_tree<T, _OD>>& iter, std::function<bool(T&)> pr)
+		{
+			auto* current = &iter;
+			std::set<decltype(current)> mapper;
+			for (int i = 0; current->empty() == false; i++)
+			{
+				if (pr(current->get_ref().value()))
+					return i;
+				mapper.insert(current);
+				current = &((*current)->at(index));
+				if (mapper.count(current))
+					break;
+			}
+			return -1;
+		}
+		template<size_t index, typename T, size_t _OD>
+		int find_at(const binding_instance<any_binding_tree<T, _OD>>& iter, T& t)
+		{
+			auto* current = &iter;
+			std::set<decltype(current)> mapper;
+			for (int i = 0; current->empty() == false; i++)
+			{
+				if (t == current->get_ref().value())
+					return i;
+				mapper.insert(current);
+				current = &((*current)->at(index));
+				if (mapper.count(current))
+					break;
+			}
+			return -1;
 		}
 
 #pragma region linear
@@ -402,12 +498,12 @@ namespace ld
 			return vecinsert(vecback(iter), args...);
 		}
 		template<typename T>
-		decltype(auto) vecback_pr(binding_instance<linear_iter<T>>& iter)
+		decltype(auto) vecback_pr(binding_instance<vector_iter<T>>& iter)
 		{
 			return bounding_pr<vector_back>(iter);
 		}
 		template<typename T, bool is_move = true>
-		decltype(auto) vecpop(binding_instance<linear_iter<T>>& iter)
+		decltype(auto) vecpop(binding_instance<vector_iter<T>>& iter)
 		{
 			if (iter.empty())
 				ThrowLDException("index is overflow");
@@ -448,10 +544,155 @@ namespace ld
 		{
 			return iter_at<vector_back>(iter, index);
 		}
+		template<typename T>
+		decltype(auto) vec_at(const binding_instance<vector_iter<T>>& iter, size_t index)
+		{
+			return iter_at<vector_back>(iter, index);
+		}
+		//Remove the latter of this iteration,
+		//If the latter iterator does not exist, it will not be operated
+		template<typename T>
+		decltype(auto) vec_erase_next(binding_instance<vector_iter<T>>& iter)
+		{
+			if (iter->at(vector_back).empty())
+				return;
+			else if(iter->at(vector_back)->at(vector_back).empty())
+			{
+				return;
+			}
+			else
+			{
+				vecinsert(iter, std::move(iter->at(vector_back)->at(vector_back)));
+				return;
+			}
+		}
 
 
 #pragma endregion
 
+#pragma region graph
+
+		template<typename T, bool is_directed = true>
+		class Graph
+			Symbol_Push public any_class Symbol_Endl
+		{
+			init_class_symbol(Graph);
+		private:
+			declare_binding_instance(std::vector<binding_instance<T>>, V);
+			declare_binding_instance(std::vector<std::vector<int>>, adj);
+			void __graph_init(size_t layer) {}
+			template<typename _binding_instance_T_first, typename ..._binding_instance_T>
+			void __graph_init(size_t layer,_binding_instance_T_first&& first, _binding_instance_T&&... args)
+			{
+				V->operator[](layer) = std::forward<_binding_instance_T_first>(first);
+				__graph_init(layer + 1, std::forward<_binding_instance_T_first>(args)...);
+			}
+		public:
+			easy_init(adj, V);
+
+			virtual ~Graph() {}
+			template<typename _binding_instance_T_first,typename ..._binding_instance_T>
+			Graph(_binding_instance_T_first&& first, _binding_instance_T&&... args) :
+				V(new std::vector<binding_instance<T>>(sizeof...(args) + 1)),
+				adj(new std::vector<std::vector<int>>(sizeof...(args) + 1))
+			{
+				for (auto&& item : V.get_ref())
+				{
+					item.init_forward(&V);
+				}
+				__graph_init(0, std::forward<_binding_instance_T_first>(first), std::forward<_binding_instance_T_first>(args)...);
+			}
+			Graph(const std::vector<binding_instance<T>>& from) :
+				V(new std::vector<binding_instance<T>>(from.size())),
+				adj(new std::vector<std::vector<int>>(from.size()))
+			{
+				for (auto&& item : V.get_ref())
+				{
+					item.init_forward(&V);
+				}
+				size_t layer = 0;
+				for (auto&& item : from)
+				{
+					V->operator[](layer++) = item;
+				}
+			}
+
+			binding_instance<T>& operator[](size_t index) const
+			{
+				return V->at(index);
+			}
+
+			void add_edge(size_t from, size_t to)
+			{
+				adj->operator[](from).push_back(to);
+				if constexpr (is_directed == false)
+				{
+					adj->operator[](to).push_back(from);
+				}
+			}
+
+
+
+		public:
+			virtual std::string SymbolName() const override
+			{
+				if constexpr (is_directed)
+					return std::string("graph<") + typeid(T).name() + ", " + std::to_string(V->size()) + "nodes>";
+				else
+					return std::string("graph<") + typeid(T).name() + ", " + std::to_string(V->size()) + "nodes, undirected>";
+			}
+			virtual std::string ToString() const override
+			{
+				std::string str = "\n";
+				for (size_t i = 0, e = adj->size(); i < e; i++)
+				{
+					auto&& current = adj.get_ref()[i];
+					if constexpr (if_tc_ToString_exist<T>)
+					{
+						auto temp = V.get_ref()[i].get_ref().ToString();
+						temp = temp.substr(0, 15);
+						str += "<";
+						str += std::to_string(i) + ">\"";
+						str += temp + "\": ";
+					}
+					else if constexpr (enable_to_string<T>)
+					{
+						auto temp = std::to_string(V.get_ref()[i].get_ref());
+						str += temp + ": ";
+					}
+					else
+					{
+						str += std::to_string(i) + ": ";
+					}
+					for (auto&& item : current)
+					{
+						if constexpr (if_tc_ToString_exist<T>)
+						{
+							auto temp = V.get_ref()[item].get_ref().ToString();
+							temp = temp.substr(0, 15);
+							str += " -> <";
+							str += std::to_string(item) + ">\"";
+							str += temp + "\"";
+						}
+						else if constexpr (enable_to_string<T>)
+						{
+							auto temp = std::to_string(V.get_ref()[item].get_ref());
+							str += " -> ";
+							str += temp;
+						}
+						else
+						{
+							str += " -> ";
+							str += std::to_string(item);
+						}
+					}
+					str += "\n";
+				}
+				return str;
+			}
+		};
+
+#pragma endregion
 
 	}
 }

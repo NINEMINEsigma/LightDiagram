@@ -54,17 +54,8 @@ using namespace ld::graph;
 
 int main()
 {
-	defined_global_binding_instance(vector_iter<int>, root, 0);
-
-	vecpush(root, 1);
-	vecpush(root, 2);
-	vecpush(root, root);
-
-	cout << vec_at(root, 0)->value() << "\n";
-	cout << vec_at(root, 1)->value() << "\n";
-	cout << vec_at(root, 2)->value() << "\n";
-	cout << vec_at(root, 3)->value() << "\n";
-
+	auto g = make_binding_instance<Graph<int>>(global_indicator{}, 1, 2, 3); try_init_class(g);
+	g->add_edge(0, 1);
 	any_binding_instance::DrawMemory();
 	cout << get_size_indicator_count();
 }
