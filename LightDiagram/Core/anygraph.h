@@ -602,9 +602,7 @@ namespace ld
 				}
 				__graph_init(0, std::forward<_binding_instance_T_first>(first), std::forward<_binding_instance_T_first>(args)...);
 			}
-			Graph(const std::vector<binding_instance<T>>& from) :
-				V(new std::vector<binding_instance<T>>(from.size())),
-				adj(new std::vector<std::vector<int>>(from.size()))
+			Graph(const std::vector<binding_instance<T>>& from) : V(new std::vector<binding_instance<T>>(from.size())), adj(new std::vector<std::vector<int>>(from.size())) Symbol_Endl
 			{
 				for (auto&& item : V.get_ref())
 				{
@@ -617,20 +615,82 @@ namespace ld
 				}
 			}
 
-			binding_instance<T>& operator[](size_t index) const
+			T& get_vertex(size_t index) const
 			{
-				return V->at(index);
+				return V->at(index).get_ref();
+			}
+			decltype(auto) operator[](size_t index) const
+			{
+				return get_vertex(index);
+			}
+			decltype(auto) operator()(size_t index) const
+			{
+				return get_vertex(index);
+			}
+			decltype(auto) size() const noexcept
+			{
+				return V->size();
+			}
+			template<typename Arg>
+			long long get_vertex_index(Arg&& arg) const
+			{
+				long long index = 0;
+				for (auto&& item : V.get_ref())
+				{
+					if (item.equals(std::forward<Arg>(arg)))
+					{
+						return index;
+					}
+					index++;
+				}
+				return -1;
+			}
+			template<typename Arg>
+			long long get_vertex_index(const Arg&& arg) const
+			{
+				long long index = 0;
+				for (auto&& item : V.get_ref())
+				{
+					if (item.equals(arg))
+					{
+						return index;
+					}
+					index++;
+				}
+				return -1;
 			}
 
+			decltype(auto) get_edges(size_t index) const
+			{
+				return adj->operator[](index);
+			}
+
+			//bool reachable(size_t from, size_t to) const
+			//{
+			//	auto&& current = get_edges(from);
+			//	return std::find(current.begin(), current.end(), to) != current.end();
+			//}
 			void add_edge(size_t from, size_t to)
 			{
-				adj->operator[](from).push_back(to);
+				get_edges(from).push_back(to);
 				if constexpr (is_directed == false)
 				{
-					adj->operator[](to).push_back(from);
+					get_edges(to).push_back(from);
 				}
 			}
-
+			void remove_edge(size_t from, size_t to)
+			{
+				do
+				{
+					auto&& current = get_edges(from);
+					get_edges(from).erase(std::find(current.begin(), current.end(), to));
+				} while (false);
+				if constexpr (is_directed == false)
+				{
+					auto&& current = get_edges(from);
+					get_edges(to).erase(std::find(current.begin(), current.end(), from));
+				}
+			}
 
 
 		public:
