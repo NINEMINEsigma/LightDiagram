@@ -39,6 +39,7 @@ _LFramework_Indicator_Def(_fastcall, void, false);
 _LFramework_Indicator_Def(__thiscall, void, false);
 _LFramework_Indicator_Def(global, void, false);
 _LFramework_Indicator_Def(namespace, void, false);
+_LFramework_Indicator_Def(new, void, false);
 _LFramework_Indicator_Def(const, void, true);
 _LFramework_Indicator_Def(unconst, void, false);
 _LFramework_Indicator_Def(noexcept, void, true);

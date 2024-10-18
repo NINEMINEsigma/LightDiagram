@@ -198,5 +198,14 @@ namespace ld
 	{
 		return false;
 	}
+
+	instance<new_indicator>::instance(std::new_handler handler) :handler(ld::set_new_bad_catch(handler))
+	{
+
+	}
+	instance<new_indicator>::~instance()
+	{
+		ld::set_new_bad_catch(handler);
+	}
 }
 

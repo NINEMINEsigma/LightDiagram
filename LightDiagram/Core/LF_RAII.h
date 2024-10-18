@@ -2205,6 +2205,48 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 
 #pragma endregion
 
+#pragma region Memory New Kit
+
+	template<>
+	_LF_C_API(Class) instance<new_indicator> final Symbol_Endl
+	{
+	public:
+		instance() = delete;
+		instance(instance&) = delete;
+		instance(instance&&) = delete;
+		instance(const instance&) = delete;
+		instance(std::new_handler);
+		~instance();
+	private:
+		std::new_handler handler;
+	};
+
+
+	_LF_C_API(TClass) alloc_default_traits 
+	{
+	public:
+		__declspec(allocator) static _CONSTEXPR20 void* _Allocate(const size_t _Bytes)
+		{
+			return ::operator new(_Bytes);
+		}
+
+#ifdef __cpp_aligned_new
+		__declspec(allocator) static _CONSTEXPR20 void* _Allocate_aligned(const size_t _Bytes, const size_t _Align)
+		{
+			if (is_constant_env() && is_clang_env())
+			{
+				return _Allocate(_Bytes);
+			}
+			else
+			{
+				return ::operator new(_Bytes, std::align_val_t{ _Align });
+			}
+		}
+#endif // defined(__cpp_aligned_new)
+	};
+
+#pragma endregion
+
 }
 
 #pragma region is_ld_instance
@@ -2338,16 +2380,16 @@ namespace ld
 		binding_instance() noexcept : base_instance(nullptr), init_ab_instance(), empty_init() {}
 		binding_instance(T* ptr) : base_instance(ptr), init_ab_instance(), empty_init() {}
 		binding_instance(any_binding_instance& forward, T* ptr)
-			: base_instance(ptr), init_ab_instance(), forward(&forward), is_global_root(false) {}
+			: base_instance(ptr), init_ab_instance(), forward(addressof(forward)), is_global_root(false) {}
 		binding_instance(const global_indicator& forward, T* ptr) 
 			: base_instance(ptr), init_ab_instance(), forward(nullptr), is_global_root(true) {}
 		// build up with move
 		binding_instance(base_instance& ins) noexcept : base_instance(ins), init_ab_instance(), empty_init() {}
 		binding_instance(base_instance&& ins) noexcept : base_instance(std::move(ins)), init_ab_instance(), empty_init() {}
 		binding_instance(any_binding_instance& forward, base_instance& ins) 
-			: base_instance(ins), init_ab_instance(), forward(&forward), is_global_root(false) {}
+			: base_instance(ins), init_ab_instance(), forward(addressof(forward)), is_global_root(false) {}
 		binding_instance(any_binding_instance& forward, base_instance&& ins)
-			: base_instance(std::move(ins)), init_ab_instance(), forward(&forward), is_global_root(false) {}
+			: base_instance(std::move(ins)), init_ab_instance(), forward(addressof(forward)), is_global_root(false) {}
 		binding_instance(const global_indicator& forward, base_instance& ins) 
 			: base_instance(ins), init_ab_instance(), forward(nullptr), is_global_root(true) {}
 		binding_instance(const global_indicator& forward, base_instance&& ins)
@@ -2356,11 +2398,11 @@ namespace ld
 		binding_instance(binding_instance&& from) noexcept : base_instance(std::move(from)), init_ab_instance(), empty_init() {}
 		binding_instance(const binding_instance& from) noexcept : base_instance(from), init_ab_instance(), empty_init() {}
 		binding_instance(any_binding_instance& forward, binding_instance& from) noexcept
-			: base_instance(from), init_ab_instance(), forward(&forward), is_global_root(false) {}
+			: base_instance(from), init_ab_instance(), forward(addressof(forward)), is_global_root(false) {}
 		binding_instance(any_binding_instance& forward, binding_instance&& from) noexcept 
-			: base_instance(std::move(from)), init_ab_instance(), forward(&forward), is_global_root(false) {}
+			: base_instance(std::move(from)), init_ab_instance(), forward(addressof(forward)), is_global_root(false) {}
 		binding_instance(any_binding_instance& forward, const binding_instance& from) noexcept
-			: base_instance(from), init_ab_instance(), forward(&forward), is_global_root(false) {}
+			: base_instance(from), init_ab_instance(), forward(addressof(forward)), is_global_root(false) {}
 		binding_instance(const global_indicator& forward, binding_instance& from) noexcept
 			: base_instance(from), init_ab_instance(), forward(nullptr), is_global_root(true) {}
 		binding_instance(const global_indicator& forward, binding_instance&& from) noexcept
@@ -2375,7 +2417,7 @@ namespace ld
 		binding_instance(nullptr_t, Args&&... args) : base_instance(new T(args...)), init_ab_instance(), empty_init() {}
 		template<typename... Args>
 		binding_instance(any_binding_instance& forward, Args&&... args)
-			: base_instance(new T(args...)), init_ab_instance(), forward(&forward), is_global_root(false) {}
+			: base_instance(new T(args...)), init_ab_instance(), forward(addressof(forward)), is_global_root(false) {}
 		template<typename... Args>
 		binding_instance(const global_indicator& forward, Args&&... args)
 			: base_instance(new T(args...)), init_ab_instance(), forward(nullptr), is_global_root(true) {}

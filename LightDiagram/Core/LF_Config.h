@@ -23,8 +23,8 @@
 
 #pragma endregion
 
-
 //release:	std::type_info to global namespace
+//release:	std::addressof to global namespace
 
 #pragma region easyx
 #if defined(__REF_EASYX)
@@ -390,6 +390,7 @@ struct platform_indicator
 #endif
 
 using type_info = std::type_info;
+using std::addressof;
 
 #pragma endregion
 
@@ -1000,6 +1001,8 @@ Enable warning C4005 to find the forbidden define.
 #ifdef _MSC_VER
 
 #include <sal.h>
+
+#define _allocator_ret_ __declspec(allocator)
 
 #endif // _MSC_VER
 
@@ -1828,5 +1831,42 @@ auto name = []()							\
 
 #pragma endregion
 
+#pragma region Kit
+
+namespace ld
+{
+	inline std::new_handler set_new_bad_catch(std::new_handler handler)
+	{
+		return std::set_new_handler(handler);
+	}
+	inline std::new_handler get_new_bad_catch()
+	{
+		return std::get_new_handler();
+	}
+}
+
+#pragma endregion
+
+#pragma region Kit
+
+#if _HAS_CXX20
+#define is_constant_env() std::is_constant_evaluated()
+#else
+constexpr bool is_constant_env()
+{
+	return false;
+}
+#endif
+
+constexpr bool is_clang_env()
+{
+#ifdef __clang__
+	return true;
+#else
+	return false;
+#endif // __clang__
+}
+
+#pragma endregion
 
 #endif // !__FILE_LF_CONFIG
