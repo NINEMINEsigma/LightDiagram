@@ -3,8 +3,11 @@
 using namespace std;
 using namespace ld;
 
-namespace lang
+namespace ls
 {
-	//const char*
+	namespace lang
+	{
+		//const char*
+	}
 }
 

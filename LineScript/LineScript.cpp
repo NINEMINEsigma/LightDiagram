@@ -9,9 +9,9 @@ sync_with_stdio_false(__auto__);
 
 using namespace std;
 using namespace ld;
+using namespace ls;
 
 int main(int argc,char** argv)
 {
-	config_instance config(argc, argv);
-	console.LogMessage("ok");
+	config::config __config__(argc, argv);
 }

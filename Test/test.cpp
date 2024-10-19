@@ -50,12 +50,8 @@ void solve(ifstream& anss)
 
 //try_solve_io_ques(ques_path)
 
-using namespace ld::graph;
 
 int main()
 {
-	auto g = make_binding_instance<Graph<int>>(global_indicator{}, 1, 2, 3); try_init_class(g);
-	g->add_edge(0, 1);
-	any_binding_instance::DrawMemory();
-	cout << get_size_indicator_count();
+
 }

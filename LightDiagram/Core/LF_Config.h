@@ -348,6 +348,7 @@ struct platform_indicator
 	constexpr static bool value = false;
 	constexpr static const char* name = "linux on windows";
 	constexpr static platform_current mode = platform_current::linux_on_windows_platform;
+	constexpr static bool is_mscv = false;
 };
 #endif
 
@@ -362,6 +363,11 @@ struct platform_indicator
 	constexpr static bool value = false;
 	constexpr static const char* name = "windows";
 	constexpr static platform_current mode = platform_current::windows_platform;
+#ifdef _MSC_VER
+	constexpr static bool is_mscv = true;
+#else
+	constexpr static bool is_mscv = false;
+#endif // _MSC_VER
 };
 #endif
 
@@ -386,6 +392,7 @@ struct platform_indicator
 	constexpr static bool value = false;
 	constexpr static const char* name = "linux";
 	constexpr static platform_current mode = platform_current::linux_platform;
+	constexpr static bool is_mscv = false;
 };
 #endif
 
@@ -1868,5 +1875,33 @@ constexpr bool is_clang_env()
 }
 
 #pragma endregion
+
+#pragma region Kit
+
+_LF_C_API(OClass) alloc_default_traits
+{
+public:
+	__declspec(allocator) static _CONSTEXPR20 void* _Allocate(const size_t _Bytes)
+	{
+		return ::operator new(_Bytes);
+	}
+
+#ifdef __cpp_aligned_new
+	__declspec(allocator) static _CONSTEXPR20 void* _Allocate_aligned(const size_t _Bytes, const size_t _Align)
+	{
+		if (is_constant_env() && is_clang_env())
+		{
+			return ::operator new(_Bytes);
+		}
+		else
+		{
+			return ::operator new(_Bytes, std::align_val_t{ _Align });
+		}
+	}
+#endif // defined(__cpp_aligned_new)
+};
+
+#pragma endregion
+
 
 #endif // !__FILE_LF_CONFIG

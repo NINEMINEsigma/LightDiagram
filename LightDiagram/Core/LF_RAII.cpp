@@ -33,6 +33,15 @@ namespace ld
 		return size_indicator_count;
 	}
 
+	function<void* (size_t)> alloc_instance_inside_ptr_handler = [](size_t _Bytes)->void*
+		{
+			return ::operator new(_Bytes);
+		};
+	function<void(void*)> free_instance_inside_ptr_handler = [](void* ptr)->void
+		{
+			delete ptr;
+		};
+
 	namespace
 	{
 		class interval_any_binding_instance_image
@@ -206,6 +215,24 @@ namespace ld
 	instance<new_indicator>::~instance()
 	{
 		ld::set_new_bad_catch(handler);
+	}
+
+	void any_binding_instance::gc()
+	{
+		lock_guard<decltype(any_binding_instance_locker)> _locker(any_binding_instance_locker);
+		set<any_binding_instance*> mapper;
+		for (auto&& item : any_binding_instances)
+		{
+			if (item->is_init() && item->root_reachable() == false)
+			{
+				mapper.insert(item);
+			}
+		}
+		for (auto&& item : mapper)
+		{
+			any_binding_instances.erase(item);
+			static_cast<instance<void>*>(item->real_head_ptr)->release();
+		}
 	}
 }
 

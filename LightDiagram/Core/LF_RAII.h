@@ -217,6 +217,9 @@ namespace ld
 	// Base referance counter(has some function)
 	using instance_counter = instance<nullptr_t>;
 
+	extern std::function<void* (size_t)> alloc_instance_inside_ptr_handler;
+	extern std::function<void(void*)> free_instance_inside_ptr_handler;
+
 #pragma endregion
 
 #pragma region Memory X kit
@@ -230,21 +233,28 @@ namespace ld
 		using tag = Tag;
 	private:
 		Tag * instance_ptr;
+		inline void destruct_and_free_instance_ptr()
+		{
+			instance_ptr->~Tag();
+			free_instance_inside_ptr_handler(instance_ptr);
+		}
 	public:
 		instance() noexcept : instance_ptr(nullptr), instance<void>() {}
 		instance(Tag* ptr) : instance_ptr(ptr), instance<void>() {}
-		instance(const Tag& data) :  instance_ptr(new Tag(data)) {}
+		instance(const Tag& data) :  instance_ptr(new(alloc_instance_inside_ptr_handler(sizeof(Tag))) Tag(data)) {}
 		instance(instance& from) noexcept :  instance_ptr(from.instance_ptr), instance<void>(from) {}
 		instance(instance&& from) noexcept :  instance_ptr(from.instance_ptr), instance<void>(std::move(from))
 		{
 			from.instance_ptr = nullptr;
 		}
 		instance(const instance& from) noexcept : instance_ptr(from.instance_ptr), instance<void>(from) {}
+		template<typename... Args>
+		instance(Args&&... args) : instance(new(alloc_instance_inside_ptr_handler(sizeof(Tag))) Tag(args...)) {}
 		virtual ~instance()
 		{
 			if (this->get_count() <= 1)
 			{
-				delete instance_ptr;
+				destruct_and_free_instance_ptr();
 			}
 		}
 		Tag* get_ptr() const noexcept
@@ -276,7 +286,7 @@ namespace ld
 		{
 			if (this->get_count() <= 1)
 			{
-				delete this->instance_ptr;
+				destruct_and_free_instance_ptr();
 			}
 			instance<void>::operator=(from);
 			this->instance_ptr = from.instance_ptr;
@@ -286,7 +296,7 @@ namespace ld
 		{
 			if (this->get_count() <= 1)
 			{
-				delete this->instance_ptr;
+				destruct_and_free_instance_ptr();
 			}
 			instance<void>::operator=(std::move(from));
 			this->instance_ptr = from.instance_ptr;
@@ -297,7 +307,7 @@ namespace ld
 		{
 			if (this->get_count() <= 1)
 			{
-				delete this->instance_ptr;
+				destruct_and_free_instance_ptr();
 			}
 			instance<void>::operator=(from);
 			this->instance_ptr = from.instance_ptr;
@@ -307,7 +317,7 @@ namespace ld
 		{
 			if (this->get_count() <= 1)
 			{
-				delete this->instance_ptr;
+				destruct_and_free_instance_ptr();
 			}
 			instance<void>::release();
 			this->instance_ptr = from;
@@ -317,7 +327,7 @@ namespace ld
 		{
 			if (this->get_count() <= 1)
 			{
-				delete this->instance_ptr;
+				destruct_and_free_instance_ptr();
 			}
 			instance<void>::release();
 			return *this;
@@ -325,7 +335,7 @@ namespace ld
 		instance<Tag>& operator=(Tag&& from)
 		{
 			if (this->empty())
-				return operator=(new Tag(std::move(from)));
+				return operator=(new(alloc_instance_inside_ptr_handler(sizeof(Tag))) Tag(std::move(from)));
 			else
 			{
 				this->get_ref() = std::move(from);
@@ -334,7 +344,7 @@ namespace ld
 		instance<Tag>& operator=(const Tag& from)
 		{
 			if (this->empty())
-				return operator=(new Tag(from));
+				return operator=(new(alloc_instance_inside_ptr_handler(sizeof(Tag))) Tag(from));
 			else
 			{
 				this->get_ref() = from;
@@ -343,7 +353,7 @@ namespace ld
 		instance<Tag>& operator=(Tag& from)
 		{
 			if (this->empty())
-				return operator=(new Tag(from));
+				return operator=(new(alloc_instance_inside_ptr_handler(sizeof(Tag))) Tag(from));
 			else
 			{
 				this->get_ref() = from;
@@ -379,7 +389,7 @@ namespace ld
 			{
 				if (this->get_count() <= 1)
 				{
-					delete this->instance_ptr;
+					destruct_and_free_instance_ptr();
 				}
 				instance<void>::operator=(from);
 				this->instance_ptr = from.get_ptr();
@@ -390,7 +400,7 @@ namespace ld
 				if (dynamic_cast<OtherTag*>(from.get_ptr()) == nullptr)return false;
 				if (this->get_count() <= 1)
 				{
-					delete this->instance_ptr;
+					destruct_and_free_instance_ptr();
 				}
 				instance<void>::operator=(from);
 				this->instance_ptr = dynamic_cast<OtherTag*>(from.get_ptr());
@@ -407,7 +417,7 @@ namespace ld
 			{
 				if (this->get_count() <= 1)
 				{
-					delete this->instance_ptr;
+					destruct_and_free_instance_ptr();
 				}
 				instance<void>::operator=(std::move(from));
 				this->instance_ptr = from.get_ptr();
@@ -418,7 +428,7 @@ namespace ld
 				if (dynamic_cast<OtherTag*>(from.get_ptr()) == nullptr)return false;
 				if (this->get_count() <= 1)
 				{
-					delete this->instance_ptr;
+					destruct_and_free_instance_ptr();
 				}
 				instance<void>::operator=(std::move(from));
 				this->instance_ptr = dynamic_cast<OtherTag*>(from.get_ptr());
@@ -529,7 +539,7 @@ namespace ld
 		using baseclass_tag = type_list_instance_baseclass<Args...>;
 		using my_type_tag = instance;
 		using base_type_tag = instance<type_list_instance_baseclass<Args...>>;
-		instance(void* args[sizeof...(Args)]) :base_type_tag(new baseclass_tag())
+		instance(void* args[sizeof...(Args)]) :base_type_tag(new(alloc_instance_inside_ptr_handler(sizeof(baseclass_tag))) baseclass_tag())
 		{
 			for (size_t i = 0; i < sizeof...(Args); i++)
 			{
@@ -540,22 +550,26 @@ namespace ld
 		using result_of_type_list =
 			typename choose_type < std::is_same_v<void, typename type_decltype<type_list_tag, index>::tag>, bad_indicator,
 			typename type_decltype<type_list_tag, index>::tag>::tag;
-		instance(result_of_type_list<0> arg0) :base_type_tag(new baseclass_tag())
+		instance(result_of_type_list<0> arg0) 
+			:base_type_tag(new(alloc_instance_inside_ptr_handler(sizeof(baseclass_tag))) baseclass_tag())
 		{
 			this->get_ptr()->operator[](0) = arg0;
 		}
-		instance(result_of_type_list<0> arg0, result_of_type_list<1> arg1) :base_type_tag(new baseclass_tag())
+		instance(result_of_type_list<0> arg0, result_of_type_list<1> arg1)
+			:base_type_tag(new(alloc_instance_inside_ptr_handler(sizeof(baseclass_tag))) baseclass_tag())
 		{
 			this->get_ptr()->operator[](0) = arg0;
 			this->get_ptr()->operator[](1) = arg1;
 		}
-		instance(result_of_type_list<0> arg0, result_of_type_list<1> arg1, result_of_type_list<2> arg2) :base_type_tag(new baseclass_tag())
+		instance(result_of_type_list<0> arg0, result_of_type_list<1> arg1, result_of_type_list<2> arg2)
+			:base_type_tag(new(alloc_instance_inside_ptr_handler(sizeof(baseclass_tag))) baseclass_tag())
 		{
 			this->get_ptr()->operator[](0) = arg0;
 			this->get_ptr()->operator[](1) = arg1;
 			this->get_ptr()->operator[](2) = arg2;
 		}
-		instance(result_of_type_list<0> arg0, result_of_type_list<1> arg1, result_of_type_list<2> arg2, result_of_type_list<3> arg3) :base_type_tag(new baseclass_tag())
+		instance(result_of_type_list<0> arg0, result_of_type_list<1> arg1, result_of_type_list<2> arg2, result_of_type_list<3> arg3) 
+			:base_type_tag(new(alloc_instance_inside_ptr_handler(sizeof(baseclass_tag))) baseclass_tag())
 		{
 			this->get_ptr()->operator[](0) = arg0;
 			this->get_ptr()->operator[](1) = arg1;
@@ -899,7 +913,8 @@ namespace ld
 	template<typename VoidContainerType> _LF_C_API(TClass)
 		instance<type_list<container_indicator, void_indicator, VoidContainerType>> Symbol_Push public instance<VoidContainerType> Symbol_Endl
 	{
-		instance(void* head, void* tail, size_t unit_size) :instance<VoidContainerType>(new VoidContainerType(head, tail, unit_size)) {}
+		instance(void* head, void* tail, size_t unit_size) 
+		:instance<VoidContainerType>(new(alloc_instance_inside_ptr_handler(sizeof(VoidContainerType))) VoidContainerType(head, tail, unit_size)) {}
 	public:
 		instance(void* head, size_t length, size_t unit_size) :instance(head, (void*)((size_t)head + length * unit_size), unit_size) {}
 		instance(size_t length, size_t unit_size) :instance(::malloc(sizeof(char) * length * unit_size), length, unit_size) {}
@@ -920,7 +935,8 @@ namespace ld
 	public:
 		constexpr static size_t unit_size = sizeof(AccTy);
 	private:
-		instance(AccTy * head, AccTy * tail) :instance<AccContainerType>(new AccContainerType(head, tail)) {}
+		instance(AccTy * head, AccTy * tail) 
+			:instance<AccContainerType>(new(alloc_instance_inside_ptr_handler(sizeof(AccContainerType))) AccContainerType(head, tail)) {}
 	public:
 		instance(void* head, size_t length) :instance((AccTy*)head, (AccTy*)((size_t)head + length * unit_size)) {}
 		instance(size_t length) :instance(::malloc(sizeof(char) * length * unit_size), length) {}
@@ -1062,16 +1078,16 @@ namespace ld
 			in_file.close();
 		}
 
-		csv_instance() :instance<first_layer>(new first_layer()) {}
-		csv_instance(std::ifstream & in_file) :instance<first_layer>(new first_layer())
+		csv_instance() :instance<first_layer>(new((alloc_instance_inside_ptr_handler(sizeof(first_layer)))) first_layer()) {}
+		csv_instance(std::ifstream & in_file) :instance<first_layer>(new((alloc_instance_inside_ptr_handler(sizeof(first_layer)))) first_layer())
 		{
 			read(in_file);
 		}
-		csv_instance(std::wifstream & in_file) :instance<first_layer>(new first_layer())
+		csv_instance(std::wifstream & in_file) :instance<first_layer>(new((alloc_instance_inside_ptr_handler(sizeof(first_layer)))) first_layer())
 		{
 			read(in_file);
 		}
-		csv_instance(const string_indicator::tag & path) :instance<first_layer>(new first_layer())
+		csv_instance(const string_indicator::tag & path) :instance<first_layer>(new((alloc_instance_inside_ptr_handler(sizeof(first_layer)))) first_layer())
 		{
 			read(path);
 		}
@@ -1278,7 +1294,8 @@ namespace ld
 	{
 	public:
 		using tag = config_indicator;
-		instance() :instance<config_map>(new config_map()) {}
+		constexpr static auto local_path_key = "local";
+		instance() :instance<config_map>(new((alloc_instance_inside_ptr_handler(sizeof(config_map)))) config_map()) {}
 		instance(int argc, char** argv):instance()
 		{
 			read_config(argc, argv);
@@ -1299,10 +1316,11 @@ namespace ld
 
 		void read_config(int argc, char** argv)
 		{
-			config_map& config = *this->get_ptr();
-			for (int i = 0; i < argc; i++)
+			config_map& config = this->get_ref();
+			config[local_path_key] = argv[0];
+			for (int i = 1; i < argc; i++)
 			{
-				std::string str(argv[argc]);
+				std::string str(argv[i]);
 				size_t spl = str.find_first_of('=');
 				if (spl != std::string::npos)
 					config[str.substr(0, spl)] = str.substr(spl + 1, str.size() - spl - 1);
@@ -1346,6 +1364,20 @@ namespace ld
 		virtual std::string SymbolName() const override
 		{
 			return typeid(*this).name();
+		}
+
+		inline decltype(auto) begin() const noexcept
+		{
+			return this->get_ref().begin();
+		}
+		inline decltype(auto) end() const noexcept
+		{
+			return this->get_ref().end();
+		}
+
+		inline std::string local_path() const noexcept
+		{
+			return this->get_ref()[local_path_key];
 		}
 	};
 	using config_instance = instance<type_list<io_tag_indicator, config_indicator, char>>;
@@ -1416,7 +1448,7 @@ namespace ld
 			_In_opt_ Bitmap::PaletteBuffer palette = nullptr,
 			size_t paletteSize = 0,
 			IndexCount ClrUsed = 0,
-			IndexCount ClrImportant = 0) : instance<Bitmap>(new Bitmap())
+			IndexCount ClrImportant = 0) : instance<Bitmap>(new((alloc_instance_inside_ptr_handler(sizeof(Bitmap)))) Bitmap())
 		{
 			CreateBitMap(this->get_ptr(), bitCount, height, width, palette, paletteSize, ClrUsed, ClrImportant);
 		}
@@ -1713,8 +1745,8 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 		using tag = std::filesystem::path;
 		using base_instance = instance<tag>;
 		instance(const tag & path, bool is_host = false) :
-			base_instance(new tag(path)),
-			my_hoster(is_host ? new std::ifstream(path) : nullptr),
+			base_instance(new((alloc_instance_inside_ptr_handler(sizeof(tag)))) tag(path)),
+			my_hoster(is_host ? new(((alloc_instance_inside_ptr_handler(sizeof(std::ifstream))))) std::ifstream(path) : nullptr),
 			my_hoster_type_info(typeid(void).hash_code()){}
 		instance(instance&& from) noexcept :
 			base_instance(std::move(from)), 
@@ -1856,7 +1888,7 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 			std::ios::openmode mode = std::ios_base::in,
 			int prot = std::ios_base::_Default_open_prot)
 		{
-			return new istream_tag(
+			return new((alloc_instance_inside_ptr_handler(sizeof(istream_tag)))) istream_tag(
 				this->get_ref().string<_CharTy, std::char_traits<_CharTy>>(),
 				mode, prot);
 		}
@@ -1876,7 +1908,7 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 			std::ios::openmode mode = std::ios_base::out| std::ios_base::ate, 
 			int prot = std::ios_base::_Default_open_prot)
 		{
-			return new ostream_tag(
+			return new((alloc_instance_inside_ptr_handler(sizeof(ostream_tag)))) ostream_tag(
 				this->get_ref().string<_CharTy, std::char_traits<_CharTy>>(),
 				mode, prot);
 		}
@@ -2221,30 +2253,6 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 		std::new_handler handler;
 	};
 
-
-	_LF_C_API(TClass) alloc_default_traits 
-	{
-	public:
-		__declspec(allocator) static _CONSTEXPR20 void* _Allocate(const size_t _Bytes)
-		{
-			return ::operator new(_Bytes);
-		}
-
-#ifdef __cpp_aligned_new
-		__declspec(allocator) static _CONSTEXPR20 void* _Allocate_aligned(const size_t _Bytes, const size_t _Align)
-		{
-			if (is_constant_env() && is_clang_env())
-			{
-				return _Allocate(_Bytes);
-			}
-			else
-			{
-				return ::operator new(_Bytes, std::align_val_t{ _Align });
-			}
-		}
-#endif // defined(__cpp_aligned_new)
-	};
-
 #pragma endregion
 
 }
@@ -2334,6 +2342,8 @@ namespace ld
 		// return <is global>
 		virtual bool __forward(void** ptr) const abstract;
 		virtual void* __get_instance_ptr() const abstract;
+	public:
+		static void gc();
 	};
 
 	if_func_exist_def(empty);
@@ -2414,13 +2424,11 @@ namespace ld
 		binding_instance(T&& arg) : base_instance(std::move(arg)), init_ab_instance(), empty_init() {}
 		binding_instance(const T& arg) : base_instance(arg), init_ab_instance(), empty_init() {}
 		template<typename... Args>
-		binding_instance(nullptr_t, Args&&... args) : base_instance(new T(args...)), init_ab_instance(), empty_init() {}
+		binding_instance(nullptr_t, Args&&... args) : base_instance(args...), init_ab_instance(), empty_init() {}
 		template<typename... Args>
-		binding_instance(any_binding_instance& forward, Args&&... args)
-			: base_instance(new T(args...)), init_ab_instance(), forward(addressof(forward)), is_global_root(false) {}
+		binding_instance(any_binding_instance& forward, Args&&... args) : base_instance(args...), init_ab_instance(), forward(addressof(forward)), is_global_root(false) {}
 		template<typename... Args>
-		binding_instance(const global_indicator& forward, Args&&... args)
-			: base_instance(new T(args...)), init_ab_instance(), forward(nullptr), is_global_root(true) {}
+		binding_instance(const global_indicator& forward, Args&&... args) : base_instance(args...), init_ab_instance(), forward(nullptr), is_global_root(true) {}
 		virtual ~binding_instance() {}
 #undef empty_init
 
@@ -2648,5 +2656,22 @@ namespace ld
 #define GlobalExcpetionApply any_binding_instance::DrawMemory();}CatchingLDException()
 
 #pragma pack(pop)
+
+template<typename _Ty>
+decltype(auto) Unwrapped(_Ty& from)
+{
+	if constexpr (std::is_pointer_v<_Ty>)
+		return *from;
+	else if constexpr (
+		std::is_same_v<ld::instance<void>, _Ty> ||
+		std::is_same_v<ld::instance<nullptr_t>, _Ty>)
+		return void_indicator{};
+	else if constexpr (is_ld_instance_v<_Ty>)
+		return from.get_ref();
+	else if constexpr (platform_indicator::is_mscv)
+		return std::_Get_unwrapped(std::forward<_Ty>(from));
+	else
+		return from;
+}
 
 #endif // !__FILE_LF_RAII

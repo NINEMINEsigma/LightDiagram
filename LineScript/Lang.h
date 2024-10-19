@@ -1,13 +1,20 @@
-#include<LightDiagram.h>
+#ifndef __FILE_LANG
+#define __FILE_LANG
 
-namespace lang
+#include<Config.h>
+
+namespace ls
 {
-	class Object
+	namespace lang
 	{
-	public:
+		class Object
+		{
+		public:
 
-	};
+		};
 
-	
+
+	}
 }
 
+#endif // !__FILE_LANG
