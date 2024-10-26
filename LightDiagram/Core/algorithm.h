@@ -26,6 +26,7 @@ namespace ld
 		return result;
 	}
 
+	//InsituOperation
 	namespace algorithm
 	{
 		template<
@@ -85,9 +86,7 @@ namespace ld
 		return *std::max_element(_data.begin(), _data.end());
 	}
 
-	template<
-		class _Container
-	>
+	template<class _Container>
 	void MergeIntervals(_Container& intervals)
 	{
 		using iter_unwap = decltype(intervals.front());
@@ -97,7 +96,7 @@ namespace ld
 			{
 				return get_left(_left) < get_left(_right);
 			});
-		std::remove_reference_t<_Container> result;
+		_Container result;
 		for (auto&& item : intervals)
 		{
 			if (result.empty())

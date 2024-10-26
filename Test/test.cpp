@@ -48,10 +48,23 @@ void solve(ifstream& anss)
 	check_ans(__env__.result);
 }
 
-//try_solve_io_ques(ques_path)
+//try_solve_io_ques(ques_path);
 
-
-int main()
+class Solution 
 {
-
-}
+public:
+	double findMaxAverage(vector<int>& nums, int k) 
+	{
+		int result = 0;
+		for (int i = 0, e = nums.size() - k; i < e; i++)
+		{
+			int sum = 0;
+			for (int j = i, ej = i + k; j < ej; j++)
+			{
+				sum += nums[j];
+			}
+			result = max(sum, result);
+		}
+		return result / static_cast<double>(k);
+	}
+};
