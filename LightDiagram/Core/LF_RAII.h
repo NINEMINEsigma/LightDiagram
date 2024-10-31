@@ -8,6 +8,7 @@
 #include <Core/static_exist.h>
 #include <Core/LF_Exception.h>
 #include <filesystem>
+#include <Core/cJSON.h>
 
 #pragma pack(push, 8)
 
@@ -2252,6 +2253,135 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 	private:
 		std::new_handler handler;
 	};
+
+#pragma endregion
+
+#pragma region json
+
+	_LFramework_Indicator_Def(json, char, true);
+	namespace
+	{
+		struct json_key_value_pair
+		{
+			char* key_name;
+			union
+			{
+				char* string_value;
+				long long int_value;
+				long double float_value;
+				intptr_t ptr_value;
+			};
+			int stats;
+		};
+	}
+	template<>
+	_LF_C_API(OClass) instance<type_list<json_indicator>>
+		Symbol_Push public instance<json_key_value_pair> Symbol_Endl
+	{
+	public:
+		using tag = json_key_value_pair;
+	private:
+		using base_instance = instance<json_key_value_pair>;
+		instance(const std::string& key) :base_instance(new tag())
+		{
+			this->get_ref().key_name = new char[key.length()];
+		}
+	public:
+		instance(instance& from) :base_instance(from) {}
+		instance& operator=(instance& from)
+		{
+			base_instance::operator=(from);
+			return *this;
+		}
+		instance(instance&& from) :base_instance(std::move(from)) {}
+		instance& operator=(instance&& from)
+		{
+			base_instance::operator=(std::move(from));
+			return *this;
+		}
+		instance(const std::string& key, const std::string& value); instance()
+		{
+		}
+		virtual ~instance()
+		{
+			if (this->empty() == false)
+				delete this->get_ref().key_name;
+		}
+
+		constexpr static int value_flag		= 1 << 0;
+		constexpr static int string_flag	= 1 << 1;
+		constexpr static int intergral_flag	= 1 << 2;
+		constexpr static int floating_flag	= 1 << 3;
+		constexpr static int ptr_flag		= 1 << 4;
+
+		//is basic value
+		bool is_value() const noexcept
+		{
+			return bit_detect(this->get_ref().stats, value_flag);
+		}
+		//is string
+		bool is_string() const noexcept;
+		//is arithmetic
+		bool is_number() const noexcept;
+		//is integral
+		bool is_integral() const noexcept;
+		//is floating point
+		bool is_floating() const noexcept;
+		//is 0x------...
+		bool is_ptr() const noexcept;
+		//is 0x00... or nullptr or null
+		bool is_null_ptr() const noexcept;
+
+		virtual std::string SymbolName() const override;
+		virtual std::string ToString() const override;
+
+		template<typename T = char*>
+		decltype(auto) value()
+		{
+			if constexpr (std::is_same_v<T, char*>)
+			{
+				return this->get_ref().string_value;
+			}
+			else if constexpr (std::is_same_v<T, long long>)
+			{
+				return this->get_ref().int_value;
+			}
+			else if constexpr (std::is_same_v<T, long double>)
+			{
+				return this->get_ref().float_value;
+			}
+			else if constexpr (std::is_same_v<T, intptr_t>)
+			{
+				return this->get_ref().ptr_value;
+			}
+			else if constexpr (std::is_same_v<T, std::string>)
+			{
+				return this->get_ref().string_value;
+			}
+			else if constexpr (std::is_integral_v<T>)
+			{
+				return static_cast<T>(this->get_ref().int_value);
+			}
+			else if constexpr (std::is_floating_point_v<T>)
+			{
+				return static_cast<T>(this->get_ref().float_value);
+			}
+			else if constexpr (std::is_pointer_v<T>)
+			{
+				return static_cast<T>(this->get_ref().ptr_value);
+			}
+			else
+			{
+				static_assert(std::is_same_v < T, void >= = false, "unsupport value-type");
+				return static_cast<void*>(addressof(this->get_ref().int_value));
+			}
+		}
+		const char* key() const noexcept
+		{
+			return this->get_ref().key_name;
+		}
+	};
+	using json_instance = instance<type_list<json_indicator>>;
 
 #pragma endregion
 

@@ -12,7 +12,7 @@ namespace ld
 		lock_guard locker(size_indicator_locker);
 		if (size_indicators.empty())
 		{
-			size_indicator_count = Max(size_indicators.size(), ++size_indicator_count);
+			size_indicator_count = ld::Max(size_indicators.size(), ++size_indicator_count);
 			return new size_tag(1);
 		}
 		else

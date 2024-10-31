@@ -1161,7 +1161,7 @@ public:
 
 //Variadic
 //__declspec(align(#))
-#define AlignStruct (size_move) __declspec(align(1<<size_move)) struct 
+#define AlignStruct(size_move) __declspec(align(1<<size_move)) struct 
 
 //Variadic
 //__declspec(align(#)) 
@@ -1380,6 +1380,7 @@ _LFramework_Config_API_Struct ___utype{ size_t ignore; __LFramework_T(Type) cons
 #define Symbol_Push :
 #define Symbol_Link ,
 #define Symbol_Endl
+#define Close_Align __attribute__((packed))
 
 //*
 //  This allows you to declare a field's Property Binder
@@ -1413,33 +1414,97 @@ decltype(name)& get_##name(){return name;}
 
 template < bool value, typename _True, typename _False> _LF_C_API(TStruct) choose_type;
 template < typename _True, typename _False>
-_LF_C_API(TStruct) choose_type < true, _True, _False>
+_LF_C_API(TStruct) choose_type < true, _True, _False> : public std::true_type
 {
 	using tag = _True;
 };
 template < typename _True, typename _False>
-_LF_C_API(TStruct) choose_type < false, _True, _False >
+_LF_C_API(TStruct) choose_type < false, _True, _False > : public std::false_type
 {
 	using tag = _False;
 };
 
 namespace ld
 {
-	template<typename T>
-	const T& Max(const T& first, const T& second)
+	template<typename Pr, typename T>
+	decltype(auto) element_pr(Pr&& pr, T&& first, T&& second)
 	{
-		if (first > second)
-			return first;
+		if (pr(static_cast<const T&>(first), static_cast<const T&>(second)))
+			return std::forward<T>(first);
 		else
-			return second;
+			return std::forward<T>(second);
+	}
+	template<typename Pr, typename T, typename ...Args>
+	decltype(auto) element_pr(Pr&& pr, T&& first, T&& second, Args&&... args)
+	{
+		if (pr(static_cast<const T&>(first), static_cast<const T&>(second)))
+			return element_pr(std::forward<T>(first), std::forward<Args>(args)...);
+		else
+			return element_pr(std::forward<T>(second), std::forward<Args>(args)...);
+	}
+
+	template<typename T>
+	decltype(auto) Max(T&& first, T&& second)
+	{
+		return first > second ? first : second;
+	}
+	template<typename T>
+	decltype(auto) Min(T&& first, T&& second)
+	{
+		return first < second ? first : second;
 	}
 	template<typename T, typename ...Args>
-	const T& Max(const T& first, const T& second, const Args&... args)
+	decltype(auto) Max(T&& first, T&& second, Args&&... args)
 	{
-		if (first > second)
-			return Max(first, args...);
-		else
-			return Max(second, args...);
+		return Max(Max(std::forward<T>(first), std::forward<T>(second)), std::forward<Args>(args)...);
+	}
+	template<typename T, typename ...Args>
+	decltype(auto) Min(const T& first, const T& second, const Args&... args)
+	{
+		return Min(Min(std::forward<T>(first), std::forward<T>(second)), std::forward<Args>(args)...);
+	}
+	template<typename T>
+	decltype(auto) Max(const T& first, const T& second)
+	{
+		return first > second ? first : second;
+	}
+	template<typename T>
+	decltype(auto) Min(const T& first, const T& second)
+	{
+		return first < second ? first : second;
+	}
+	template<typename T, typename ...Args>
+	decltype(auto) Max(const T& first, const T& second, const Args&... args)
+	{
+		return Max(Max(std::forward<T>(first), std::forward<T>(second)), std::forward<Args>(args)...);
+	}
+	template<typename T, typename ...Args>
+	decltype(auto) Min(const T& first, const T& second, const Args&... args)
+	{
+		return Min(Min(std::forward<T>(first), std::forward<T>(second)), std::forward<Args>(args)...);
+	}
+	namespace constexpr_kit
+	{
+		template<typename T>
+		constexpr decltype(auto) Max(const T& first, const T& second)
+		{
+			return first > second ? first : second;
+		}
+		template<typename T>
+		constexpr decltype(auto) Min(const T& first, const T& second)
+		{
+			return first < second ? first : second;
+		}
+		template<typename T, typename ...Args>
+		constexpr decltype(auto) Max(const T& first, const T& second, const Args&... args)
+		{
+			return constexpr_kit::Max(constexpr_kit::Max(std::forward<T>(first), std::forward<T>(second)), std::forward<Args>(args)...);
+		}
+		template<typename T, typename ...Args>
+		constexpr decltype(auto) Min(const T& first, const T& second, const Args&... args)
+		{
+			return constexpr_kit::Min(constexpr_kit::Min(std::forward<T>(first), std::forward<T>(second)), std::forward<Args>(args)...);
+		}
 	}
 }
 
@@ -1506,7 +1571,6 @@ template<size_t size>
 using ConstexprCount = ConstexprMode<size_t, size>;
 
 #pragma endregion
-
 
 #pragma endregion
 
@@ -1900,6 +1964,19 @@ public:
 	}
 #endif // defined(__cpp_aligned_new)
 };
+
+#pragma endregion
+
+#pragma region bit kit
+
+#define bit_opt_and(left,right)		(left&right)
+#define bit_opt_or(left,right)		(left|right)
+#define bit_opt_not(left)			(~left)
+#define bit_opt_nand(left,right)	(bit_opt_not(bit_opt_and(left,right)))
+#define bit_opt_nor(left,right)		(bit_opt_not(bit_opt_or(left,right)))
+#define bit_opt_xor(left,right)		(bit_opt_and(bit_opt_not(left),right)+bit_opt_and(left,bit_opt_not(right)))
+#define bit_opt_xnor(left,right)	(bit_opt_not(bit_opt_xor(left,right)))
+#define bit_detect(value,pos)		(bit_opt_and(value,(1<<pos)))
 
 #pragma endregion
 
