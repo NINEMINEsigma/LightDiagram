@@ -366,7 +366,7 @@ public:
 	}
 };
 template<typename Func>
-_LF_C_API(TClass) closures<Func, void> final
+_LF_C_API(TClass) closures<Func, void> final Symbol_Endl
 {
 public:
 	std::function<Func> invoker;
@@ -407,7 +407,7 @@ public:
 	}
 };
 template<typename Func>
-_LF_C_API(TClass) release_closures<Func, void> final
+_LF_C_API(TClass) release_closures<Func, void> final Symbol_Endl
 {
 	bool is_invoke;
 public:
@@ -431,10 +431,9 @@ public:
 	}
 };
 
-
 #define	null_able	auto
 
-_LF_C_API(Class) copy_enable:_LF_Inherited(any_class)
+_LF_C_API(Class) copy_enable Symbol_Push public any_class 
 {
 public:
 	using tag = void;
@@ -448,14 +447,14 @@ protected:
 		return *this;
 	}
 };
-_LF_C_API(Class) copy_disable:_LF_Inherited(any_class)
+_LF_C_API(Class) copy_disable Symbol_Push public any_class
 {
 public:
 	using tag = void;
 	constexpr static bool value = true;
 protected:
 	copy_disable() {}
-	~copy_disable() {}
+	virtual ~copy_disable() {}
 private:
 	copy_disable(const copy_disable&) = delete;
 	copy_disable& operator=(const copy_disable&) = delete;

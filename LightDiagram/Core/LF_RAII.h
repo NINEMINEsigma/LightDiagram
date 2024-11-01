@@ -597,7 +597,7 @@ namespace ld
 			}
 		}
 
-		template<typename TargetType> constexpr static int index_result_of_type_list = type_list_tag::is_type_list_contains<TargetType>(0);
+		template<typename TargetType> constexpr static int index_result_of_type_list = type_list_tag:: template is_type_list_contains<TargetType>(0);
 
 		template<size_t index>
 		result_of_type_list<index> get_value_ptr()
@@ -883,20 +883,20 @@ namespace ld
 		template<size_t index, typename... Args>// decltype(std::declval<instance>()._m_funcs.get_value<index>()(nullptr)) 
 		auto&& invoke(Args&&... args)
 		{
-			if constexpr (std::is_same_v<void, decltype(this->_m_funcs.get_value<index>().operator()(this, args...))>)
-				this->_m_funcs.get_value<index>().operator()(this, args...);
+			if constexpr (std::is_same_v<void, decltype(this->_m_funcs. template get_value<index>().operator()(this, args...))>)
+				this->_m_funcs. template get_value<index>().operator()(this, args...);
 			else
-				return this->_m_funcs.get_value<index>().operator()(this, args...);
+				return this->_m_funcs. template get_value<index>().operator()(this, args...);
 		}
 		template<size_t index>
 		auto& get_value()
 		{
-			return this->_m_fields.get_value<index>();
+			return this->_m_fields. template get_value<index>();
 		}
 		template<size_t index,typename _T>
 		void set_value(_T&& right)
 		{
-			 this->_m_fields.set_value<index>(std::forward<_T>(right));
+			 this->_m_fields. template set_value<index>(std::forward<_T>(right));
 		}
 
 		virtual std::string SymbolName() const override
@@ -971,6 +971,8 @@ namespace ld
 	{
 	public:
 		using tag = _Layer_Ty<_Layer_Ty<std::basic_string<_CharTy>>>;
+		using instance = csv_instance;
+		using base_instance = ld::instance<_Layer_Ty<_Layer_Ty<std::basic_string<_CharTy>>>>;
 		using inside_char = _CharTy;
 		using string = std::basic_string<inside_char>;
 		using inside_layer = std::basic_string<_CharTy>;
@@ -1079,29 +1081,29 @@ namespace ld
 			in_file.close();
 		}
 
-		csv_instance() :instance<first_layer>(new((alloc_instance_inside_ptr_handler(sizeof(first_layer)))) first_layer()) {}
-		csv_instance(std::ifstream & in_file) :instance<first_layer>(new((alloc_instance_inside_ptr_handler(sizeof(first_layer)))) first_layer())
+		csv_instance() :base_instance(new((alloc_instance_inside_ptr_handler(sizeof(first_layer)))) first_layer()) {}
+		csv_instance(std::ifstream & in_file) :base_instance(new((alloc_instance_inside_ptr_handler(sizeof(first_layer)))) first_layer())
 		{
 			read(in_file);
 		}
-		csv_instance(std::wifstream & in_file) :instance<first_layer>(new((alloc_instance_inside_ptr_handler(sizeof(first_layer)))) first_layer())
+		csv_instance(std::wifstream & in_file) :base_instance(new((alloc_instance_inside_ptr_handler(sizeof(first_layer)))) first_layer())
 		{
 			read(in_file);
 		}
-		csv_instance(const string_indicator::tag & path) :instance<first_layer>(new((alloc_instance_inside_ptr_handler(sizeof(first_layer)))) first_layer())
+		csv_instance(const string_indicator::tag & path) :base_instance(new((alloc_instance_inside_ptr_handler(sizeof(first_layer)))) first_layer())
 		{
 			read(path);
 		}
-		csv_instance(csv_instance && from) noexcept :instance<first_layer>(std::move(from)) {}
+		csv_instance(csv_instance && from) noexcept :base_instance(std::move(from)) {}
 		csv_instance& operator=(csv_instance && from) noexcept
 		{
-			instance<first_layer>::operator=(std::move(from));
+			base_instance::operator=(std::move(from));
 			return *this;
 		}
-		csv_instance(csv_instance & from) noexcept : instance<first_layer>(from) {}
+		csv_instance(csv_instance & from) noexcept : base_instance(from) {}
 		csv_instance& operator=(csv_instance & from) noexcept
 		{
-			instance<first_layer>::operator=(from);
+			base_instance::operator=(from);
 			return *this;
 		}
 		virtual ~csv_instance() {}
@@ -1387,7 +1389,7 @@ namespace ld
 
 #pragma region Bitmap
 
-#if defined(_WINDOW_)||defined(_LINUX_ON_WINDOW_)
+#if defined(_WINDOW_)
 	template<>
 	_LF_C_API(Class) instance<type_list<io_tag_indicator, bitmap_indicator>>
 		Symbol_Push public instance<BITMAP_FILE> Symbol_Endl
@@ -1844,11 +1846,11 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 
 		bool delete_file() const
 		{
-			std::filesystem::remove(this->get_ref());
+			return std::filesystem::remove(this->get_ref());
 		}
-		bool delete_all() const
+		decltype(auto) delete_all() const
 		{
-			std::filesystem::remove_all(this->get_ref());
+			return std::filesystem::remove_all(this->get_ref());
 		}
 
 		std::filesystem::directory_entry get_entry() const
@@ -1876,42 +1878,28 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 
 		using istream_tag = std::basic_ifstream<_CharTy, std::char_traits<_CharTy>>;
 
-		istream_tag to_ifstream(
-			std::ios::openmode mode = std::ios_base::in, 
-			int prot = std::ios_base::_Default_open_prot)
+		istream_tag to_ifstream(std::ios::openmode mode = std::ios_base::in)
 		{
-			return istream_tag(
-				this->get_ref().string<_CharTy, std::char_traits<_CharTy>>(),
-				mode, prot);
+			return istream_tag(this->get_ref().string<_CharTy, std::char_traits<_CharTy>>(), mode);
 		}
 
-		instance<istream_tag> to_ifstream_instance(
-			std::ios::openmode mode = std::ios_base::in,
-			int prot = std::ios_base::_Default_open_prot)
+		instance<istream_tag> to_ifstream_instance(std::ios::openmode mode = std::ios_base::in)
 		{
 			return new((alloc_instance_inside_ptr_handler(sizeof(istream_tag)))) istream_tag(
-				this->get_ref().string<_CharTy, std::char_traits<_CharTy>>(),
-				mode, prot);
+				this->get_ref().string<_CharTy, std::char_traits<_CharTy>>(), mode);
 		}
 
 		using ostream_tag = std::basic_ofstream<_CharTy, std::char_traits<_CharTy>>;
 
-		ostream_tag to_ofstream(
-			std::ios::openmode mode = std::ios_base::out| std::ios_base::ate, 
-			int prot = std::ios_base::_Default_open_prot)
+		ostream_tag to_ofstream(std::ios::openmode mode = std::ios_base::out| std::ios_base::ate)
 		{
-			return ostream_tag(
-				this->get_ref().string<_CharTy, std::char_traits<_CharTy>>(),
-				mode, prot);
+			return ostream_tag(this->get_ref().string<_CharTy, std::char_traits<_CharTy>>(), mode);
 		}
 
-		instance<ostream_tag> to_ofstream_instance(
-			std::ios::openmode mode = std::ios_base::out| std::ios_base::ate, 
-			int prot = std::ios_base::_Default_open_prot)
+		instance<ostream_tag> to_ofstream_instance(std::ios::openmode mode = std::ios_base::out| std::ios_base::ate)
 		{
 			return new((alloc_instance_inside_ptr_handler(sizeof(ostream_tag)))) ostream_tag(
-				this->get_ref().string<_CharTy, std::char_traits<_CharTy>>(),
-				mode, prot);
+				this->get_ref().string<_CharTy, std::char_traits<_CharTy>>(), mode);
 		}
 
 		using iostream_tag = std::basic_fstream<_CharTy, std::char_traits<_CharTy>>;
@@ -1926,7 +1914,7 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 		void hoster_stream(instance<_StreamTy> hoster)
 		{
 			my_hoster_type_info = typeid(_StreamTy).hash_code();
-			my_hoster = hoster.reboxing_to<std::ios_base>();
+			my_hoster = hoster. template reboxing_to<std::ios_base>();
 		}
 		void relinquish_hoster()
 		{
@@ -2259,11 +2247,10 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 #pragma region json
 
 	_LFramework_Indicator_Def(json, char, true);
-	namespace
-	{
-		struct json_key_value_pair
+	struct json_key_value_pair
 		{
 			char* key_name;
+			char* source_string;
 			union
 			{
 				char* string_value;
@@ -2273,7 +2260,6 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 			};
 			int stats;
 		};
-	}
 	template<>
 	_LF_C_API(OClass) instance<type_list<json_indicator>>
 		Symbol_Push public instance<json_key_value_pair> Symbol_Endl
@@ -2310,7 +2296,7 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 
 		constexpr static int value_flag		= 1 << 0;
 		constexpr static int string_flag	= 1 << 1;
-		constexpr static int intergral_flag	= 1 << 2;
+		constexpr static int integral_flag	= 1 << 2;
 		constexpr static int floating_flag	= 1 << 3;
 		constexpr static int ptr_flag		= 1 << 4;
 
@@ -2320,20 +2306,30 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 			return bit_detect(this->get_ref().stats, value_flag);
 		}
 		//is string
-		bool is_string() const noexcept;
+		bool is_string() const noexcept
+		{
+			return bit_detect(this->get_ref().stats, string_flag);
+		}
 		//is arithmetic
 		bool is_number() const noexcept;
 		//is integral
-		bool is_integral() const noexcept;
+		bool is_integral() const noexcept
+		{
+			return bit_detect(this->get_ref().stats, integral_flag);
+		}
 		//is floating point
-		bool is_floating() const noexcept;
+		bool is_floating() const noexcept
+		{
+			return bit_detect(this->get_ref().stats, floating_flag);
+		}
 		//is 0x------...
-		bool is_ptr() const noexcept;
-		//is 0x00... or nullptr or null
-		bool is_null_ptr() const noexcept;
+		bool is_ptr() const noexcept
+		{
+			return bit_detect(this->get_ref().stats, ptr_flag);
+		}
 
-		virtual std::string SymbolName() const override;
-		virtual std::string ToString() const override;
+		//virtual std::string SymbolName() const override;
+		//virtual std::string ToString() const override;
 
 		template<typename T = char*>
 		decltype(auto) value()
@@ -2372,7 +2368,7 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 			}
 			else
 			{
-				static_assert(std::is_same_v < T, void >= = false, "unsupport value-type");
+				static_assert(std::is_same_v < T, void > == false, "unsupport value-type");
 				return static_cast<void*>(addressof(this->get_ref().int_value));
 			}
 		}
@@ -2788,22 +2784,6 @@ namespace ld
 #pragma pack(pop)
 
 template<typename _Ty>
-decltype(auto) Unwrapped(_Ty& from)
-{
-	if constexpr (std::is_pointer_v<_Ty>)
-		return *from;
-	else if constexpr (
-		std::is_same_v<ld::instance<void>, _Ty> ||
-		std::is_same_v<ld::instance<nullptr_t>, _Ty>)
-		return void_indicator{};
-	else if constexpr (is_ld_instance_v<_Ty>)
-		return from.get_ref();
-	else if constexpr (platform_indicator::is_mscv)
-		return *std::_Get_unwrapped(std::forward<_Ty>(from));
-	else
-		return from;
-}
-template<typename _Ty>
 decltype(auto) Unwrapped(_Ty&& from)
 {
 	if constexpr (std::is_pointer_v<_Ty>)
@@ -2814,10 +2794,13 @@ decltype(auto) Unwrapped(_Ty&& from)
 		return void_indicator{};
 	else if constexpr (is_ld_instance_v<_Ty>)
 		return from.get_ref();
-	else if constexpr (platform_indicator::is_mscv)
-		return *std::_Get_unwrapped(std::forward<_Ty>(from));
+#ifdef _MSC_VER
 	else
-		return from;
+		return *std::_Get_unwrapped(std::forward<_Ty>(from));
+#else
+	else
+		return *std::forward<_Ty>(from);
+#endif
 }
 template<typename _Ty>
 decltype(auto) Unwrapped(const _Ty& from)
@@ -2830,10 +2813,13 @@ decltype(auto) Unwrapped(const _Ty& from)
 		return void_indicator{};
 	else if constexpr (is_ld_instance_v<_Ty>)
 		return from.get_ref();
-	else if constexpr (platform_indicator::is_mscv)
-		return *std::_Get_unwrapped(std::forward<_Ty>(from));
+#ifdef _MSC_VER
 	else
-		return from;
+		return *std::_Get_unwrapped(std::forward<_Ty>(from));
+#else
+	else
+		return *std::forward<_Ty>(from);
+#endif
 }
 
 template<typename _Ty>
@@ -2847,10 +2833,13 @@ decltype(auto) Unwrapped2Ptr(_Ty& from)
 		return void_indicator{};
 	else if constexpr (is_ld_instance_v<_Ty>)
 		return from.get_ptr();
-	else if constexpr (platform_indicator::is_mscv)
+#ifdef _MSC_VER
+	else
 		return std::_Get_unwrapped(std::forward<_Ty>(from));
+#else
 	else
 		return addressof(from);
+#endif
 }
 
 #endif // !__FILE_LF_RAII

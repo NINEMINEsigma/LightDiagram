@@ -9,7 +9,8 @@
 #include <MutexLock.h>
 
 
-class Condition : noncopyable {
+class Condition : public noncopyable 
+{
  public:
   explicit Condition(MutexLock &_mutex) : mutex(_mutex) {
     pthread_cond_init(&cond, NULL);

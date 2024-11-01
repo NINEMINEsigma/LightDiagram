@@ -8,7 +8,7 @@
 #include <base/Thread.h>
 
 
-_LF_C_API(Class) EventLoopThread final: noncopyable, public any_class
+_LF_C_API(Class) EventLoopThread final: public noncopyable
 {
 public:
   EventLoopThread();

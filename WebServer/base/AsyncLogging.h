@@ -10,7 +10,7 @@
 #include <MutexLock.h>
 #include <Thread.h>
 
-_LF_C_API(Class) AsyncLogging : noncopyable, public any_class
+_LF_C_API(Class) AsyncLogging : public noncopyable
 {
 public:
     AsyncLogging(const std::string basename, int flushInterval = 2);

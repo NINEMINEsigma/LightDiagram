@@ -7,7 +7,7 @@
 #include <EventLoopThread.h>
 #include <base/Logging.h>
 
-_LF_C_API(Class) EventLoopThreadPool final: noncopyable, public any_class
+_LF_C_API(Class) EventLoopThreadPool final: public noncopyable
 {
 public:
 	EventLoopThreadPool(EventLoop * baseLoop, int numThreads);

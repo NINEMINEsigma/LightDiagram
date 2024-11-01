@@ -21,8 +21,10 @@ namespace ld
 
 	_LF_C_API(Class) process_creater
 	{
+#if defined(_WINDOW_)
 		STARTUPINFOA start_info;
 		PROCESS_INFORMATION pinfo;
+#endif // _WINDOW_
 		bool stats;
 		bool is_wait;
 	public:

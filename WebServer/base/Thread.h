@@ -10,7 +10,8 @@
 #include <string>
 #include <CountDownLatch.h>
 
-class Thread : noncopyable {
+class Thread : public noncopyable 
+{
  public:
   typedef std::function<void()> ThreadFunc;
   explicit Thread(const ThreadFunc&, const std::string& name = std::string());

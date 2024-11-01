@@ -4,7 +4,8 @@
 #include <LightDiagram.h>
 #include <stdint.h>
 
-namespace CurrentThread {
+namespace CurrentThread
+{
 // internal
 extern __thread int t_cachedTid;
 extern __thread char t_tidString[32];

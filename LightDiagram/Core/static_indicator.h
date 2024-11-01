@@ -12,7 +12,7 @@ namespace std
 #pragma region Typen (Define)
 
 #define _LFramework_Indicator_Def(name,_tag,_value)													\
-_LF_C_API(OStruct) name##_indicator																	\
+_LF_C_API(OStruct) name##_indicator	: public std::_value##_type										\
 {																									\
 	using tag = _tag;																				\
 	constexpr static bool value = _value;															\
@@ -58,13 +58,8 @@ _LFramework_Indicator_Def(container, void, true);
 _LFramework_Indicator_Def(config, void, true);
 _LFramework_Indicator_Def(bitmap, void, true);
 _LFramework_Indicator_Def(file, void, true);
-template<typename _Ty>
-struct disable_template_indicator
-{
-	using tag = void;
-	constexpr static bool value = true;
-};
-template< typename indicator> constexpr bool is_disable_template_v = std::is_same_v<indicator, disable_template_indicator>;
+_LFramework_Indicator_Def(disable_template, void, false);
+_LFramework_Indicator_Def(enable_template, void, true);
 
 #define __Global_Space
 
@@ -149,19 +144,6 @@ _LF_C_API(OStruct) type_list<First, Args...>
 	template<typename Default, typename T>
 	using decltype_type = typename choose_type<!is_type_list_contains_detect<is_type_list_contains<T>(0)>::value, Default, T>::tag;
 };
-
-template< typename... indicators> constexpr bool is_disable_template_v<type_list<indicators...>> = type_list<indicators...>::decltype_type<bad_indicator, disable_template_indicator>::tag::value;
-
-template<typename T>
-constexpr bool is_type_indicator(typename T::type_indicator*) { return true; }
-template<typename T>
-constexpr bool is_type_indicator(...) { return false; }
-template<typename T>
-constexpr bool is_type_list_end() { return !std::is_same_v<typename T::type_indicator, bad_indicator>; }
-template<typename T>
-constexpr bool is_indicator_typen(typename T::tag* t, bool v) { return true; }
-template<typename T>
-constexpr bool is_indicator_typen(...) { return false; }
 
 template<typename L>
 _LF_C_API(OStruct) type_decltype<L, -2>
@@ -301,7 +283,7 @@ private:
 	tag current_value;
 	class_component_indicatior<Args...> next_container;
 public:
-	template<size_t index> const auto& get_value() const
+	template<size_t index> decltype(auto) get_value() const
 	{
 		if constexpr (index == 0)
 		{
@@ -309,12 +291,9 @@ public:
 		}
 		else
 		{
-			return next_container.get_value<index - 1>();
+			return next_container. template get_value<index - 1>();
 		}
 	}
-	//template<size_t index> using type_on_container =
-	//	std::remove_const_t<
-	//	std::remove_cv_t<decltype(std::declval<class_component_indicatior>().get_value<index>())>>;
 	template<size_t index, typename _T> void set_value(_T && from)
 	{
 		if constexpr (index == 0)
@@ -323,7 +302,18 @@ public:
 		}
 		else
 		{
-			next_container.set_value<index - 1>(std::forward<_T>(from));
+			next_container. template set_value<index - 1>(std::forward<_T>(from));
+		}
+	}
+	template<size_t index, typename _T> void set_value(const _T& from)
+	{
+		if constexpr (index == 0)
+		{
+			this->current_value = from;
+		}
+		else
+		{
+			next_container. template set_value<index - 1>(from);
 		}
 	}
 	class_component_indicatior()
@@ -334,11 +324,12 @@ public:
 		}
 		else if constexpr (std::is_arithmetic_v<tag>)
 		{
-			current_value = 0;
+			current_value = tag{};
 		}
 	}
 	template<typename LvTag,typename... LvArgs>
-	class_component_indicatior(LvTag&& first, LvArgs&&... args) :current_value(first), next_container(args...) {}
+	class_component_indicatior(LvTag&& first, LvArgs&&... args) 
+		:current_value(std::forward<LvTag>(first)), next_container(std::forward<LvArgs>(args)...) {}
 };
 
 #pragma endregion

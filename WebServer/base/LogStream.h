@@ -11,7 +11,8 @@ const int kSmallBuffer = 4000;
 const int kLargeBuffer = 4000 * 1000;
 
 template <int SIZE>
-class FixedBuffer : noncopyable {
+class FixedBuffer : public noncopyable 
+{
  public:
   FixedBuffer() : cur_(data_) {}
 
@@ -41,7 +42,8 @@ class FixedBuffer : noncopyable {
   char* cur_;
 };
 
-class LogStream : noncopyable {
+class LogStream : public noncopyable 
+{
  public:
   typedef FixedBuffer<kSmallBuffer> Buffer;
 

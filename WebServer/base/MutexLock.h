@@ -5,7 +5,8 @@
 #include <cstdio>
 
 
-class MutexLock : noncopyable {
+class MutexLock : public noncopyable 
+{
  public:
   MutexLock() { pthread_mutex_init(&mutex, NULL); }
   ~MutexLock() {
@@ -24,7 +25,8 @@ class MutexLock : noncopyable {
   friend class Condition;
 };
 
-class MutexLockGuard : noncopyable {
+class MutexLockGuard : public noncopyable 
+{
  public:
   explicit MutexLockGuard(MutexLock &_mutex) : mutex(_mutex) { mutex.lock(); }
   ~MutexLockGuard() { mutex.unlock(); }

@@ -4,7 +4,8 @@
 #include <LightDiagram.h>
 #include <string>
 
-class AppendFile : noncopyable {
+class AppendFile :public noncopyable
+{
  public:
   explicit AppendFile(std::string filename);
   ~AppendFile();

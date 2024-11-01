@@ -338,10 +338,10 @@ enum class platform_current
 #define NOMINMAX
 
 #if defined(_LINUX_ON_WINDOW_)
-#include <Winsock2.h>
-#include <ws2tcpip.h>
-#include <Windows.h>
-#include <io.h>
+//#include <Winsock2.h>
+//#include <ws2tcpip.h>
+//#include <Windows.h>
+//#include <io.h>
 struct platform_indicator
 {
 	using tag = void;
@@ -394,6 +394,9 @@ struct platform_indicator
 	constexpr static platform_current mode = platform_current::linux_platform;
 	constexpr static bool is_mscv = false;
 };
+#ifndef abstract
+#define abstract =0
+#endif
 #endif
 
 using type_info = std::type_info;
@@ -994,7 +997,6 @@ Enable warning C4005 to find the forbidden define.
 #endif // _STL_COMPILER_PREPROCESSOR
 #endif // _XKEYCHECK_H
 
-
 #pragma endregion
 
 #pragma region MSVC Features
@@ -1235,13 +1237,22 @@ public:
 
 #pragma endregion
 
-
 //-----------------------------------------------
 //-----------------------------------------------
 //-----------------------------------------------
 //-----------------------------------------------
 
 #endif // !__Non_Portable_Features
+
+#ifdef _MSC_VER
+#define hook_allocator_ptr_return __declspec(allocator)
+#else
+#define hook_allocator_ptr_return
+#endif // _MSC_VER
+
+#ifndef _CONSTEXPR20
+#define _CONSTEXPR20
+#endif // !_CONSTEXPR20
 
 #pragma endregion
 
@@ -1262,14 +1273,37 @@ public:
 #if defined(_USE_DEFINED_CALL_)&&!defined(_USE_DEFINED_CALL_DEFINED)//&&!defined(_MSC_VER)
 
 #define _USE_DEFINED_CALL_DEFINED
+#ifndef __stdcall
 #define __stdcall
+#endif
+
+#ifndef _stdcall
 #define _stdcall
+#endif
+
+#ifndef __cdecl
 #define __cdecl
+#endif
+
+#ifndef _cdecl
 #define _cdecl
+#endif
+
+#ifndef __fastcall
 #define __fastcall
+#endif
+
+#ifndef _fastcall
 #define _fastcall
+#endif
+
+#ifndef __thiscall
 #define __thiscall
+#endif
+
+#ifndef abstract
 #define abstract =0
+#endif
 
 #endif // _USE_DEFINED_CALL_
 
@@ -1424,6 +1458,8 @@ _LF_C_API(TStruct) choose_type < false, _True, _False > : public std::false_type
 	using tag = _False;
 };
 
+#pragma endregion
+
 namespace ld
 {
 	template<typename Pr, typename T>
@@ -1459,10 +1495,11 @@ namespace ld
 		return Max(Max(std::forward<T>(first), std::forward<T>(second)), std::forward<Args>(args)...);
 	}
 	template<typename T, typename ...Args>
-	decltype(auto) Min(const T& first, const T& second, const Args&... args)
+	decltype(auto) Min(T&& first, T&& second, Args&&... args)
 	{
 		return Min(Min(std::forward<T>(first), std::forward<T>(second)), std::forward<Args>(args)...);
 	}
+
 	template<typename T>
 	decltype(auto) Max(const T& first, const T& second)
 	{
@@ -1476,12 +1513,12 @@ namespace ld
 	template<typename T, typename ...Args>
 	decltype(auto) Max(const T& first, const T& second, const Args&... args)
 	{
-		return Max(Max(std::forward<T>(first), std::forward<T>(second)), std::forward<Args>(args)...);
+		return Max(Max(first, second), args...);
 	}
 	template<typename T, typename ...Args>
 	decltype(auto) Min(const T& first, const T& second, const Args&... args)
 	{
-		return Min(Min(std::forward<T>(first), std::forward<T>(second)), std::forward<Args>(args)...);
+		return Min(Min(first, second), args...);
 	}
 	namespace constexpr_kit
 	{
@@ -1498,12 +1535,12 @@ namespace ld
 		template<typename T, typename ...Args>
 		constexpr decltype(auto) Max(const T& first, const T& second, const Args&... args)
 		{
-			return constexpr_kit::Max(constexpr_kit::Max(std::forward<T>(first), std::forward<T>(second)), std::forward<Args>(args)...);
+			return constexpr_kit::Max(constexpr_kit::Max(first, second), args...);
 		}
 		template<typename T, typename ...Args>
 		constexpr decltype(auto) Min(const T& first, const T& second, const Args&... args)
 		{
-			return constexpr_kit::Min(constexpr_kit::Min(std::forward<T>(first), std::forward<T>(second)), std::forward<Args>(args)...);
+			return constexpr_kit::Min(constexpr_kit::Min(first, second), args...);
 		}
 	}
 }
@@ -1544,7 +1581,6 @@ decltype(auto) next_matrix(_Mapper& mapper, _Is& s)
 	return static_cast<bool>(s);
 }
 
-#pragma endregion
 
 #pragma region TempRef
 
@@ -1833,6 +1869,7 @@ _Str trim(const _Str& str, _CharFirst ch)
 
 #pragma region Kit
 
+#ifdef _WINDOW_
 
 #pragma pack (1)
 struct tagBITMAPFILEHEADER_OnLF 
@@ -1858,6 +1895,9 @@ typedef _LF_C_API(OStruct) tagBITMAPFILE
 	ColorBuffer BitMapBuffer;
 } BITMAP_FILE;
 #pragma pack()
+
+#endif // _WINDOW_
+
 template<typename _T>
 _T Clamp01(const _T& t)
 {
@@ -1945,13 +1985,13 @@ constexpr bool is_clang_env()
 _LF_C_API(OClass) alloc_default_traits
 {
 public:
-	__declspec(allocator) static _CONSTEXPR20 void* _Allocate(const size_t _Bytes)
+	hook_allocator_ptr_return static _CONSTEXPR20 void* _Allocate(const size_t _Bytes)
 	{
 		return ::operator new(_Bytes);
 	}
 
 #ifdef __cpp_aligned_new
-	__declspec(allocator) static _CONSTEXPR20 void* _Allocate_aligned(const size_t _Bytes, const size_t _Align)
+	hook_allocator_ptr_return static _CONSTEXPR20 void* _Allocate_aligned(const size_t _Bytes, const size_t _Align)
 	{
 		if (is_constant_env() && is_clang_env())
 		{

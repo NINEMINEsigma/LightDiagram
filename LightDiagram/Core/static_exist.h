@@ -34,7 +34,7 @@ template< typename T, typename Ret, typename... Args>																		\
 _LF_C_API(OStruct) __exist_function_##name<																					\
 	T,																														\
 	Ret(Args...),																											\
-	typename std::enable_if<std::is_same_v<decltype(std::declval<T>().##name##(std::declval<Args>()...)), Ret>>::type>		\
+	typename std::enable_if<std::is_same_v<decltype(std::declval<T>().name(std::declval<Args>()...)), Ret>>::type>		\
 	: std::true_type { };																									\
 template< typename T, typename Ret > _LF_C_API(TDLL) constexpr bool __exist_function_##name##_v = __exist_function_##name<T,Ret>();
 #define _LFramework_Kit_API_Exist_Func(name)	__exist_function_##name##_v

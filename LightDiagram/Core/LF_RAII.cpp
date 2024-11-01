@@ -39,7 +39,7 @@ namespace ld
 		};
 	function<void(void*)> free_instance_inside_ptr_handler = [](void* ptr)->void
 		{
-			delete ptr;
+			::free(ptr);
 		};
 
 	namespace
