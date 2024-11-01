@@ -16,6 +16,8 @@
 //	On this page, each <set>function returns the old value before the change if it returns
 //*
 
+if_func_exist_def(get_ref);
+
 namespace ld
 {
 #ifndef instance_size_tag
@@ -172,6 +174,10 @@ namespace ld
 	};
 	// Base referance counter
 	using instance_base = instance<void>;
+	namespace instance_tag
+	{
+		using base_tag = void;
+	}
 
 	// Referance Counter(has function <get_ptr> and <get_ref>)
 	template<> _LF_C_API(Class) instance<nullptr_t> Symbol_Push public instance<void> Symbol_Endl
@@ -217,6 +223,10 @@ namespace ld
 	};
 	// Base referance counter(has some function)
 	using instance_counter = instance<nullptr_t>;
+	namespace instance_tag
+	{
+		using count_tag = nullptr_t;
+	}
 
 	extern std::function<void* (size_t)> alloc_instance_inside_ptr_handler;
 	extern std::function<void(void*)> free_instance_inside_ptr_handler;
@@ -224,8 +234,6 @@ namespace ld
 #pragma endregion
 
 #pragma region Memory X kit
-
-	if_func_exist_def(get_ref);
 
 	//main instance template type to be a shared ptr
 	template<typename Tag> _LF_C_API(TClass) instance : public instance<void>
@@ -671,8 +679,16 @@ namespace ld
 	};
 	// pseudo class, all argument type add pointer to ptr-type
 	template<typename... Args> using instance_pseudo_class = instance<type_list<std::add_pointer_t<Args>...>>;
+	namespace instance_tag
+	{
+		template<typename... Args> using pseudo_class_tag = type_list<std::add_pointer_t<Args>...>;
+	}
 	// long arguments package, and need all value is ptr
 	template<typename... Args> using instance_args_package = instance<type_list<Args...>>;
+	namespace instance_tag
+	{
+		template<typename... Args> using args_package_tag = type_list<Args...>;
+	}
 
 	// limited-ref-count shared ptr
 	template<size_t Max> _LF_C_API(TClass) instance<ConstexprCount<Max>> Symbol_Push public instance<nullptr_t> Symbol_Endl
@@ -717,6 +733,10 @@ namespace ld
 	};
 	// limited-ref-count shared ptr, throw bad when over count
 	template<size_t Max> using instance_limit = instance<ConstexprCount<Max>>;
+	namespace instance_tag
+	{
+		template<size_t Max> using limit_tag = ConstexprCount<Max>;
+	}
 
 	// memeory alloc buffer, for temp or long time
 	// bug warning, the delete-constructor is not triggered on this type's delete-constructor
@@ -904,7 +924,130 @@ namespace ld
 			return typeid(*this).name();
 		}
 	};
+	template<typename... Functions, typename... Fields> _LF_C_API(TClass)
+		instance<type_list<class_indicator, type_list<void>, type_list<Functions...>, type_list<Fields...>>> Symbol_Push public any_class Symbol_Endl
+	{
+	public:
+		using tag = void_indicator;
+		using base_tag = type_list<type_list<type_list<void>, type_list<Functions...>, type_list<Fields...>>>;
+		using func_list = type_list<Functions...>;
+		using field_list = type_list<Fields...>;
+	public:
+		using func_container = class_component_indicatior<std::function<typename extension_func_traits<type_list<instance*, Functions>>::tag>...>;
+		using field_container = class_component_indicatior<Fields...>;
+	public:
+		func_container _m_funcs;
+		field_container _m_fields;
+		instance(std::function<typename extension_func_traits<type_list<instance*, Functions>>::tag>... _funcs_args) : _m_funcs(_funcs_args...), _m_fields() {}
+		instance(instance&) = delete;
+		instance(instance&&) = delete;
+		instance operator=(instance&) = delete;
+		instance operator=(instance&&) = delete;
+		virtual ~instance() {}
+
+		template<size_t index, typename... Args>// decltype(std::declval<instance>()._m_funcs.get_value<index>()(nullptr)) 
+		auto&& invoke(Args&&... args)
+		{
+			if constexpr (std::is_same_v<void, decltype(this->_m_funcs. template get_value<index>().operator()(this, args...))>)
+				this->_m_funcs. template get_value<index>().operator()(this, args...);
+			else
+				return this->_m_funcs. template get_value<index>().operator()(this, args...);
+		}
+		template<size_t index>
+		auto& get_value()
+		{
+			return this->_m_fields. template get_value<index>();
+		}
+		template<size_t index,typename _T>
+		void set_value(_T&& right)
+		{
+			 this->_m_fields. template set_value<index>(std::forward<_T>(right));
+		}
+
+		virtual std::string SymbolName() const override
+		{
+			return typeid(*this).name();
+		}
+	};
+	template<typename... Modules, typename... Fields> _LF_C_API(TClass)
+		instance<type_list<class_indicator, type_list<Modules...>, type_list<void>, type_list<Fields...>>> Symbol_Push public any_class Symbol_Endl
+	{
+	public:
+		using tag = void_indicator;
+		using base_tag = type_list<type_list<type_list<Modules...>, type_list<void>, type_list<Fields...>>>;
+		using module_list = type_list<Modules...>;
+		using field_list = type_list<Fields...>;
+	public:
+		using field_container = class_component_indicatior<Fields...>;
+	public:
+		field_container _m_fields;
+		instance() : _m_fields() {}
+		instance(instance&) = delete;
+		instance(instance&&) = delete;
+		instance operator=(instance&) = delete;
+		instance operator=(instance&&) = delete;
+		virtual ~instance() {}
+
+		template<size_t index>
+		auto& get_value()
+		{
+			return this->_m_fields. template get_value<index>();
+		}
+		template<size_t index,typename _T>
+		void set_value(_T&& right)
+		{
+			 this->_m_fields. template set_value<index>(std::forward<_T>(right));
+		}
+
+		virtual std::string SymbolName() const override
+		{
+			return typeid(*this).name();
+		}
+	};
+	template<typename... Fields> _LF_C_API(TClass)
+		instance<type_list<class_indicator, type_list<void>, type_list<void>, type_list<Fields...>>> Symbol_Push public instance<class_component_indicatior<Fields...>> Symbol_Endl
+	{
+	public:
+		using tag = void_indicator;
+		using base_tag = type_list<type_list<type_list<void>, type_list<void>, type_list<Fields...>>>;
+		using field_list = type_list<Fields...>;
+	public:
+		using field_container = class_component_indicatior<Fields...>;
+	private:
+		using base_instance = instance<class_component_indicatior<Fields...>>;
+	public:
+		template<typename... Args>
+		instance(Args&&... args) :base_instance(std::forward<Args>(args)...) {}
+		instance() :base_instance(new typename base_instance::tag()) {}
+		template<typename Arg>
+		instance& operator=(Arg&& from) noexcept
+		{
+			base_instance::operator=(std::forward<Arg>(from));
+			return *this;
+		}
+		virtual ~instance() {}
+
+		template<size_t index>
+		auto& get_value()
+		{
+			return this->get_ref(). template get_value<index>();
+		}
+		template<size_t index,typename _T>
+		void set_value(_T&& right)
+		{
+			 this->get_ref(). template set_value<index>(std::forward<_T>(right));
+		}
+
+		virtual std::string SymbolName() const override
+		{
+			return typeid(*this).name();
+		}
+	};
 	template<typename ModulesList, typename FunctionsList, typename FieldsList > using meta_instance = instance<type_list<class_indicator, ModulesList, FunctionsList, FieldsList>>;
+	namespace instance_tag
+	{
+		template<typename ModulesList, typename FunctionsList, typename FieldsList> using meta_tag = type_list<class_indicator, ModulesList, FunctionsList, FieldsList>;
+	}
 
 #pragma endregion
 
@@ -953,6 +1096,11 @@ namespace ld
 	};
 	template<typename VoidContainerType> using void_container_instance = instance<type_list<container_indicator, void_indicator, VoidContainerType>>;
 	template<typename AccTy, typename AccContainerType> using accu_container_instance = instance<type_list<container_indicator, AccTy, AccContainerType>>;
+	namespace instance_tag
+	{
+		template<typename VoidContainerType> using void_container_tag = type_list<container_indicator, void_indicator, VoidContainerType>;
+		template<typename AccTy, typename AccContainerType> using accu_container_tag = type_list<container_indicator, AccTy, AccContainerType>;
+	}
 
 #pragma endregion
 
@@ -1384,6 +1532,10 @@ namespace ld
 		}
 	};
 	using config_instance = instance<type_list<io_tag_indicator, config_indicator, char>>;
+	namespace instance_tag
+	{
+		using config_tag = type_list<io_tag_indicator, config_indicator, char>;
+	}
 
 #pragma endregion
 
@@ -1734,6 +1886,10 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 
 #endif
 	using bitmap_instance = instance<type_list<io_tag_indicator, bitmap_indicator>>;
+	namespace instance_tag
+	{
+		using bitmap_tag = type_list<io_tag_indicator, bitmap_indicator>;
+	}
 
 #pragma endregion
 
@@ -1742,7 +1898,7 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 	//file system
 	template<typename _CharTy>
 	_LF_C_API(Class) instance<type_list<io_tag_indicator, file_indicator, _CharTy>>
-		Symbol_Push public instance<std::filesystem::path>
+		Symbol_Push public instance<std::filesystem::path> Symbol_Endl
 	{
 	public:
 		using tag = std::filesystem::path;
@@ -2217,12 +2373,12 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 	};
 	using tool_file_w = instance<type_list<io_tag_indicator, file_indicator, wchar_t>>;
 	using tool_file = instance<type_list<io_tag_indicator, file_indicator, char>>;
-
-	template<typename _Ty>
-	auto to_string(const tool_file& file)
+	namespace instance_tag
 	{
-		return file.get_ref().string<_Ty>();
+		using wfile_tag = type_list<io_tag_indicator, file_indicator, wchar_t>;
+		using file_tag = type_list<io_tag_indicator, file_indicator, char>;
 	}
+
 
 #pragma endregion
 
@@ -2241,37 +2397,42 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 	private:
 		std::new_handler handler;
 	};
+	using new_handler_hoster = instance<new_indicator>;
+	namespace instance_tag
+	{
+		using new_handler_tag = new_indicator;
+	}
 
 #pragma endregion
 
 #pragma region json
 
-	_LFramework_Indicator_Def(json, char, true);
-	struct json_key_value_pair
+	namespace internal_json
+	{
+		_LFramework_Indicator_Def(json, char, true);
+		using bit32_t = int32_t;
+		using stats_flag_t = int;
+		struct json_key_value_pair
 		{
-			char* key_name;
-			char* source_string;
+			std::string key_name;
+			std::string string_value;
 			union
 			{
-				char* string_value;
-				long long int_value;
+				bit32_t int_value;
 				long double float_value;
 				intptr_t ptr_value;
 			};
-			int stats;
+			stats_flag_t stats;
 		};
+	}
 	template<>
-	_LF_C_API(OClass) instance<type_list<json_indicator>>
-		Symbol_Push public instance<json_key_value_pair> Symbol_Endl
+	_LF_C_API(OClass) instance<type_list<internal_json::json_indicator>>
+		Symbol_Push protected instance<internal_json::json_key_value_pair> Symbol_Endl
 	{
 	public:
-		using tag = json_key_value_pair;
+		using tag = internal_json::json_key_value_pair;
 	private:
-		using base_instance = instance<json_key_value_pair>;
-		instance(const std::string& key) :base_instance(new tag())
-		{
-			this->get_ref().key_name = new char[key.length()];
-		}
+		using base_instance = instance<tag>;
 	public:
 		instance(instance& from) :base_instance(from) {}
 		instance& operator=(instance& from)
@@ -2285,8 +2446,10 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 			base_instance::operator=(std::move(from));
 			return *this;
 		}
-		instance(const std::string& key, const std::string& value); instance()
+		instance(const std::string& key, const std::string& value): base_instance(new tag())
 		{
+			this->get_ref().key_name = key;
+
 		}
 		virtual ~instance()
 		{
@@ -2326,6 +2489,16 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 		bool is_ptr() const noexcept
 		{
 			return bit_detect(this->get_ref().stats, ptr_flag);
+		}
+
+		template<typename _Val>
+		void write(_Val&& value)
+		{
+			if constexpr (std::is_arithmetic_v<_Val>)
+			{
+
+				this->get_ref().int_value = std::forward<_Val>(value);
+			}
 		}
 
 		//virtual std::string SymbolName() const override;
@@ -2372,15 +2545,27 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 				return static_cast<void*>(addressof(this->get_ref().int_value));
 			}
 		}
-		const char* key() const noexcept
+		decltype(auto) key() const noexcept
 		{
 			return this->get_ref().key_name;
 		}
 	};
-	using json_instance = instance<type_list<json_indicator>>;
+	using json_instance = instance<type_list<internal_json::json_indicator>>;
+	namespace instance_tag
+	{
+		using json_tag = type_list<json_indicator>;
+	}
 
 #pragma endregion
 
+}
+
+namespace std
+{
+	decltype(auto) to_string(const ld::tool_file& file)
+	{
+		return file.get_ref().string();
+	}
 }
 
 #pragma region is_ld_instance

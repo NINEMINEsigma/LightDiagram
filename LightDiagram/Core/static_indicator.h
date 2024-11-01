@@ -283,7 +283,7 @@ private:
 	tag current_value;
 	class_component_indicatior<Args...> next_container;
 public:
-	template<size_t index> decltype(auto) get_value() const
+	template<size_t index> decltype(auto) get_value()
 	{
 		if constexpr (index == 0)
 		{
@@ -292,6 +292,17 @@ public:
 		else
 		{
 			return next_container. template get_value<index - 1>();
+		}
+	}
+	template<size_t index> decltype(auto) get_c_value() const
+	{
+		if constexpr (index == 0)
+		{
+			return this->current_value;
+		}
+		else
+		{
+			return next_container. template get_c_value<index - 1>();
 		}
 	}
 	template<size_t index, typename _T> void set_value(_T && from)
@@ -330,6 +341,18 @@ public:
 	template<typename LvTag,typename... LvArgs>
 	class_component_indicatior(LvTag&& first, LvArgs&&... args) 
 		:current_value(std::forward<LvTag>(first)), next_container(std::forward<LvArgs>(args)...) {}
+	operator tag& ()
+	{
+		return current_value;
+	}
+	operator const tag& () const
+	{
+		return current_value;
+	}
+	constexpr tag* operator->()
+	{
+		return &current_value;
+	}
 };
 
 #pragma endregion
