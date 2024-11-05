@@ -1,0 +1,30 @@
+
+#define _LFramework_Config_API_Func				_LFramework_Config_API_DLL _LFramework_Config_API_Call
+#define _LFramework_Config_API_Func_VarParas	_LFramework_Config_API_DLL __cdecl
+#define _LFramework_Config_API_Func_Fast		_LFramework_Config_API_DLL __fastcall
+
+#define FVP										Func_VarParas
+#define FFs										Func_Fast
+
+#define __LFramework_T(name)					template<typename name>
+#define _LFramework_Config_API_Template(name)	__LFramework_T(_T) name
+
+#define _LF_(name)								_LFramework_##name
+#define _LF_C_(name)							_LF_( Config_##name )
+#define _LF_C_API(name)							_LF_C_( API_##name )
+#define _LF_C_API_T_(name)						_LFramework_Config_API_Template(name)
+#define _LF_API(name)							_LF_( API_##name )
+
+#define _LF_T(name)								__LFramework_T(name)
+#define _LF__T(name)							__LFramework_T( _##name )
+
+#define _LF_T_C _LF_C_API_T_(_LF_C_API(Class))
+
+#define _LFramework_Inherited public virtual
+
+#define _LFramework_Interface(name) _LFramework_Config_API_Class name {public : virtual ~##name (){}}
+#define _LFramework_Inherited_Interface(name) _LFramework_Inherited name
+
+#define _LF_Inherited(name) _LFramework_Inherited_Interface(name)
+
+_LFramework_Config_API_Struct ___utype{ size_t ignore; __LFramework_T(Type) constexpr operator Type& () const noexcept; };

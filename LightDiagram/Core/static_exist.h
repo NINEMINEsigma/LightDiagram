@@ -80,7 +80,6 @@ template< typename T, typename MType> _LF_C_API(TDLL) constexpr bool __exist_pro
 
 #pragma endregion
 
-
 if_type_exist_def(pointer_indicator);
 if_type_exist_def(owner_indicator);
 if_type_exist_def(counter_indicator);

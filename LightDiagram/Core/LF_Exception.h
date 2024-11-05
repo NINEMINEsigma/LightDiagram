@@ -8,14 +8,14 @@
 namespace ld
 {
     // Enum class for console text color
-    enum _LF_C_API(Class) ConsoleColor
+    enum class ConsoleColor
     {
         Green, Red, Blue, White, Black, Yellow, Purple, Gray, Cyan, None,
             GreenIntensity, RedIntensity, BlueIntensity, WhiteIntensity, BlackIntensity, YellowIntensity, PurpleIntensity, GrayIntensity, CyanIntensity
     };
 
     // Enum class for console background color
-    enum _LF_C_API(Class) ConsoleBackgroundColor
+    enum class ConsoleBackgroundColor
     {
         Green, Red, Blue, White, Black, Yellow, Purple, Gray, Cyan, None
     };

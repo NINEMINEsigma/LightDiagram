@@ -2,6 +2,10 @@
 
 #define __FILE_STATIC_INDICATOR
 
+#include<Core/LF_Config.h>
+#ifndef _LF_C_API
+static_assert(false, "_LF_C_API is lost");
+#endif
 #include<Core/static_exist.h>
 
 namespace std

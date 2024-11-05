@@ -380,9 +380,10 @@ struct platform_indicator
 #include <arpa/inet.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/type.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
-#include <sys/time.h>
 #include <netinet/tcp.h>
 #include <dirent.h>
 #define _USE_DEFINED_CALL_
@@ -2020,5 +2021,8 @@ public:
 
 #pragma endregion
 
+#ifndef _LF_C_API
+static_assert(false, "_LF_C_API is lost");
+#endif
 
 #endif // !__FILE_LF_CONFIG
