@@ -1,3 +1,4 @@
+#if 0
 #ifndef __FILE_PROCESS
 #define __FILE_PROCESS
 
@@ -24,3 +25,4 @@ namespace ld
 }
 
 #endif // !__FILE_PROCESS
+#endif

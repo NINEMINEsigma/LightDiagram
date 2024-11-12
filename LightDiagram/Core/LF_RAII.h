@@ -2412,10 +2412,7 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 
 namespace std
 {
-	decltype(auto) to_string(const ld::tool_file& file)
-	{
-		return file.get_ref().string();
-	}
+	extern std::string to_string(const ld::tool_file& file);
 }
 
 #pragma region is_ld_instance

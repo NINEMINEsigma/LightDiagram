@@ -1,8 +1,8 @@
 {
-    "version": 3,
+    "version": 4,
   "configurePresets": [
     {
-      "name": "windows-base",
+      "name": "v3-windows-base",
       "hidden": true,
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
@@ -18,9 +18,9 @@
       }
     },
     {
-      "name": "x64-debug",
+      "name": "v3-x64-debug",
       "displayName": "Windows x64 Debug",
-      "inherits": "windows-base",
+      "inherits": "v3-windows-base",
       "architecture": {
         "value": "x64",
         "strategy": "external"
@@ -31,18 +31,18 @@
       }
     },
     {
-      "name": "x64-release",
+      "name": "v3-x64-release",
       "displayName": "Windows x64 Release",
-      "inherits": "x64-debug",
+      "inherits": "v3-x64-debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "_WINDOWS": "x64"
       }
     },
     {
-      "name": "x86-debug",
+      "name": "v3-x86-debug",
       "displayName": "Windows x86 Debug",
-      "inherits": "windows-base",
+      "inherits": "v3-windows-base",
       "architecture": {
         "value": "x86",
         "strategy": "external"
@@ -53,9 +53,9 @@
       }
     },
     {
-      "name": "x86-release",
+      "name": "v3-x86-release",
       "displayName": "Windows x86 Release",
-      "inherits": "x86-debug",
+      "inherits": "v3-x86-debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "_WINDOWS": "x86"
@@ -63,7 +63,7 @@
     },
 
     {
-      "name": "linux-base",
+      "name": "v3-linux-base",
       "hidden": true,
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
@@ -80,9 +80,9 @@
       }
     },
     {
-      "name": "linux-x64-debug",
+      "name": "v3-linux-x64-debug",
       "displayName": "Linux x64 Debug",
-      "inherits": "linux-base",
+      "inherits": "v3-linux-base",
       "architecture": {
         "value": "x64",
         "strategy": "external"
@@ -93,18 +93,18 @@
       }
     },
     {
-      "name": "linux-x64-release",
+      "name": "v3-linux-x64-release",
       "displayName": "Linux x64 Release",
-      "inherits": "linux-x64-debug",
+      "inherits": "v3-linux-x64-debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "_LINUX": "x64"
       }
     },
     {
-      "name": "linux-x86-debug",
+      "name": "v3-linux-x86-debug",
       "displayName": "Linux x86 Debug",
-      "inherits": "linux-base",
+      "inherits": "v3-linux-base",
       "architecture": {
         "value": "x86",
         "strategy": "external"
@@ -115,9 +115,9 @@
       }
     },
     {
-      "name": "linux-x86-release",
+      "name": "v3-linux-x86-release",
       "displayName": "Linux x86 Release",
-      "inherits": "linux-x86-debug",
+      "inherits": "v3-linux-x86-debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "_LINUX": "x86"
@@ -125,9 +125,9 @@
     },
 
     {
-      "name": "linux-on-windows-x64-debug",
+      "name": "v3-linux-on-windows-x64-debug",
       "displayName": "Linux on windows x64 Debug",
-      "inherits": "windows-base",
+      "inherits": "v3-windows-base",
       "architecture": {
         "value": "x64",
         "strategy": "external"
@@ -138,18 +138,18 @@
       }
     },
     {
-      "name": "linux-on-windows-x64-release",
+      "name": "v3-linux-on-windows-x64-release",
       "displayName": "Linux on windows x64 Release",
-      "inherits": "linux-on-windows-x64-debug",
+      "inherits": "v3-linux-on-windows-x64-debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "_LINUX_ON_WINDOWS": "x64"
       }
     },
     {
-      "name": "linux-on-windows-x86-debug",
+      "name": "v3-linux-on-windows-x86-debug",
       "displayName": "Linux on windows x86 Debug",
-      "inherits": "windows-base",
+      "inherits": "v3-windows-base",
       "architecture": {
         "value": "x86",
         "strategy": "external"
@@ -160,13 +160,182 @@
       }
     },
     {
-      "name": "linux-on-windows-x86-release",
+      "name": "v3-linux-on-windows-x86-release",
       "displayName": "Linux on windows x86 Release",
-      "inherits": "linux-on-windows-x86-debug",
+      "inherits": "v3-linux-on-windows-x86-debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "_LINUX_ON_WINDOWS": "x86"
       }
+    },
+
+
+    {
+      "name": "v4-base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-${presetName}",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_INSTALL_RPATH": "$ORIGIN;$ORIGIN/.."
+      }
+    },
+    {
+      "name": "v4-sycl-base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-${presetName}",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_CXX_COMPILER": "icx",
+        "CMAKE_C_COMPILER": "cl",
+        "GGML_SYCL": "ON",
+        "CMAKE_INSTALL_RPATH": "$ORIGIN;$ORIGIN/.."
+      }
+    },
+    {
+      "name": "v4-debug",
+      "hidden": true,
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+    },
+    {
+      "name": "v4-release",
+      "hidden": true,
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+    },
+    {
+      "name": "v4-reldbg",
+      "hidden": true,
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo" }
+    },
+    {
+      "name": "v4-static",
+      "hidden": true,
+      "cacheVariables": { "GGML_STATIC": "ON" }
+    },
+    {
+      "name": "v4-sycl_f16",
+      "hidden": true,
+      "cacheVariables": { "GGML_SYCL_F16": "ON" }
+    },
+
+    {
+      "name": "v4-arm64-windows-msvc",
+      "hidden": true,
+      "architecture": {
+        "value": "arm64",
+        "strategy": "external"
+      },
+      "toolset": {
+        "value": "host=x64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/cmake/arm64-windows-msvc.cmake",
+        "_WINDOWS": "x64"
+      }
+    },
+
+    {
+      "name": "v4-arm64-windows-llvm",
+      "hidden": true,
+      "architecture": {
+        "value": "arm64",
+        "strategy": "external"
+      },
+      "toolset": {
+        "value": "host=x64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/cmake/arm64-windows-llvm.cmake",
+        "_WINDOWS": "x64"
+      }
+    },
+
+    {
+      "name": "v4-arm64-apple-clang",
+      "hidden": true,
+      "architecture": {
+        "value": "arm64",
+        "strategy": "external"
+      },
+      "toolset": {
+        "value": "host=x64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/cmake/arm64-apple-clang.cmake"
+      }
+    },
+
+    {
+      "name": "v4-arm64-windows-llvm-debug",
+      "inherits": [ "v4-base", "v4-arm64-windows-llvm", "v4-debug" ]
+    },
+    {
+      "name": "v4-arm64-windows-llvm-release",
+      "inherits": [ "v4-base", "v4-arm64-windows-llvm", "v4-reldbg" ]
+    },
+    {
+      "name": "v4-arm64-windows-llvm+static-release",
+      "inherits": [ "v4-base", "v4-arm64-windows-llvm", "v4-reldbg", "v4-static" ]
+    },
+
+    {
+      "name": "v4-arm64-apple-clang-debug",
+      "inherits": [ "v4-base", "v4-arm64-apple-clang", "v4-debug" ]
+    },
+    {
+      "name": "v4-arm64-apple-clang-release",
+      "inherits": [ "v4-base", "v4-arm64-apple-clang", "v4-reldbg" ]
+    },
+    {
+      "name": "v4-arm64-apple-clang+static-release",
+      "inherits": [ "v4-base", "v4-arm64-apple-clang", "v4-reldbg", "v4-static" ]
+    },
+
+    {
+      "name": "v4-arm64-windows-msvc-debug",
+      "inherits": [ "v4-base", "v4-arm64-windows-msvc", "v4-debug" ]
+    },
+    {
+      "name": "v4-arm64-windows-msvc-release",
+      "inherits": [ "v4-base", "v4-arm64-windows-msvc", "v4-reldbg" ]
+    },
+    {
+      "name": "v4-arm64-windows-msvc+static-release",
+      "inherits": [ "v4-base", "v4-arm64-windows-msvc", "v4-reldbg", "v4-static" ]
+    },
+
+    {
+      "name": "v4-x64-windows-msvc-debug",
+      "inherits": [ "v4-base", "v4-debug" ]
+    },
+    {
+      "name": "v4-x64-windows-msvc-release",
+      "inherits": [ "v4-base", "v4-reldbg" ]
+    },
+    {
+      "name": "v4-x64-windows-msvc+static-release",
+      "inherits": [ "v4-base", "v4-reldbg", "v4-static" ]
+    },
+
+    {
+      "name": "v4-x64-windows-sycl-debug",
+      "inherits": [ "v4-sycl-base", "v4-debug" ]
+    },
+    {
+      "name": "v4-x64-windows-sycl-debug-f16",
+      "inherits": [ "v4-sycl-base", "v4-debug", "v4-sycl_f16" ]
+    },
+    {
+      "name": "v4-x64-windows-sycl-release",
+      "inherits": [ "v4-sycl-base", "v4-release" ]
+    },
+    {
+      "name": "v4-x64-windows-sycl-release-f16",
+      "inherits": [ "v4-sycl-base", "v4-release", "v4-sycl_f16" ]
     }
   ]
 }

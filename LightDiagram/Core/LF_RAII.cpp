@@ -237,3 +237,10 @@ namespace ld
 
 }
 
+namespace std
+{
+	std::string to_string(const ld::tool_file& file)
+	{
+		return file.get_ref().string();
+	}
+}

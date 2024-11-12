@@ -1,3 +1,4 @@
+#if 0
 #include<Core/Process.h>
 
 using namespace std;
@@ -78,3 +79,4 @@ namespace ld
 	}
 }
 
+#endif
