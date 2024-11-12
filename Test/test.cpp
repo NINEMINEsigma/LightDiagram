@@ -5,7 +5,7 @@
 #include<LightDiagram.h>
 
 using namespace ld;
-using namespace ld::resources;
+//using namespace ld::resources;
 using namespace std;
 
 sync_with_stdio_false(__auto__);

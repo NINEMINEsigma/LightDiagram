@@ -41,9 +41,8 @@
 //*
 
 #include<Core/LF_Config.h>
-#ifndef _LF_C_API
-static_assert(false,"_LF_C_API is lost")
-#endif
+#include<Core/static_indicator.h>
+#include<Core/static_traits.h>
 #include<Core/some_features.h>
 #if defined(_LINUX_ON_WINDOW_)
 #include <Core/uni_utility.h>

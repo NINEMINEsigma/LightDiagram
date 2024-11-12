@@ -22,25 +22,25 @@ namespace ld
 
 #if defined(_WINDOW_)||defined(_LINUX_ON_WINDOW_)
     // Get the Windows color code for a given ConsoleColor
-    WORD GetColorCode(ConsoleColor color);
+    extern WORD GetColorCode(ConsoleColor color);
 #else
     // Get the ANSI escape code for a given ConsoleColor
-    std::wstring GetColorCode(ConsoleColor color);
+    extern std::wstring GetColorCode(ConsoleColor color);
 #endif
 
 #if defined(_WINDOW_)||defined(_LINUX_ON_WINDOW_)
     // Get the Windows color code for a given ConsoleBackgroundColor
-    WORD GetBackgroundColorCode(ConsoleBackgroundColor color);
+    extern WORD GetBackgroundColorCode(ConsoleBackgroundColor color);
 #else
     // Get the ANSI escape code for a given ConsoleBackgroundColor
-    std::wstring GetBackgroundColorCode(ConsoleBackgroundColor color);
+    extern std::wstring GetBackgroundColorCode(ConsoleBackgroundColor color);
 #endif
 
 
-    std::ostream& operator<<    (std::ostream& os, const ConsoleColor& data);
-    std::ostream& operator<<    (std::ostream& os, const ConsoleBackgroundColor& data);
-    std::wostream& operator<<   (std::wostream& os, const ConsoleColor& data);
-    std::wostream& operator<<   (std::wostream& os, const ConsoleBackgroundColor& data);
+    extern std::ostream& operator<<    (std::ostream& os, const ConsoleColor& data);
+    extern std::ostream& operator<<    (std::ostream& os, const ConsoleBackgroundColor& data);
+    extern std::wostream& operator<<   (std::wostream& os, const ConsoleColor& data);
+    extern std::wostream& operator<<   (std::wostream& os, const ConsoleBackgroundColor& data);
 
     using string = std::string;
 

@@ -1,6 +1,6 @@
 ﻿message(STATUS "LLMToolKit aux source -> ${Platform_Name}")
 message(STATUS "LLMToolKit src source -> ${PROJECT_SOURCE_DIR}")
-include_directories(".")
+include_directories(.)
 
 #Spack
 set(Spack_Part_Path "${Platform_Name}/Spark/3.5/v1.1")

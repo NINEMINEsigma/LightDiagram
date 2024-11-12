@@ -1372,7 +1372,6 @@ public:
 
 _LFramework_Config_API_Struct ___utype{ size_t ignore; __LFramework_T(Type) constexpr operator Type& () const noexcept; };
 
-
 #ifdef __clang__
 #define _LFramework_Report_Error(cond, mesg)                                               \
     _Pragma("clang diagnostic push") _Pragma("clang diagnostic ignored \"-Wassume\"") do { \
@@ -1881,7 +1880,7 @@ struct tagBITMAPFILEHEADER_OnLF
 	WORD    bfReserved2;
 	DWORD   bfOffBits;
 };
-typedef _LF_C_API(OStruct) tagBITMAPFILE
+_LF_C_API(OStruct) tagBITMAPFILE
 {
 	using Header = tagBITMAPFILEHEADER_OnLF;
 	Header BitmapHeader;
@@ -1894,7 +1893,8 @@ typedef _LF_C_API(OStruct) tagBITMAPFILE
 	using Color = UCHAR;
 	using ColorBuffer = Color*;
 	ColorBuffer BitMapBuffer;
-} BITMAP_FILE;
+};
+using BITMAP_FILE = tagBITMAPFILE;
 #pragma pack()
 
 #endif // _WINDOW_
@@ -2020,9 +2020,5 @@ public:
 #define bit_detect(value,pos)		(bit_opt_and(value,(1<<pos)))
 
 #pragma endregion
-
-#ifndef _LF_C_API
-static_assert(false, "_LF_C_API is lost");
-#endif
 
 #endif // !__FILE_LF_CONFIG
