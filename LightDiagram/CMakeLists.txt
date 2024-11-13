@@ -42,11 +42,11 @@ endif()
 include_directories     ("${PROJECT_SOURCE_DIR}/LightDiagram" "${PROJECT_SOURCE_DIR}/LightDiagram/Core")
 aux_source_directory    (. Main_Cpp_List)
 aux_source_directory    (./Core Core_Cpp_List)
-aux_source_directory    (./Extension Extension_Cpp_List)
+aux_source_directory    (./Engine Engine_Cpp_List)
 message( STATUS "main part cpp = ${Main_Cpp_List}")
 message( STATUS "core part cpp = ${Core_Cpp_List}")
-message( STATUS "extension part cpp = ${Extension_Cpp_List}")
-add_library (LightDiagram ${Main_Cpp_List} ${Core_Cpp_List} ${Extension_Cpp_List} ${Utility_Cpp_List})
+message( STATUS "engine part cpp = ${Engine_Cpp_List}")
+add_library (LightDiagram ${Main_Cpp_List} ${Core_Cpp_List} ${Engine_Cpp_List})
 if(MPI_FOUND)
     target_link_libraries(LightDiagram ${MPI_C_LIBRARIES})
     set_property(TARGET LightDiagram PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
@@ -71,3 +71,6 @@ install(TARGETS LightDiagram
         RUNTIME DESTINATION ${Install_Path}/bin
         LIBRARY DESTINATION ${Install_Path}/lib
         ARCHIVE DESTINATION ${Install_Path}/lib/static)
+
+file(GLOB LightDiagram_Engines_List ${PROJECT_SOURCE_DIR}/LightDiagram/Engine/*.h)
+install(FILES ${LightDiagram_Engines_List} DESTINATION  ${Install_Path}/include/Engine)

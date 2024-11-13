@@ -32,6 +32,9 @@ target_link_libraries(demo_test LightDiagram)
 file(GLOB OpenCV2_Lib_List ${PROJECT_SOURCE_DIR}/LightMath/opencv2-lib/static/*.lib)
 target_link_libraries(demo_test ${OpenCV2_Lib_List})
 
-install(TARGETS demo_test)
+install(TARGETS demo_test 
+        RUNTIME DESTINATION ${Install_Path}/bin/test
+        LIBRARY DESTINATION ${Install_Path}/lib
+        ARCHIVE DESTINATION ${Install_Path}/lib/static)
 
 message("CMAKE_CXX_STANDARD(Test) = ${CMAKE_CXX_STANDARD}" )

@@ -9,4 +9,7 @@ target_link_libraries(WebServer LightDiagram)
 
 add_subdirectory(base)
 
-install(TARGETS WebServer)
+install(TARGETS WebServer 
+        RUNTIME DESTINATION ${Install_Path}/bin
+        LIBRARY DESTINATION ${Install_Path}/lib
+        ARCHIVE DESTINATION ${Install_Path}/lib/static)

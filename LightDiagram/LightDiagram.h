@@ -107,4 +107,10 @@ int main()\
 
 #pragma endregion
 
+//*
+//	Engine
+//*
+
+#include<Engine/Process.h>
+
 #endif // !__FILE_LIGHTDIAGRAM

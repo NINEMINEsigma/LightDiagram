@@ -248,13 +248,11 @@ namespace ld
 		}
 	public:
 		instance() noexcept : instance_ptr(nullptr), instance<void>() {}
+		instance(new_indicator try_new_empty_ctr) noexcept : instance_ptr(new(alloc_instance_inside_ptr_handler(sizeof(Tag))) tag()), instance<void>() {}
 		instance(Tag* ptr) : instance_ptr(ptr), instance<void>() {}
 		instance(const Tag& data) :  instance_ptr(new(alloc_instance_inside_ptr_handler(sizeof(Tag))) Tag(data)) {}
 		instance(instance& from) noexcept :  instance_ptr(from.instance_ptr), instance<void>(from) {}
-		instance(instance&& from) noexcept :  instance_ptr(from.instance_ptr), instance<void>(std::move(from))
-		{
-			from.instance_ptr = nullptr;
-		}
+		instance(instance&& from) noexcept : instance_ptr(std::move(from.instance_ptr)), instance<void>(std::move(from)) {}
 		instance(const instance& from) noexcept : instance_ptr(from.instance_ptr), instance<void>(from) {}
 		template<typename... Args>
 		instance(Args&&... args) : instance(new(alloc_instance_inside_ptr_handler(sizeof(Tag))) Tag(args...)) {}
@@ -287,8 +285,7 @@ namespace ld
 		void swap(instance<Tag>&& from)noexcept
 		{
 			instance<void>::swap(std::move(from));
-			this->instance_ptr = from.instance_ptr;
-			from.instance_ptr = nullptr;
+			this->instance_ptr = std::move(from.instance_ptr);
 		}
 		instance<Tag>& operator=(instance<Tag>& from) noexcept
 		{
@@ -469,7 +466,7 @@ namespace ld
 		}
 		operator bool()
 		{
-			return this->empty();
+			return !this->empty();
 		}
 
 		//reboxing operator
@@ -2408,6 +2405,47 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 
 #pragma endregion
 	  
+#pragma region Thread
+
+	//Specialized instances of thread control
+	template<>
+	_LF_C_API(Class) instance<std::thread>: public instance<void>
+	{
+	public:
+		using tag = std::thread;
+	private:
+		using atomic_bool = std::atomic_bool;
+
+		tag* instance_ptr;
+		bool is_need_join_when_destructor = true;
+		atomic_bool* is_task_end;
+		void destruct_and_free_instance_ptr();
+	public:
+		instance(const std::function<void()>& data);
+		instance(instance& from) noexcept;
+		instance(instance&& from) noexcept;
+		instance(const instance& from) noexcept;
+		virtual ~instance();
+		void swap(instance& from) noexcept;
+		void swap(instance&& from) noexcept;
+		instance& operator=(instance& from) noexcept;
+		instance& operator=(instance&& from) noexcept;
+		instance& operator=(const instance& from) noexcept;
+		bool operator==(const instance& from) const noexcept;
+		bool equals(const instance& from) const noexcept;
+
+		virtual bool empty() const override final;
+		bool is_end() const noexcept;
+
+		_NODISCARD tag::native_handle_type native_handle() noexcept;
+		_NODISCARD tag::id get_id() const noexcept;
+		void detach();
+		void join();
+		_NODISCARD bool joinable() const noexcept;
+	};
+
+#pragma endregion
+
 }
 
 namespace std

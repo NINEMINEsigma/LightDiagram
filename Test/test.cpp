@@ -10,8 +10,19 @@ using namespace std;
 
 sync_with_stdio_false(__auto__);
 
+void notepad_open()
+{
+	instance<process_kit> process("notepad", 0);
+	cout << "stats: " << process->get_stats() << endl;
+}
+
 int main(int argc, char** argv)
 {
 	config_instance config(argc, argv);
-	cout << ld::constexpr_kit::Max(10, 9, 5, 1, 2) << "\n" << ld::constexpr_kit::Min(9, 5, 1, 0, 2);
+	do
+	{
+		instance<thread> th(notepad_open);
+		int i;
+		cin >> i;
+	} while (false);
 }
