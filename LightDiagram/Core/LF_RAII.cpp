@@ -257,7 +257,8 @@ namespace ld
 	}
 	instance<std::thread>::instance() :
 		is_task_end(new(alloc_instance_inside_ptr_handler(sizeof(atomic_bool))) atomic_bool(true)),
-		instance_ptr(new(alloc_instance_inside_ptr_handler(sizeof(tag))) tag()) {}
+		instance_ptr(new(alloc_instance_inside_ptr_handler(sizeof(tag))) tag()),
+		instance<void>(){}
 	instance<std::thread>::instance(const std::function<void()>& data) :
 		is_task_end(new(alloc_instance_inside_ptr_handler(sizeof(atomic_bool))) atomic_bool(false)),
 		instance_ptr(new(alloc_instance_inside_ptr_handler(sizeof(tag))) tag(
@@ -267,9 +268,10 @@ namespace ld
 				data();
 				*this->is_task_end = true;
 			}
-		)) {}
+		)),
+		instance<void>() {}
 	instance<std::thread>::instance(instance& from) noexcept : instance_ptr(from.instance_ptr), is_task_end(from.is_task_end), instance<void>(from) {}
-	instance<std::thread>::instance(instance&& from) noexcept : instance_ptr(std::move(from.instance_ptr)), is_task_end(std::move(from.is_task_end)), instance<void>(std::move(from)) {}
+	instance<std::thread>::instance(instance&& from) noexcept : instance_ptr(from.instance_ptr), is_task_end(from.is_task_end), instance<void>(std::move(from)) {}
 	instance<std::thread>::instance(const instance& from) noexcept : instance_ptr(from.instance_ptr), is_task_end(from.is_task_end), instance<void>(from) {}
 	instance<std::thread>::~instance()
 	{

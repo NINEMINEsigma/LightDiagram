@@ -40,7 +40,7 @@ namespace ld
 	public:
 		using tag = void;
 	private:
-		size_indicator instance_counter;
+		size_indicator instance_counter = nullptr;
 	protected:
 #pragma region instance_counter Property
 		size_indicator get_counter()const
@@ -2459,8 +2459,9 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 		using inside_instance = instance<_Inside>;
 	private:
 		std::stack<inside_instance> container;
-		std::function<inside_instance()> builder;
+		std::function<inside_instance&&()> builder;
 		std::function<void(_Inside&)> initer;
+		std::mutex thread_mutex;
 	public:
 		instance_pool(
 			const std::function<inside_instance()>&builder,
@@ -2473,17 +2474,20 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 
 		instance_pool& back_pool(inside_instance& from)
 		{
+			std::lock_guard<std::mutex> __temp__{ thread_mutex };
 			container.push(std::move(from));
 			return *this;
 		}
 		instance_pool& back_pool(inside_instance&& from)
 		{
+			std::lock_guard<std::mutex> __temp__{ thread_mutex };
 			container.push(std::move(from));
 			return *this;
 		}
 
 		inside_instance&& get()
 		{
+			std::lock_guard<std::mutex> __temp__{ thread_mutex };
 			if (container.empty())
 			{
 				inside_instance result = builder();
@@ -2513,21 +2517,28 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 		std::function<inside_instance()> builder;
 		std::function<void(_Inside&)> initer;
 		size_t size, header;
+		std::mutex thread_mutex;
 	public:
-		instance_pool(
-			const std::function<inside_instance()>& builder,
+		instance_limit_pool(
+			const std::function<inside_instance&&()>& builder,
 			const std::function<void(_Inside&)>& initer,
 			size_t size) :
 			__init(builder),
 			__init(initer),
 			__init(size),
-			header(0),
-			container(size, builder()) {}
-		instance_pool(const instance_pool&) = delete;
-		virtual ~instance_pool() {}
+			header(0)
+		{
+			for (size_t i = 0; i < size; i++)
+			{
+				container.push_back(std::move(builder()));
+			}
+		}
+		instance_limit_pool(const instance_limit_pool&) = delete;
+		virtual ~instance_limit_pool() {}
 
 		inside_instance& get()
 		{
+			std::lock_guard<std::mutex> __temp__{ thread_mutex };
 			initer(container[header % size]);
 			return container[header++ % size];
 		}

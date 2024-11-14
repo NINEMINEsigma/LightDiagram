@@ -10,19 +10,22 @@ using namespace std;
 
 sync_with_stdio_false(__auto__);
 
-void notepad_open()
-{
-	instance<process_kit> process("notepad", 0);
-	cout << "stats: " << process->get_stats() << endl;
-}
 
 int main(int argc, char** argv)
 {
 	config_instance config(argc, argv);
-	do
-	{
-		instance<std::thread> th(notepad_open);
-		int i;
-		cin >> i;
-	} while (false);
+	atomic_int index = 0;
+	instance_limit_pool<std::thread> threads(
+		[&index]()
+		{
+			return instance<std::thread>([&index]()
+				{
+					cout << index.fetch_add(1) << "\n";
+				});
+		},
+		[](auto& from)
+		{
+
+		}, 5);
+	Sleep(30);
 }
