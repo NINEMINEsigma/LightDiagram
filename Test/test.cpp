@@ -21,7 +21,7 @@ int main(int argc, char** argv)
 	config_instance config(argc, argv);
 	do
 	{
-		instance<thread> th(notepad_open);
+		instance<std::thread> th(notepad_open);
 		int i;
 		cin >> i;
 	} while (false);

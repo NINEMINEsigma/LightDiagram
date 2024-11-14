@@ -2421,6 +2421,7 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 		atomic_bool* is_task_end;
 		void destruct_and_free_instance_ptr();
 	public:
+		instance();
 		instance(const std::function<void()>& data);
 		instance(instance& from) noexcept;
 		instance(instance&& from) noexcept;
@@ -2430,11 +2431,11 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 		void swap(instance&& from) noexcept;
 		instance& operator=(instance& from) noexcept;
 		instance& operator=(instance&& from) noexcept;
+		instance& operator=(const std::function<void()>& from) noexcept;
 		instance& operator=(const instance& from) noexcept;
 		bool operator==(const instance& from) const noexcept;
 		bool equals(const instance& from) const noexcept;
 
-		virtual bool empty() const override final;
 		bool is_end() const noexcept;
 
 		_NODISCARD tag::native_handle_type native_handle() noexcept;
@@ -2442,6 +2443,63 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 		void detach();
 		void join();
 		_NODISCARD bool joinable() const noexcept;
+	};
+	using thread_instance = instance<std::thread>;
+
+#pragma endregion
+
+
+#pragma region Pool
+
+	//Instance Pool
+	template<typename _Inside>
+	_LF_C_API(TClass) instance_pool Symbol_Push public any_class
+	{
+	public:
+		using inside_instance = instance<_Inside>;
+	private:
+		std::stack<inside_instance> container;
+		std::function<inside_instance()> builder;
+		std::function<void(_Inside&)> initer;
+	public:
+		instance_pool(
+			const std::function<inside_instance()>&builder,
+			const std::function<void(_Inside&)>&initer,
+			size_t start_size = 0) :
+			__init(builder),
+			__init(initer) {}
+		instance_pool(const instance_pool&) = delete;
+		virtual ~instance_pool() {}
+
+		instance_pool& back_pool(inside_instance& from)
+		{
+			container.push(std::move(from));
+			return *this;
+		}
+		instance_pool& back_pool(inside_instance&& from)
+		{
+			container.push(std::move(from));
+			return *this;
+		}
+
+		inside_instance&& get()
+		{
+			if (container.empty())
+			{
+				inside_instance result = builder();
+				if (result.empty() == false)
+					initer(result.get_ref());
+				return std::move(result);
+			}
+			else
+			{
+				inside_instance result = container.top();
+				container.pop();
+				if (result.empty() == false)
+					initer(result.get_ref());
+				return std::move(result);
+			}
+		}
 	};
 
 #pragma endregion
