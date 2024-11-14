@@ -2449,7 +2449,7 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 #pragma endregion
 
 
-#pragma region Pool
+#pragma region Pool and Limit-Pool
 
 	//Instance Pool
 	template<typename _Inside>
@@ -2499,6 +2499,37 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 					initer(result.get_ref());
 				return std::move(result);
 			}
+		}
+	};
+
+	//Instance Pool
+	template<typename _Inside>
+	_LF_C_API(TClass) instance_limit_pool Symbol_Push public any_class
+	{
+	public:
+		using inside_instance = instance<_Inside>;
+	private:
+		std::vector<inside_instance> container;
+		std::function<inside_instance()> builder;
+		std::function<void(_Inside&)> initer;
+		size_t size, header;
+	public:
+		instance_pool(
+			const std::function<inside_instance()>& builder,
+			const std::function<void(_Inside&)>& initer,
+			size_t size) :
+			__init(builder),
+			__init(initer),
+			__init(size),
+			header(0),
+			container(size, builder()) {}
+		instance_pool(const instance_pool&) = delete;
+		virtual ~instance_pool() {}
+
+		inside_instance& get()
+		{
+			initer(container[header % size]);
+			return container[header++ % size];
 		}
 	};
 
