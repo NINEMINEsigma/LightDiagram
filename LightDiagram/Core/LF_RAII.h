@@ -31,7 +31,7 @@ namespace ld
 #pragma region Basic
 
 	extern size_indicator obtain_size_indicator();
-	extern void free_size_indicator(_In_ size_indicator ptr);
+	extern void free_size_indicator(_In_ size_indicator& ptr);
 	extern size_t get_size_indicator_count();
 
 	// Referance Counter
@@ -108,13 +108,15 @@ namespace ld
 		}
 		void swap(instance<void>& from)
 		{
-			auto tempcat = this->instance_counter;
+			static size_indicator tempcat;
+			tempcat = this->instance_counter;
 			this->instance_counter = from.instance_counter;
 			from.instance_counter = tempcat;
 		}
 		void swap(instance<void>&& from)
 		{
-			auto cat = this->instance_counter;
+			static size_indicator cat;
+			cat = this->instance_counter;
 			this->instance_counter = from.instance_counter;
 			if (cat && *cat == 1)
 			{
@@ -245,6 +247,7 @@ namespace ld
 		{
 			instance_ptr->~Tag();
 			free_instance_inside_ptr_handler(instance_ptr);
+			instance_ptr = nullptr;
 		}
 	public:
 		instance() noexcept : instance_ptr(nullptr), instance<void>() {}
@@ -2448,7 +2451,6 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 
 #pragma endregion
 
-
 #pragma region Pool and Limit-Pool
 
 	//Instance Pool
@@ -2459,13 +2461,13 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 		using inside_instance = instance<_Inside>;
 	private:
 		std::stack<inside_instance> container;
-		std::function<inside_instance&&()> builder;
-		std::function<void(_Inside&)> initer;
+		std::function<inside_instance()> builder;
+		std::function<void(inside_instance&)> initer;
 		std::mutex thread_mutex;
 	public:
 		instance_pool(
 			const std::function<inside_instance()>&builder,
-			const std::function<void(_Inside&)>&initer,
+			const std::function<void(inside_instance&)>&initer,
 			size_t start_size = 0) :
 			__init(builder),
 			__init(initer) {}
@@ -2492,7 +2494,7 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 			{
 				inside_instance result = builder();
 				if (result.empty() == false)
-					initer(result.get_ref());
+					initer(result);
 				return std::move(result);
 			}
 			else
@@ -2500,7 +2502,7 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 				inside_instance result = container.top();
 				container.pop();
 				if (result.empty() == false)
-					initer(result.get_ref());
+					initer(result);
 				return std::move(result);
 			}
 		}
@@ -2515,13 +2517,13 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 	private:
 		std::vector<inside_instance> container;
 		std::function<inside_instance()> builder;
-		std::function<void(_Inside&)> initer;
+		std::function<void(inside_instance&)> initer;
 		size_t size, header;
 		std::mutex thread_mutex;
 	public:
 		instance_limit_pool(
-			const std::function<inside_instance&&()>& builder,
-			const std::function<void(_Inside&)>& initer,
+			const std::function<inside_instance()>& builder,
+			const std::function<void(inside_instance&)>& initer,
 			size_t size) :
 			__init(builder),
 			__init(initer),
@@ -2536,12 +2538,19 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 		instance_limit_pool(const instance_limit_pool&) = delete;
 		virtual ~instance_limit_pool() {}
 
-		inside_instance& get()
+		instance_limit_pool& next(std::function<void()> from)
 		{
 			std::lock_guard<std::mutex> __temp__{ thread_mutex };
-			initer(container[header % size]);
-			return container[header++ % size];
+			initer(container[++header % size]);
+			container[header % size] = from;
+			return *this;
 		}
+		inside_instance& current()
+		{
+			std::lock_guard<std::mutex> __temp__{ thread_mutex };
+			return container[header % size];
+		}
+
 	};
 
 #pragma endregion

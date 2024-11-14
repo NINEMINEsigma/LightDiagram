@@ -22,11 +22,12 @@ namespace ld
 			return result;
 		}
 	}
-	void free_size_indicator(_In_ size_indicator ptr)
+	void free_size_indicator(_In_ size_indicator& ptr)
 	{
 		lock_guard locker(size_indicator_locker);
 		*ptr = 1;
 		size_indicators.push(ptr);
+		ptr = nullptr;
 	}
 	size_t get_size_indicator_count()
 	{
@@ -253,7 +254,9 @@ namespace ld
 			instance_ptr->join();
 		instance_ptr->~tag();
 		free_instance_inside_ptr_handler(instance_ptr);
+		instance_ptr = nullptr;
 		free_instance_inside_ptr_handler(is_task_end);
+		is_task_end = nullptr;
 	}
 	instance<std::thread>::instance() :
 		is_task_end(new(alloc_instance_inside_ptr_handler(sizeof(atomic_bool))) atomic_bool(true)),
@@ -268,8 +271,7 @@ namespace ld
 				data();
 				*this->is_task_end = true;
 			}
-		)),
-		instance<void>() {}
+		)), instance<void>() {}
 	instance<std::thread>::instance(instance& from) noexcept : instance_ptr(from.instance_ptr), is_task_end(from.is_task_end), instance<void>(from) {}
 	instance<std::thread>::instance(instance&& from) noexcept : instance_ptr(from.instance_ptr), is_task_end(from.is_task_end), instance<void>(std::move(from)) {}
 	instance<std::thread>::instance(const instance& from) noexcept : instance_ptr(from.instance_ptr), is_task_end(from.is_task_end), instance<void>(from) {}
@@ -376,8 +378,11 @@ namespace ld
 	}
 	void instance<std::thread>::join()
 	{
-		this->instance_ptr->join();
-		*this->is_task_end = true;
+		if (*this->is_task_end == false && this->joinable())
+		{
+			this->instance_ptr->join();
+			*this->is_task_end = true;
+		}
 	}
 	_NODISCARD bool instance<std::thread>::joinable() const noexcept
 	{

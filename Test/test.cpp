@@ -15,17 +15,16 @@ int main(int argc, char** argv)
 {
 	config_instance config(argc, argv);
 	atomic_int index = 0;
+	cout << "x";
 	instance_limit_pool<std::thread> threads(
-		[&index]()
-		{
-			return instance<std::thread>([&index]()
-				{
-					cout << index.fetch_add(1) << "\n";
-				});
-		},
-		[](auto& from)
-		{
-
-		}, 5);
-	Sleep(30);
+		[]() {return instance<thread>{}; },
+		[](auto& from) {},
+		1);
+	cout << "x";
+	threads.current().join();
+	cout << "x";
+	Sleep(5);
+	cout << "x";
+	threads.current().join();
+	cout << "y";
 }
