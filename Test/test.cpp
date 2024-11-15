@@ -34,7 +34,8 @@ int main(int argc, char** argv)
 {
 	config_instance config(argc, argv);
 	atomic_int index = 0;
-	vector<instance<int>> ths;
-	for (int i = 0; i < 20; i++)
-		ths.push_back(0);
+	instance<int> a(1);
+	//instance<int> b{ std::move(a) };
+	//instance<int> b = std::move(a);
+	instance<int> b{ std::move(a)};
 }

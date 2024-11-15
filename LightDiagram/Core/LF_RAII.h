@@ -242,23 +242,35 @@ namespace ld
 	public:
 		using tag = Tag;
 	private:
-		Tag * instance_ptr;
-		inline void destruct_and_free_instance_ptr()
+		tag* instance_ptr;
+		void destruct_and_free_instance_ptr()
 		{
 			instance_ptr->~Tag();
 			free_instance_inside_ptr_handler(instance_ptr);
 			instance_ptr = nullptr;
 		}
+		//build up instance by outside-ptr
+		instance(Tag* ptr) : instance_ptr(ptr), instance<void>() {}
 	public:
-		instance() noexcept : instance_ptr(nullptr), instance<void>() {}
-		instance(new_indicator try_new_empty_ctr) noexcept : instance_ptr(new(alloc_instance_inside_ptr_handler(sizeof(Tag))) tag()), instance<void>() {}
-		//instance(Tag* ptr) : instance_ptr(ptr), instance<void>() {}
-		instance(const Tag& data) :  instance_ptr(new(alloc_instance_inside_ptr_handler(sizeof(Tag))) Tag(data)) {}
-		instance(instance& from) noexcept :  instance_ptr(from.instance_ptr), instance<void>(from) {}
+		//build up instance by nullptr ( stats is empty )
+		instance() noexcept : instance(nullptr) {}
+		//build up instance by default-constructor
+		instance(new_indicator try_new_empty_ctr) noexcept : instance(new(alloc_instance_inside_ptr_handler(sizeof(Tag))) tag()) {}
+		//build up instance by left-value copy constructor
+		instance(Tag& data) : instance(new(alloc_instance_inside_ptr_handler(sizeof(Tag))) Tag(data)) {}
+		//build up instance by right-value move constructor
+		instance(Tag&& data) : instance(new(alloc_instance_inside_ptr_handler(sizeof(Tag))) Tag(std::move(data))) {}
+		//build up instance by left-value(const) copy constructor
+		instance(const Tag& data) : instance(new(alloc_instance_inside_ptr_handler(sizeof(Tag))) Tag(data)) {}
+		//build up instance by copy left-value instance
+		instance(instance& from) noexcept : instance_ptr(from.instance_ptr), instance<void>(from) {}
+		//build up instance by move right-value instance
 		instance(instance&& from) noexcept : instance_ptr(std::move(from.instance_ptr)), instance<void>(std::move(from)) {}
+		//build up instance by copy left-value(const) instance
 		instance(const instance& from) noexcept : instance_ptr(from.instance_ptr), instance<void>(from) {}
+		//build up instance by constructor with args
 		template<typename... Args>
-		instance(Args&&... args) : instance_ptr(new(alloc_instance_inside_ptr_handler(sizeof(Tag))) Tag(std::forward<Args>(args)...)), instance<void>() {}
+		instance(Args&&... args) : instance(new(alloc_instance_inside_ptr_handler(sizeof(Tag))) Tag(std::forward<Args>(args)...)) {}
 		virtual ~instance()
 		{
 			if (this->get_count() <= 1)
@@ -266,28 +278,45 @@ namespace ld
 				destruct_and_free_instance_ptr();
 			}
 		}
-		Tag* get_ptr() const noexcept
+		//get real address
+		constexpr Tag* get_ptr() const noexcept
 		{
 			return instance_ptr;
 		}
+		//get instance reference, not check
 		Tag& get_ref() const
 		{
 			return *instance_ptr;
 		}
+		//to read address
 		constexpr Tag* operator->() const
 		{
 			return instance_ptr;
 		}
+		//swap instance-ptr and instance-counter
 		void swap(instance<Tag>& from)noexcept
 		{
 			instance<void>::swap(from);
 			std::swap(this->instance_ptr, from.instance_ptr);
 		}
+		//swap instance-ptr and instance-counter
 		void swap(instance<Tag>&& from)noexcept
 		{
 			instance<void>::swap(std::move(from));
 			std::swap(this->instance_ptr, from.instance_ptr);
 		}
+		//set up instance by left-value copy operator
+		instance<Tag>& operator=(instance<Tag>& from) noexcept
+		{
+			if (this->get_count() <= 1)
+			{
+				destruct_and_free_instance_ptr();
+			}
+			instance<void>::operator=(from);
+			this->instance_ptr = from.instance_ptr;
+			return *this;
+		}
+		//set up instance by right-value move operator
 		instance<Tag>& operator=(instance<Tag>&& from) noexcept
 		{
 			if (this->get_count() <= 1)
@@ -299,6 +328,7 @@ namespace ld
 			from.instance_ptr = nullptr;
 			return *this;
 		}
+		//set up instance by left-value copy operator
 		instance<Tag>& operator=(const instance<Tag>& from) noexcept
 		{
 			if (this->get_count() <= 1)
@@ -309,35 +339,17 @@ namespace ld
 			this->instance_ptr = from.instance_ptr;
 			return *this;
 		}
-		/*
-		instance<Tag>& operator=(Tag* from) noexcept
+		//set up instance by left-value cpoy operator
+		instance<Tag>& operator=(Tag& from)
 		{
-			if (this->instance_ptr == from)
+			if (this->empty())
+				return operator=(new(alloc_instance_inside_ptr_handler(sizeof(Tag))) Tag(from));
+			else
 			{
-				return *this;
+				this->get_ref() = from;
 			}
-			if (this->get_count() <= 1)
-			{
-				destruct_and_free_instance_ptr();
-			}
-			instance<void>::release();
-			this->instance_ptr = from;
-			return *this;
 		}
-		instance<Tag>& operator=(nullptr_t) noexcept
-		{
-			if (this->instance_ptr == nullptr)
-			{
-				return *this;
-			}
-			if (this->get_count() <= 1)
-			{
-				destruct_and_free_instance_ptr();
-			}
-			instance<void>::release();
-			return *this;
-		}
-		*/
+		//set up instance by right-value move operator
 		instance<Tag>& operator=(Tag&& from)
 		{
 			if (this->empty())
@@ -347,6 +359,7 @@ namespace ld
 				this->get_ref() = std::move(from);
 			}
 		}
+		//set up instance by left-value cpoy operator
 		instance<Tag>& operator=(const Tag& from)
 		{
 			if (this->empty())
@@ -356,22 +369,27 @@ namespace ld
 				this->get_ref() = from;
 			}
 		}
+		//is instance same one
 		bool operator==(const instance<Tag>& from) const noexcept
 		{
 			return instance<void>::operator==(from);
 		}
+		//is instance same one
 		bool equals(const instance<Tag>& from) const noexcept
 		{
 			return instance<void>::operator==(from);
 		}
+		//is instance empty
 		bool equals(nullptr_t) const noexcept
 		{
 			return this->instance_ptr == nullptr;
 		}
+		//is instance real address same with target
 		bool equals(Tag* from) const noexcept
 		{
 			return this->instance_ptr == from;
 		}
+		//is instance reference same with target
 		bool equals(const Tag& from) const noexcept
 		{
 			return *this->instance_ptr == from;
