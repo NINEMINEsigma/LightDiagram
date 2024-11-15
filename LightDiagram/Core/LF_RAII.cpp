@@ -36,7 +36,7 @@ namespace ld
 
 	function<void* (size_t)> alloc_instance_inside_ptr_handler = [](size_t _Bytes)->void*
 		{
-			return ::operator new(_Bytes);
+			return ::malloc(_Bytes);
 		};
 	function<void(void*)> free_instance_inside_ptr_handler = [](void* ptr)->void
 		{

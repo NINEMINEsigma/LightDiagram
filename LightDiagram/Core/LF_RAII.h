@@ -252,13 +252,13 @@ namespace ld
 	public:
 		instance() noexcept : instance_ptr(nullptr), instance<void>() {}
 		instance(new_indicator try_new_empty_ctr) noexcept : instance_ptr(new(alloc_instance_inside_ptr_handler(sizeof(Tag))) tag()), instance<void>() {}
-		instance(Tag* ptr) : instance_ptr(ptr), instance<void>() {}
+		//instance(Tag* ptr) : instance_ptr(ptr), instance<void>() {}
 		instance(const Tag& data) :  instance_ptr(new(alloc_instance_inside_ptr_handler(sizeof(Tag))) Tag(data)) {}
 		instance(instance& from) noexcept :  instance_ptr(from.instance_ptr), instance<void>(from) {}
 		instance(instance&& from) noexcept : instance_ptr(std::move(from.instance_ptr)), instance<void>(std::move(from)) {}
 		instance(const instance& from) noexcept : instance_ptr(from.instance_ptr), instance<void>(from) {}
 		template<typename... Args>
-		instance(Args&&... args) : instance(new(alloc_instance_inside_ptr_handler(sizeof(Tag))) Tag(args...)) {}
+		instance(Args&&... args) : instance_ptr(new(alloc_instance_inside_ptr_handler(sizeof(Tag))) Tag(std::forward<Args>(args)...)), instance<void>() {}
 		virtual ~instance()
 		{
 			if (this->get_count() <= 1)
@@ -281,24 +281,12 @@ namespace ld
 		void swap(instance<Tag>& from)noexcept
 		{
 			instance<void>::swap(from);
-			Tag* cat = this->instance_ptr;
-			this->instance_ptr = from.instance_ptr;
-			from.instance_ptr = cat;
+			std::swap(this->instance_ptr, from.instance_ptr);
 		}
 		void swap(instance<Tag>&& from)noexcept
 		{
 			instance<void>::swap(std::move(from));
-			this->instance_ptr = std::move(from.instance_ptr);
-		}
-		instance<Tag>& operator=(instance<Tag>& from) noexcept
-		{
-			if (this->get_count() <= 1)
-			{
-				destruct_and_free_instance_ptr();
-			}
-			instance<void>::operator=(from);
-			this->instance_ptr = from.instance_ptr;
-			return *this;
+			std::swap(this->instance_ptr, from.instance_ptr);
 		}
 		instance<Tag>& operator=(instance<Tag>&& from) noexcept
 		{
@@ -321,8 +309,13 @@ namespace ld
 			this->instance_ptr = from.instance_ptr;
 			return *this;
 		}
+		/*
 		instance<Tag>& operator=(Tag* from) noexcept
 		{
+			if (this->instance_ptr == from)
+			{
+				return *this;
+			}
 			if (this->get_count() <= 1)
 			{
 				destruct_and_free_instance_ptr();
@@ -333,6 +326,10 @@ namespace ld
 		}
 		instance<Tag>& operator=(nullptr_t) noexcept
 		{
+			if (this->instance_ptr == nullptr)
+			{
+				return *this;
+			}
 			if (this->get_count() <= 1)
 			{
 				destruct_and_free_instance_ptr();
@@ -340,6 +337,7 @@ namespace ld
 			instance<void>::release();
 			return *this;
 		}
+		*/
 		instance<Tag>& operator=(Tag&& from)
 		{
 			if (this->empty())
@@ -350,15 +348,6 @@ namespace ld
 			}
 		}
 		instance<Tag>& operator=(const Tag& from)
-		{
-			if (this->empty())
-				return operator=(new(alloc_instance_inside_ptr_handler(sizeof(Tag))) Tag(from));
-			else
-			{
-				this->get_ref() = from;
-			}
-		}
-		instance<Tag>& operator=(Tag& from)
 		{
 			if (this->empty())
 				return operator=(new(alloc_instance_inside_ptr_handler(sizeof(Tag))) Tag(from));
@@ -1444,22 +1433,23 @@ namespace ld
 	{
 	public:
 		using tag = config_indicator;
+		using base_instance = instance<config_map>;
 		constexpr static auto local_path_key = "local";
-		instance() :instance<config_map>(new((alloc_instance_inside_ptr_handler(sizeof(config_map)))) config_map()) {}
-		instance(int argc, char** argv):instance()
+		instance() :base_instance(new_indicator{}) {}
+		instance(int argc, char** argv) :base_instance(new_indicator{})
 		{
 			read_config(argc, argv);
 		}
-		instance(instance&& from) noexcept :instance<config_map>(std::move(from)) {}
+		instance(instance&& from) noexcept :base_instance(std::move(from)) {}
 		instance& operator=(instance&& from) noexcept
 		{
-			instance<config_map>::operator=(std::move(from));
+			base_instance::operator=(std::move(from));
 			return *this;
 		}
-		instance(instance& from) noexcept :instance<config_map>(from) {}
+		instance(instance& from) noexcept :base_instance(from) {}
 		instance& operator=(instance& from) noexcept
 		{
-			instance<config_map>::operator=(from);
+			base_instance::operator=(from);
 			return *this;
 		}
 		virtual ~instance() {}
@@ -1540,7 +1530,7 @@ namespace ld
 
 #pragma region Bitmap
 
-#if defined(_WINDOW_)
+#if defined(_WINDOW_)||defined(_LINUX_ON_WINDOW_)
 	template<>
 	_LF_C_API(Class) instance<type_list<io_tag_indicator, bitmap_indicator>>
 		Symbol_Push public instance<BITMAP_FILE> Symbol_Endl
@@ -1550,6 +1540,7 @@ namespace ld
 		using Bitmap = BITMAP_FILE;
 		using IndexCount = DWORD;
 		using IndexCountN = WORD;
+		using base_instance = instance<Bitmap>;
 	private:
 		void CreateBitMap(
 			_In_ Bitmap * output,
@@ -1602,7 +1593,8 @@ namespace ld
 			_In_opt_ Bitmap::PaletteBuffer palette = nullptr,
 			size_t paletteSize = 0,
 			IndexCount ClrUsed = 0,
-			IndexCount ClrImportant = 0) : instance<Bitmap>(new((alloc_instance_inside_ptr_handler(sizeof(Bitmap)))) Bitmap())
+			IndexCount ClrImportant = 0) :
+			base_instance(new_indicator{})
 		{
 			CreateBitMap(this->get_ptr(), bitCount, height, width, palette, paletteSize, ClrUsed, ClrImportant);
 		}
@@ -2412,7 +2404,7 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 
 	//Specialized instances of thread control
 	template<>
-	_LF_C_API(Class) instance<std::thread>: public instance<void>
+	_LF_C_API(Class) instance<std::thread> : public instance<void>
 	{
 	public:
 		using tag = std::thread;
