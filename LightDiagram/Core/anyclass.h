@@ -138,7 +138,7 @@ class any_class;
 template<typename T> class null_package;
 template<typename T> _LF_C_API(TDLL) null_package<T> make_null_package(any_class* ptr);
 
-_LF_C_API(Class)
+_LF_C_API(OClass)
 type_class
 {
 public:
@@ -147,7 +147,7 @@ public:
 	virtual std::string SymbolName() const abstract;
 	virtual any_class* GetClone() const abstract;
 };
-_LF_C_API(Class)
+_LF_C_API(OClass)
 any_class : public type_class
 {
 public:

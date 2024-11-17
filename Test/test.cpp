@@ -1,7 +1,5 @@
 ﻿#define _CRT_SECURE_NO_WARNINGS
 
-#define is_monitor_the_constructor_of_anyclass false
-
 #include<LightDiagram.h>
 
 using namespace ld;
@@ -10,32 +8,30 @@ using namespace std;
 
 sync_with_stdio_false(__auto__);
 
-struct test
+atomic_int index = 0;
+mutex _mutex;
+constexpr int sound_max = 10;
+bool is_task = false;
+void testing()
 {
-	test()
-	{
-		cout << "start\n";
-	}
-	test(test& from)
-	{
-		cout << "move-l\n";
-	}
-	test(test&& from)
-	{
-		cout << "move-r\n";
-	}
-	~test()
-	{
-		cout << "end\n";
-	}
-};
+	while (is_task == false) {}
+	lock_guard lg(_mutex);
+	int mysound = index.fetch_add(1);
+	cout << mysound << endl;
+}
 
 int main(int argc, char** argv)
 {
 	config_instance config(argc, argv);
-	atomic_int index = 0;
-	instance<int> a(1);
-	//instance<int> b{ std::move(a) };
-	//instance<int> b = std::move(a);
-	instance<int> b{ std::move(a)};
+	vector<instance<thread>> ths;
+	for (int i = 0; i < sound_max; i++)
+	{
+		ths.push_back(instance<thread>(testing));
+	}
+	is_task = true;
+	for (auto&& item : ths)
+	{
+		if (item.joinable())
+			item.join();
+	}
 }

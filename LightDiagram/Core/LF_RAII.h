@@ -102,9 +102,9 @@ namespace ld
 			if (this->instance_counter)
 				release_nocallback();
 		}
-		size_tag get_count() const noexcept
+		size_tag get_count() const
 		{
-			return this->instance_counter ? *this->instance_counter : 0;
+			return *this->instance_counter;
 		}
 		void swap(instance<void>& from)
 		{
@@ -171,6 +171,10 @@ namespace ld
 		virtual bool empty() const
 		{
 			return true;
+		}
+		int countable() const noexcept
+		{
+			return this->instance_counter ? static_cast<int>(*this->instance_counter) : -1;
 		}
 	};
 	// Base referance counter
@@ -245,6 +249,8 @@ namespace ld
 		tag* instance_ptr;
 		void destruct_and_free_instance_ptr()
 		{
+			if (instance_ptr == nullptr)
+				return;
 			instance_ptr->~Tag();
 			free_instance_inside_ptr_handler(instance_ptr);
 			instance_ptr = nullptr;
@@ -265,7 +271,10 @@ namespace ld
 		//build up instance by copy left-value instance
 		instance(instance& from) noexcept : instance_ptr(from.instance_ptr), instance<void>(from) {}
 		//build up instance by move right-value instance
-		instance(instance&& from) noexcept : instance_ptr(std::move(from.instance_ptr)), instance<void>(std::move(from)) {}
+		instance(instance&& from) noexcept : instance_ptr(from.instance_ptr), instance<void>(std::move(from))
+		{
+			from.instance_ptr = nullptr;
+		}
 		//build up instance by copy left-value(const) instance
 		instance(const instance& from) noexcept : instance_ptr(from.instance_ptr), instance<void>(from) {}
 		//build up instance by constructor with args
@@ -499,6 +508,7 @@ namespace ld
 			return reboxing_to<OtherTag>();
 		}
 
+		//is instance reference exist
 		virtual bool empty() const override
 		{
 			return this->instance_ptr == nullptr;
@@ -2431,7 +2441,6 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 
 		tag* instance_ptr;
 		bool is_need_join_when_destructor = true;
-		atomic_bool* is_task_end;
 		void destruct_and_free_instance_ptr();
 	public:
 		instance();
@@ -2449,12 +2458,10 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 		bool operator==(const instance& from) const noexcept;
 		bool equals(const instance& from) const noexcept;
 
-		bool is_end() const noexcept;
-
 		_NODISCARD tag::native_handle_type native_handle() noexcept;
 		_NODISCARD tag::id get_id() const noexcept;
-		void detach();
-		void join();
+		void detach() noexcept;
+		void join() noexcept;
 		_NODISCARD bool joinable() const noexcept;
 	};
 	using thread_instance = instance<std::thread>;
@@ -2481,16 +2488,13 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 			size_t start_size = 0) :
 			__init(builder),
 			__init(initer) {}
+		instance_pool(size_t start_size) :instance_pool([]() {return inside_instance(new_indicator{}); }, [](auto&) {}, start_size) {}
+		instance_pool() :instance_pool(0) {}
 		instance_pool(const instance_pool&) = delete;
 		virtual ~instance_pool() {}
 
-		instance_pool& back_pool(inside_instance& from)
-		{
-			std::lock_guard<std::mutex> __temp__{ thread_mutex };
-			container.push(std::move(from));
-			return *this;
-		}
-		instance_pool& back_pool(inside_instance&& from)
+		template<typename _Ins>
+		instance_pool& back_pool(_Ins&& from)
 		{
 			std::lock_guard<std::mutex> __temp__{ thread_mutex };
 			container.push(std::move(from));
@@ -2502,14 +2506,14 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 			std::lock_guard<std::mutex> __temp__{ thread_mutex };
 			if (container.empty())
 			{
-				inside_instance result = builder();
+				inside_instance result = std::move(builder());
 				if (result.empty() == false)
 					initer(result);
 				return std::move(result);
 			}
 			else
 			{
-				inside_instance result = container.top();
+				inside_instance result = std::move(container.top());
 				container.pop();
 				if (result.empty() == false)
 					initer(result);
@@ -2526,16 +2530,16 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 		using inside_instance = instance<_Inside>;
 	private:
 		std::vector<inside_instance> container;
-		std::function<inside_instance()> builder;
 		std::function<void(inside_instance&)> initer;
 		size_t size, header;
 		std::mutex thread_mutex;
+
 	public:
+		template<typename _Builder>
 		instance_limit_pool(
-			const std::function<inside_instance()>& builder,
+			_Builder&& builder,
 			const std::function<void(inside_instance&)>& initer,
 			size_t size) :
-			__init(builder),
 			__init(initer),
 			__init(size),
 			header(0)
@@ -2545,14 +2549,17 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 				container.push_back(std::move(builder()));
 			}
 		}
+		instance_limit_pool(size_t size) :
+			__init(size),
+			header(0),
+			container(size, new_indicator{}) {}
 		instance_limit_pool(const instance_limit_pool&) = delete;
 		virtual ~instance_limit_pool() {}
 
-		instance_limit_pool& next(std::function<void()> from)
+		instance_limit_pool& next()
 		{
 			std::lock_guard<std::mutex> __temp__{ thread_mutex };
 			initer(container[++header % size]);
-			container[header % size] = from;
 			return *this;
 		}
 		inside_instance& current()
@@ -2561,6 +2568,22 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 			return container[header % size];
 		}
 
+		auto begin()
+		{
+			return container.begin();
+		}
+		auto end()
+		{
+			return container.end();
+		}
+		auto cbegin() const
+		{
+			return container.cbegin();
+		}
+		auto cend() const
+		{
+			return container.cend();
+		}
 	};
 
 #pragma endregion

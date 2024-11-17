@@ -250,34 +250,25 @@ namespace ld
 {
 	void instance<std::thread>::destruct_and_free_instance_ptr()
 	{
+		if (instance_ptr == nullptr)
+			return;
 		if (instance_ptr->joinable() && is_need_join_when_destructor)
 			instance_ptr->join();
 		instance_ptr->~tag();
 		free_instance_inside_ptr_handler(instance_ptr);
 		instance_ptr = nullptr;
-		free_instance_inside_ptr_handler(is_task_end);
-		is_task_end = nullptr;
 	}
 	instance<std::thread>::instance() :
-		is_task_end(new(alloc_instance_inside_ptr_handler(sizeof(atomic_bool))) atomic_bool(true)),
 		instance_ptr(new(alloc_instance_inside_ptr_handler(sizeof(tag))) tag()),
 		instance<void>(){}
 	instance<std::thread>::instance(const std::function<void()>& data) :
-		is_task_end(new(alloc_instance_inside_ptr_handler(sizeof(atomic_bool))) atomic_bool(false)),
-		instance_ptr(new(alloc_instance_inside_ptr_handler(sizeof(tag))) tag(
-			[this, data]()
-			{
-				*this->is_task_end = false;
-				data();
-				*this->is_task_end = true;
-			}
-		)), instance<void>() {}
-	instance<std::thread>::instance(instance& from) noexcept : instance_ptr(from.instance_ptr), is_task_end(from.is_task_end), instance<void>(from) {}
-	instance<std::thread>::instance(instance&& from) noexcept : instance_ptr(from.instance_ptr), is_task_end(from.is_task_end), instance<void>(std::move(from)) {}
-	instance<std::thread>::instance(const instance& from) noexcept : instance_ptr(from.instance_ptr), is_task_end(from.is_task_end), instance<void>(from) {}
+		instance_ptr(new(alloc_instance_inside_ptr_handler(sizeof(tag))) tag(data)), instance<void>() {}
+	instance<std::thread>::instance(instance& from) noexcept : instance_ptr(from.instance_ptr),  instance<void>(from) {}
+	instance<std::thread>::instance(instance&& from) noexcept : instance_ptr(from.instance_ptr),  instance<void>(std::move(from)) {}
+	instance<std::thread>::instance(const instance& from) noexcept : instance_ptr(from.instance_ptr),  instance<void>(from) {}
 	instance<std::thread>::~instance()
 	{
-		if (this->get_count() <= 1)
+		if (this->countable() != -1 && this->get_count() <= 1)
 		{
 			destruct_and_free_instance_ptr();
 		}
@@ -287,13 +278,11 @@ namespace ld
 	{
 		instance<void>::swap(from);
 		std::swap(this->instance_ptr, from.instance_ptr);
-		std::swap(this->is_task_end, from.is_task_end);
 	}
 	void instance<std::thread>::swap(instance&& from)noexcept
 	{
 		instance<void>::swap(std::move(from));
 		this->instance_ptr = std::move(from.instance_ptr);
-		this->is_task_end = std::move(from.is_task_end);
 	}
 
 	instance<std::thread>& instance<std::thread>::operator=(instance& from) noexcept
@@ -304,7 +293,6 @@ namespace ld
 		}
 		instance<void>::operator=(from);
 		this->instance_ptr = from.instance_ptr;
-		this->is_task_end = from.is_task_end;
 		return *this;
 	}
 	instance<std::thread>& instance<std::thread>::operator=(instance&& from) noexcept
@@ -315,7 +303,6 @@ namespace ld
 		}
 		instance<void>::operator=(std::move(from));
 		this->instance_ptr = std::move(from.instance_ptr);
-		this->is_task_end = std::move(from.is_task_end);
 		return *this;
 	}
 	instance<std::thread>& instance<std::thread>::operator=(const function<void()>& from) noexcept
@@ -329,13 +316,7 @@ namespace ld
 			if (instance_ptr->joinable() && is_need_join_when_destructor)
 				instance_ptr->join();
 		}
-		*this->instance_ptr = std::move(tag(
-			[this, from]()
-			{
-				*this->is_task_end = false;
-				from();
-				*this->is_task_end = true;
-			}));
+		*this->instance_ptr = std::move(tag(from));
 		return *this;
 	}
 	instance<std::thread>& instance<std::thread>::operator=(const instance& from) noexcept
@@ -346,7 +327,6 @@ namespace ld
 		}
 		instance<void>::operator=(from);
 		this->instance_ptr = from.instance_ptr;
-		this->is_task_end = from.is_task_end;
 		return *this;
 	}
 	bool instance<std::thread>::operator==(const instance& from) const noexcept
@@ -358,34 +338,37 @@ namespace ld
 		return instance<void>::operator==(from);
 	}
 
-	bool instance<std::thread>::is_end() const noexcept
-	{
-		return static_cast<bool>(*this->is_task_end);
-	}
-
 	_NODISCARD instance<std::thread>::tag::native_handle_type instance<std::thread>::native_handle() noexcept
 	{
-		return this->instance_ptr->native_handle();
+		if (this->instance_ptr)
+			return this->instance_ptr->native_handle();
+		else
+			return {};
 	}
 	_NODISCARD instance<std::thread>::tag::id instance<std::thread>::get_id() const noexcept
 	{
-		return this->instance_ptr->get_id();
+		if (this->instance_ptr)
+			return this->instance_ptr->get_id();
+		else
+			return {};
 	}
-	void instance<std::thread>::detach()
+	void instance<std::thread>::detach() noexcept
 	{
-		this->instance_ptr->detach();
-		*this->is_task_end = true;
+		if (this->instance_ptr)
+			this->instance_ptr->detach();
 	}
-	void instance<std::thread>::join()
+	void instance<std::thread>::join() noexcept
 	{
-		if (*this->is_task_end == false && this->joinable())
+		if (this->instance_ptr && this->joinable())
 		{
 			this->instance_ptr->join();
-			*this->is_task_end = true;
 		}
 	}
 	_NODISCARD bool instance<std::thread>::joinable() const noexcept
 	{
-		return this->instance_ptr->joinable();
+		if (this->instance_ptr)
+			return this->instance_ptr->joinable();
+		else
+			return false;
 	}
 }
