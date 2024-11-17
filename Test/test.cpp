@@ -12,6 +12,7 @@ atomic_int index = 0;
 mutex _mutex;
 constexpr int sound_max = 10;
 bool is_task = false;
+
 void testing()
 {
 	while (is_task == false) {}
@@ -20,18 +21,30 @@ void testing()
 	cout << mysound << endl;
 }
 
+void line1()
+{
+	instance_limit_pool<thread> ths(sound_max);
+	for (int i = 0; i < sound_max; i++)
+	{
+		ths.current() = testing;
+		ths.next();
+	}
+	for (auto&& item : ths)
+	{
+		item.join();
+	}
+}
+
+void line2()
+{
+	is_task = true;
+}
+
 int main(int argc, char** argv)
 {
 	config_instance config(argc, argv);
-	vector<instance<thread>> ths;
-	for (int i = 0; i < sound_max; i++)
-	{
-		ths.push_back(instance<thread>(testing));
-	}
-	is_task = true;
-	for (auto&& item : ths)
-	{
-		if (item.joinable())
-			item.join();
-	}
+	instance<thread> th1(line1);
+	int a;
+	cin >> a;
+	line2();
 }

@@ -316,7 +316,14 @@ namespace ld
 			if (instance_ptr->joinable() && is_need_join_when_destructor)
 				instance_ptr->join();
 		}
-		*this->instance_ptr = std::move(tag(from));
+		if (this->instance_ptr)
+		{
+			*this->instance_ptr = std::move(tag(from));
+		}
+		else
+		{
+			instance::operator=(instance(from));
+		}
 		return *this;
 	}
 	instance<std::thread>& instance<std::thread>::operator=(const instance& from) noexcept

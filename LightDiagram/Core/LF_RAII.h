@@ -2533,7 +2533,6 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 		std::function<void(inside_instance&)> initer;
 		size_t size, header;
 		std::mutex thread_mutex;
-
 	public:
 		template<typename _Builder>
 		instance_limit_pool(
@@ -2552,7 +2551,8 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 		instance_limit_pool(size_t size) :
 			__init(size),
 			header(0),
-			container(size, new_indicator{}) {}
+			initer([](auto&) {}),
+			container(size) {}
 		instance_limit_pool(const instance_limit_pool&) = delete;
 		virtual ~instance_limit_pool() {}
 
