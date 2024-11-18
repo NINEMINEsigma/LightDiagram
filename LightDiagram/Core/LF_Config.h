@@ -1491,7 +1491,7 @@ _LF_C_API(TStruct) choose_type < false, _True, _False > : public std::false_type
 
 #pragma region Format
 
-#ifndef is_obsolete_ld_format
+#ifdef __REF_LD_FORMAT
 
 LF_Attribute_Format(1, 2)
 static std::string _LF_C_API(Func_VarParas) format(const char* fmt, ...)
@@ -1508,7 +1508,7 @@ static std::string _LF_C_API(Func_VarParas) format(const char* fmt, ...)
 	return std::string(buf.data(), size);
 }
 
-#endif // !is_obsolete_ld_format
+#endif // !__REF_LD_FORMAT
 
 #pragma endregion
 
