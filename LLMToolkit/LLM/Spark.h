@@ -62,7 +62,7 @@ namespace llm
 			int maxCache;
 			bool async_finish;
 			IAnyArchitecture::DestroyAction WithDestroy() const override;
-			virtual std::string SymbolName() const override;
+			//virtual std::string SymbolName() const override;
 		};
 
 		_LF_C_API(Class)

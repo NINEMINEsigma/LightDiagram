@@ -174,7 +174,8 @@
       "name": "v4-base",
       "hidden": true,
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build-${presetName}",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "installDir": "${sourceDir}/out/install/${presetName}",
       "cacheVariables": {
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
         "CMAKE_INSTALL_RPATH": "$ORIGIN;$ORIGIN/.."

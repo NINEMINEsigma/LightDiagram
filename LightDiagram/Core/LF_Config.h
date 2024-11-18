@@ -1309,23 +1309,43 @@ public:
 #endif // _USE_DEFINED_CALL_
 
 #ifdef _Source_DLL_EXPORT
-#define _LFramework_Config_API_DLL _declspec(dllexport)
-#define _LFramework_Config_API_TDLL _LFramework_Config_API_DLL
+	#define _LFramework_Config_API_DLL _declspec(dllexport)
+	#define _LFramework_Config_API_TDLL _LFramework_Config_API_DLL
+	#define Symbol_Extern extern
+	#define _LFramework_Config_API_IsDLL 1
+#else 
+#ifndef Symbol_Extern
+	#define Symbol_Extern
+#endif // !Symbol_Extern
+#ifndef _LFramework_Config_API_IsDLL
+	#define _LFramework_Config_API_IsDLL 0
+#endif // !_LFramework_Config_API_IsDLL
 #endif // _Source_Development
 
 #ifdef _Source_DLL_IMPORT
-#define _LFramework_Config_API_DLL _declspec(dllimport)
-#define _LFramework_Config_API_TDLL _LFramework_Config_API_DLL
+	#define _LFramework_Config_API_DLL _declspec(dllimport)
+	#define _LFramework_Config_API_TDLL _LFramework_Config_API_DLL
+	#define Symbol_Extern extern
+	#define _LFramework_Config_API_IsDLL 1
+#else 
+#ifndef Symbol_Extern
+	#define Symbol_Extern
+#endif // !Symbol_Extern
+#ifndef _LFramework_Config_API_IsDLL
+	#define _LFramework_Config_API_IsDLL 0
+#endif // !_LFramework_Config_API_IsDLL
 #endif // _Source_Development
 
 #ifndef _LFramework_Config_API_DLL
-#define _LFramework_Config_API_DLL
+	#define _LFramework_Config_API_DLL
 #endif // _LFramework_Config_API_DLL
 #ifndef _LFramework_Config_API_TDLL
-#define _LFramework_Config_API_TDLL
+	#define _LFramework_Config_API_TDLL
 #endif // !_LFramework_Config_API_TDLL
 
 #define _LFramework_Config_API_Call __stdcall 
+
+#define _LFramework_Config_API_HasInclude(name)	__has_include(name)
 
 #define _LFramework_Config_API_Class			class _LFramework_Config_API_DLL
 #define _LFramework_Config_API_Struct			struct _LFramework_Config_API_DLL
@@ -1415,6 +1435,15 @@ _LFramework_Config_API_Struct ___utype{ size_t ignore; __LFramework_T(Type) cons
 #define Symbol_Link ,
 #define Symbol_Endl
 #define Close_Align __attribute__((packed))
+#ifdef __GNUC__
+#ifdef __MINGW32__
+#define LF_Attribute_Format(...) __attribute__((format(gnu_printf, __VA_ARGS__)))
+#else
+#define LF_Attribute_Format(...) __attribute__((format(printf, __VA_ARGS__)))
+#endif
+#else
+#define LF_Attribute_Format(...)
+#endif
 
 //*
 //  This allows you to declare a field's Property Binder
@@ -1459,6 +1488,30 @@ _LF_C_API(TStruct) choose_type < false, _True, _False > : public std::false_type
 };
 
 #pragma endregion
+
+#pragma region Format
+
+#ifndef is_obsolete_ld_format
+
+LF_Attribute_Format(1, 2)
+static std::string _LF_C_API(Func_VarParas) format(const char* fmt, ...)
+{
+	va_list ap;
+	va_list ap2;
+	va_start(ap, fmt);
+	va_copy(ap2, ap);
+	int size = vsnprintf(NULL, 0, fmt, ap);
+	std::vector<char> buf(size + 1);
+	int size2 = vsnprintf(buf.data(), size + 1, fmt, ap2);
+	va_end(ap2);
+	va_end(ap);
+	return std::string(buf.data(), size);
+}
+
+#endif // !is_obsolete_ld_format
+
+#pragma endregion
+
 
 namespace ld
 {
@@ -1843,26 +1896,21 @@ inline auto to_value(const std::string& str)
 	}
 }
 
+// trim whitespace from the beginning and end of a string
 template<typename _Str, typename _CharFirst>
 _Str trim(const _Str& str, _CharFirst ch)
 {
-	size_t size = str.size();
-	if (size == 0)
-		return _Str();
-	bool start = str.front() == ch, last = str.back() == ch;
-	if (size == 1)
-		return start ? str : _Str();
-	if (start == false && last == false)
-		return str;
-	size_t offset = 
-		start 
-		? (std::distance(str.cbegin(), std::find_if_not(str.cbegin(), str.cend(), [ch](const _CharFirst& _c) {return ch == _c; }))) 
-		: 0;
-	size_t roffset =
-		last 
-		? (std::distance(str.crbegin(), std::find_if_not(str.crbegin(), str.crend(), [ch](const _CharFirst& _c) {return ch == _c; }))) 
-		: (size - offset);
-	return str.substr(offset, size - offset - roffset);
+	size_t start = 0;
+	size_t end = str.size();
+	while (start < end && ch == str[start])
+	{
+		start += 1;
+	}
+	while (end > start && ch == str[end - 1])
+	{
+		end -= 1;
+	}
+	return str.substr(start, end - start);
 }
 
 #pragma endregion

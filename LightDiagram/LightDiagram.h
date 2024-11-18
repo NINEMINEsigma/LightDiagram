@@ -41,6 +41,8 @@
 //*
 
 #include<Core/LF_Config.h>
+#include<Core/unicode-data.h>
+#include<Core/unicode.h>
 #include<Core/static_indicator.h>
 #include<Core/static_traits.h>
 #include<Core/some_features.h>

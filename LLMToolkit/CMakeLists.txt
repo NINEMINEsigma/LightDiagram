@@ -1,4 +1,11 @@
-﻿message(STATUS "LLMToolKit aux source -> ${Platform_Name}")
+﻿set(ENABLE_LLAMA ON)
+
+if(ENABLE_LLAMA) 
+	add_compile_definitions(__REF_LLAMA)
+	add_subdirectory("llama")
+endif()
+
+message(STATUS "LLMToolKit aux source -> ${Platform_Name}")
 message(STATUS "LLMToolKit src source -> ${PROJECT_SOURCE_DIR}")
 include_directories(.)
 

@@ -13,6 +13,8 @@ endif()
 
 #include_directories(../LightMath)
 #include_directories(../LLMToolKit)
+include_directories(../LLMToolKit/llama)
+add_compile_definitions(__REF_LLAMA)
 include_directories(../LightDiagram)
 
 include_directories(.)
@@ -25,6 +27,7 @@ if(Boost_FOUND)
     message( STATUS "Boost_LIBRARIES = ${Boost_LIBRARIES}")
 endif()
 target_link_libraries(demo_test LightDiagram)
+target_link_libraries(demo_test llama)
 #target_link_libraries(demo_test LLMToolKit)
 #target_link_libraries(demo_test OpenXLSX::OpenXLSX)
 #target_link_libraries(demo_test LightMath)
@@ -33,7 +36,7 @@ file(GLOB OpenCV2_Lib_List ${PROJECT_SOURCE_DIR}/LightMath/opencv2-lib/static/*.
 target_link_libraries(demo_test ${OpenCV2_Lib_List})
 
 install(TARGETS demo_test 
-        RUNTIME DESTINATION ${Install_Path}/bin/test
+        RUNTIME DESTINATION ${Install_Path}/bin
         LIBRARY DESTINATION ${Install_Path}/lib
         ARCHIVE DESTINATION ${Install_Path}/lib/static)
 

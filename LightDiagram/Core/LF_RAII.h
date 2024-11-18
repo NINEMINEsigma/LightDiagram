@@ -1529,16 +1529,35 @@ namespace ld
 			return (*this->get_ptr())[key];
 		}
 
+		template<typename _T>
+		bool detect_and_set(const std::string& key, _T& data)
+		{
+			bool result = contains(key);
+			if (result)
+				data = to_value<_T>(get_value(key));
+			return result;
+		}
+		template<typename _T,typename _Def_T>
+		bool detect_and_set(const std::string& key, _T& data, _Def_T&& default_setter)
+		{
+			bool result = contains(key);
+			if (result)
+				data = to_value<_T>(get_value(key));
+			else
+				data = std::forward<_Def_T>(default_setter);
+			return result;
+		}
+
 		virtual std::string SymbolName() const override
 		{
 			return typeid(*this).name();
 		}
 
-		inline decltype(auto) begin() const noexcept
+		inline auto begin() const noexcept
 		{
 			return this->get_ref().begin();
 		}
-		inline decltype(auto) end() const noexcept
+		inline auto end() const noexcept
 		{
 			return this->get_ref().end();
 		}

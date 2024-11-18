@@ -8,5 +8,8 @@
 
 #include <LightDiagram.h>
 #include <LLM/Spark.h>
+#ifdef __REF_LLAMA
+#include <llama/include/llama.h>
+#endif // __REF_LLAMA
 
 #endif // !__FILE_LLMTOOLKIT

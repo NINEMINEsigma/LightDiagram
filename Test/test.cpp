@@ -1,6 +1,7 @@
 ﻿#define _CRT_SECURE_NO_WARNINGS
 
 #include<LightDiagram.h>
+#include<llama.h>
 
 using namespace ld;
 //using namespace ld::resources;
@@ -8,43 +9,169 @@ using namespace std;
 
 sync_with_stdio_false(__auto__);
 
-atomic_int index = 0;
-mutex _mutex;
-constexpr int sound_max = 10;
-bool is_task = false;
-
-void testing()
+static void print_usage(int argc, char** argv) 
 {
-	while (is_task == false) {}
-	lock_guard lg(_mutex);
-	int mysound = index.fetch_add(1);
-	cout << mysound << endl;
+    printf("\nexample usage:\n");
+    printf("\n    %s [-m=model.gguf] [-n=n_predict] [-ngl=n_gpu_layers] [-p=prompt]\n", argv[0]);
+    printf("\n");
 }
 
-void line1()
+int main(int argc, char** argv) 
 {
-	instance_limit_pool<thread> ths(sound_max);
-	for (int i = 0; i < sound_max; i++)
-	{
-		ths.current() = testing;
-		ths.next();
-	}
-	for (auto&& item : ths)
-	{
-		item.join();
-	}
-}
+    // path to the model gguf file
+    std::string model_path = "D:/LLM/MODELs/llama3-8B/Meta-Llama-3-8B-Instruct/Meta-Llama-3-8B-Instruct-Q4_0.gguf";
+    // prompt to generate text from
+    std::string prompt = "Hello my name is";
+    // number of layers to offload to the GPU
+    int ngl = 99;
+    // number of tokens to predict
+    int n_predict = 32;
 
-void line2()
-{
-	is_task = true;
-}
+    // parse command line arguments
 
-int main(int argc, char** argv)
-{
-	config_instance config(argc, argv);
-	instance<thread> th1(line1);
-	int a;
-	cin >> a;
-	line2();
+    config_instance __config__(argc, argv);
+    try
+    {
+        if (__config__.contains("-h") || __config__.contains("--help"))
+        {
+            print_usage(argc, argv);
+            return 0;
+        }
+        __config__.detect_and_set("-m", model_path);
+        __config__.detect_and_set("-n", ngl);
+        __config__.detect_and_set("-ngl", n_predict);
+        __config__.detect_and_set("-p", prompt);
+    }
+    catch (exception ex)
+    {
+        console.LogError("error is happen:");
+        console.LogError(ex.what());
+        print_usage(argc, argv);
+        return 0;
+    }
+
+    // initialize the model
+
+    llama_model_params model_params = llama_model_default_params();
+    model_params.n_gpu_layers = ngl;
+
+    llama_model* model = llama_load_model_from_file(model_path.c_str(), model_params);
+
+    if (model == NULL) {
+        fprintf(stderr, "%s: error: unable to load model\n", __func__);
+        return 1;
+    }
+
+    // tokenize the prompt
+
+    // find the number of tokens in the prompt
+    const int n_prompt = -llama_tokenize(model, prompt.c_str(), prompt.size(), NULL, 0, true, true);
+
+    // allocate space for the tokens and tokenize the prompt
+    std::vector<llama_token> prompt_tokens(n_prompt);
+    if (llama_tokenize(model, prompt.c_str(), prompt.size(), prompt_tokens.data(), prompt_tokens.size(), true, true) < 0) {
+        fprintf(stderr, "%s: error: failed to tokenize the prompt\n", __func__);
+        return 1;
+    }
+
+    // initialize the context
+
+    llama_context_params ctx_params = llama_context_default_params();
+    // n_ctx is the context size
+    ctx_params.n_ctx = n_prompt + n_predict - 1;
+    // n_batch is the maximum number of tokens that can be processed in a single call to llama_decode
+    ctx_params.n_batch = n_prompt;
+    // enable performance counters
+    ctx_params.no_perf = false;
+
+    llama_context* ctx = llama_new_context_with_model(model, ctx_params);
+
+    if (ctx == NULL) {
+        fprintf(stderr, "%s: error: failed to create the llama_context\n", __func__);
+        return 1;
+    }
+
+    // initialize the sampler
+
+    auto sparams = llama_sampler_chain_default_params();
+    sparams.no_perf = false;
+    llama_sampler* smpl = llama_sampler_chain_init(sparams);
+
+    llama_sampler_chain_add(smpl, llama_sampler_init_greedy());
+
+    // print the prompt token-by-token
+
+    for (auto id : prompt_tokens) {
+        char buf[128];
+        int n = llama_token_to_piece(model, id, buf, sizeof(buf), 0, true);
+        if (n < 0) {
+            fprintf(stderr, "%s: error: failed to convert token to piece\n", __func__);
+            return 1;
+        }
+        std::string s(buf, n);
+        printf("%s", s.c_str());
+    }
+
+    // prepare a batch for the prompt
+
+    llama_batch batch = llama_batch_get_one(prompt_tokens.data(), prompt_tokens.size());
+
+    // main loop
+
+    const auto t_main_start = ggml_time_us();
+    int n_decode = 0;
+    llama_token new_token_id;
+
+    for (int n_pos = 0; n_pos + batch.n_tokens < n_prompt + n_predict; ) {
+        // evaluate the current batch with the transformer model
+        if (llama_decode(ctx, batch)) {
+            fprintf(stderr, "%s : failed to eval, return code %d\n", __func__, 1);
+            return 1;
+        }
+
+        n_pos += batch.n_tokens;
+
+        // sample the next token
+        {
+            new_token_id = llama_sampler_sample(smpl, ctx, -1);
+
+            // is it an end of generation?
+            if (llama_token_is_eog(model, new_token_id)) {
+                break;
+            }
+
+            char buf[128];
+            int n = llama_token_to_piece(model, new_token_id, buf, sizeof(buf), 0, true);
+            if (n < 0) {
+                fprintf(stderr, "%s: error: failed to convert token to piece\n", __func__);
+                return 1;
+            }
+            std::string s(buf, n);
+            printf("%s", s.c_str());
+            fflush(stdout);
+
+            // prepare the next batch with the sampled token
+            batch = llama_batch_get_one(&new_token_id, 1);
+
+            n_decode += 1;
+        }
+    }
+
+    printf("\n");
+
+    const auto t_main_end = ggml_time_us();
+
+    fprintf(stderr, "%s: decoded %d tokens in %.2f s, speed: %.2f t/s\n",
+        __func__, n_decode, (t_main_end - t_main_start) / 1000000.0f, n_decode / ((t_main_end - t_main_start) / 1000000.0f));
+
+    fprintf(stderr, "\n");
+    llama_perf_sampler_print(smpl);
+    llama_perf_context_print(ctx);
+    fprintf(stderr, "\n");
+
+    llama_sampler_free(smpl);
+    llama_free(ctx);
+    llama_free_model(model);
+
+    return 0;
 }
