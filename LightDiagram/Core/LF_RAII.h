@@ -479,6 +479,10 @@ namespace ld
 			return *this;
 		}
 
+		constexpr operator tag* ()
+		{
+			return instance_ptr;
+		}
 		operator tag& ()
 		{
 			return this->get_ref();

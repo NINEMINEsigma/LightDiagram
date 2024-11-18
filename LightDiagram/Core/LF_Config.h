@@ -1837,8 +1837,18 @@ namespace std
 	{
 		return str;
 	}
-}
 
+	template<typename _RetT,typename _LeftT>
+	inline _RetT Combine(const _RetT& first, const _LeftT& arg)
+	{
+		return to_string(first) + to_string(arg);
+	}
+	template<typename _RetT, typename... Args>
+	inline _RetT Combine(const _RetT& first, const Args&...args)
+	{
+		return to_string(first) + Combine<_RetT>(args...);
+	}
+}
 
 template<typename T> constexpr bool enable_to_string =
 std::is_arithmetic_v<T>
