@@ -8,6 +8,8 @@ set(ENABLE_LIGHT_MATH OFF)
 set(ENABLE_LINE_SCRIPT OFF)
 set(ENABLE_TEST ON)
 add_compile_definitions(not_monitor_the_constructor_of_anyclass)
+# Enable Export
+# add_compile_definitions(_Source_DLL_EXPORT)
 # Enable C++17
 set(CMAKE_CXX_STANDARD 17)
 # Enable C11

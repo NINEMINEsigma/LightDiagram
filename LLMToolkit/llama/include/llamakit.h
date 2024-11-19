@@ -624,7 +624,18 @@ namespace ld
             return instance_ptr;
         }
     };
+}
 
+extern "C"
+{
+    LLAMA_API int llama_ld_call(
+        const char* model_path_cstr,
+        const char* prompt_cstr,
+        int n_predict_number,
+        void (*callback)(const char*)
+    );
+
+    LLAMA_API int test_add(int a, int b);
 }
 
 #endif // !__FILE_LLAMA_KIT

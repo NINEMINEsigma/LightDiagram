@@ -17,7 +17,7 @@ add_library(llama
             llama-vocab.cpp
             llama-grammar.cpp
             llama-sampling.cpp
-            )
+             "llamakit.cpp")
 
 target_include_directories(llama PUBLIC . ../include)
 target_compile_features   (llama PUBLIC cxx_std_11) # don't bump

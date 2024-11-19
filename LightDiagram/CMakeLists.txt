@@ -74,3 +74,4 @@ install(TARGETS LightDiagram
 
 file(GLOB LightDiagram_Engines_List ${PROJECT_SOURCE_DIR}/LightDiagram/Engine/*.h)
 install(FILES ${LightDiagram_Engines_List} DESTINATION  ${Install_Path}/include/Engine)
+

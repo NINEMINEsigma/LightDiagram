@@ -1,5 +1,4 @@
 ﻿#ifndef __FILE_LF_CONFIG
-
 #define __FILE_LF_CONFIG
 
 #pragma region config defined
@@ -1343,7 +1342,8 @@ public:
 	#define _LFramework_Config_API_TDLL
 #endif // !_LFramework_Config_API_TDLL
 
-#define _LFramework_Config_API_Call __stdcall 
+//#define _LFramework_Config_API_Call __stdcall
+#define _LFramework_Config_API_Call
 
 #define _LFramework_Config_API_HasInclude(name)	__has_include(name)
 
