@@ -1846,7 +1846,7 @@ namespace std
 	template<typename _RetT, typename... Args>
 	inline _RetT Combine(const _RetT& first, const Args&...args)
 	{
-		return to_string(first) + Combine<_RetT>(args...);
+		return to_string(first) + Combine<std::string>(std::to_string(args)...);
 	}
 }
 

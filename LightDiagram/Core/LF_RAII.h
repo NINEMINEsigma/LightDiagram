@@ -282,7 +282,7 @@ namespace ld
 		instance(Args&&... args) : instance(new(alloc_instance_inside_ptr_handler(sizeof(tag))) tag(std::forward<Args>(args)...)) {}
 		virtual ~instance()
 		{
-			if (this->get_count() <= 1)
+			if (this->countable() != -1 && this->get_count() <= 1)
 			{
 				destruct_and_free_instance_ptr();
 			}

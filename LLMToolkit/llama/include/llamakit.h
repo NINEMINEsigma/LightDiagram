@@ -24,7 +24,14 @@ namespace ld
         instance(tag* ptr) : instance_ptr(ptr), instance<void>() {}
     public:
         //build up instance
-        instance() noexcept : instance(nullptr) {}
+        instance() noexcept : instance_ptr(nullptr), instance<void>()
+        {
+            auto params = llama_sampler_chain_default_params();
+            params.no_perf = false;
+            instance_ptr = llama_sampler_chain_init(params);
+        }
+        //build up instance
+        instance(new_indicator) noexcept : instance(nullptr) {}
         //build up instance by copy left-value instance
         instance(instance& from) noexcept : instance_ptr(from.instance_ptr), instance<void>(from) {}
         //build up instance by move right-value instance
@@ -36,7 +43,7 @@ namespace ld
         instance(const instance& from) noexcept : instance_ptr(from.instance_ptr), instance<void>(from) {}
         virtual ~instance()
         {
-            if (this->get_count() <= 1)
+            if (this->countable()!=-1 && this->get_count() <= 1)
             {
                 destruct_and_free_instance_ptr();
             }
@@ -147,15 +154,19 @@ namespace ld
             return "llama-instance";
         }
 
-        void init_instance(llama_sampler_chain_params params)
-        {
-            instance_ptr = llama_sampler_chain_init(params);
-            llama_sampler_chain_add(instance_ptr, llama_sampler_init_greedy());
-        }
-
         void sampler_print() const
         {
             llama_perf_sampler_print(instance_ptr);
+        }
+
+        void init_default() const
+        {
+            llama_sampler_chain_add(instance_ptr, llama_sampler_init_greedy());
+        }
+
+        void push(const instance<llama_sampler>& next) const
+        {
+            llama_sampler_chain_add(instance_ptr, next.get_ptr());
         }
 
         constexpr operator tag* ()
@@ -183,6 +194,8 @@ namespace ld
     public:
         //build up instance
         instance() noexcept : instance(nullptr) {}
+        //build up instance
+        instance(new_indicator) noexcept : instance(nullptr) {}
         //build up instance by copy left-value instance
         instance(instance& from) noexcept : instance_ptr(from.instance_ptr), instance<void>(from) {}
         //build up instance by move right-value instance
@@ -194,7 +207,7 @@ namespace ld
         instance(const instance& from) noexcept : instance_ptr(from.instance_ptr), instance<void>(from) {}
         virtual ~instance()
         {
-            if (this->get_count() <= 1)
+            if (this->countable() != -1 && this->get_count() <= 1)
             {
                 destruct_and_free_instance_ptr();
             }
@@ -369,6 +382,8 @@ namespace ld
     public:
         //build up instance
         instance() noexcept : instance(nullptr) {}
+        //build up instance
+        instance(new_indicator) noexcept : instance(nullptr) {}
         //build up instance by copy left-value instance
         instance(instance& from) noexcept : instance_ptr(from.instance_ptr), instance<void>(from) {}
         //build up instance by move right-value instance
@@ -380,7 +395,7 @@ namespace ld
         instance(const instance& from) noexcept : instance_ptr(from.instance_ptr), instance<void>(from) {}
         virtual ~instance()
         {
-            if (this->get_count() <= 1)
+            if (this->countable() != -1 && this->get_count() <= 1)
             {
                 destruct_and_free_instance_ptr();
             }
@@ -580,6 +595,7 @@ namespace ld
                 n_pos += batch.n_tokens;
 
                 // sample the next token
+                do
                 {
                     new_token_id = llama_sampler_sample(smpl.get_ptr(), ctx.get_ptr(), -1);
 
@@ -605,7 +621,7 @@ namespace ld
 
                     // prepare the next batch with the sampled token
                     batch = llama_batch_get_one(&new_token_id, 1);
-                }
+                }while(false);
             }
         }
         void operator()(
@@ -628,6 +644,15 @@ namespace ld
 
 extern "C"
 {
+    typedef int32_t map_index_t;
+
+    LLAMA_API map_index_t LoadModel(
+        const char* model_path,
+        struct llama_model_params params
+    );
+
+    LLAMA_API map_index_t CreateSampler();
+
     LLAMA_API int llama_ld_call(
         const char* model_path_cstr,
         const char* prompt_cstr,
@@ -635,7 +660,13 @@ extern "C"
         void (*callback)(const char*)
     );
 
-    LLAMA_API int test_add(int a, int b);
+    LLAMA_API int LlamaPredict(
+        map_index_t model_index,
+        map_index_t sampler_index,
+        const char* prompt_cstr,
+        int n_predict_number,
+        void (*callback)(const char*)
+    );
 }
 
 #endif // !__FILE_LLAMA_KIT
