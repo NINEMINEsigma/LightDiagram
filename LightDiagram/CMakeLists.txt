@@ -63,9 +63,9 @@ if (CMAKE_VERSION VERSION_GREATER 3.12)
 endif()
 
 file(GLOB LightDiagram_Header_List ${PROJECT_SOURCE_DIR}/LightDiagram/Core/*.h)
-file(GLOB LightDiagram_cFiles_List ${PROJECT_SOURCE_DIR}/LightDiagram/Core/*.c)
+#file(GLOB LightDiagram_cFiles_List ${PROJECT_SOURCE_DIR}/LightDiagram/Core/*.c)
 install(FILES ${LightDiagram_Header_List} DESTINATION  ${Install_Path}/include/Core)
-install(FILES ${LightDiagram_cFiles_List} DESTINATION  ${Install_Path}/include/Core)
+#install(FILES ${LightDiagram_cFiles_List} DESTINATION  ${Install_Path}/include/Core)
 install(FILES ${PROJECT_SOURCE_DIR}/LightDiagram/LightDiagram.h DESTINATION ${Install_Path}/include/)
 install(TARGETS LightDiagram 
         RUNTIME DESTINATION ${Install_Path}/bin

@@ -59,6 +59,7 @@
 #include<Core/algorithm.h>
 #include<Core/anygraph.h>
 
+#include<Core/LString.h>
 #include<Core/LF_Architecture.h>
 
 #pragma region IO QUES
