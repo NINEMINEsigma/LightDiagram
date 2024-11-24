@@ -17,8 +17,8 @@ namespace ld
 	inline std::string go_string(_First&& first, _LeftT&& arg)
 	{
 		return 
-			to_string(std::forward<_First>(first)) +
-			to_string(std::forward<_First>(arg));
+			std::to_string(std::forward<_First>(first)) +
+			std::to_string(std::forward<_LeftT>(arg));
 	}
 	template<typename _First, typename... Args>
 	inline std::string go_string(_First&& first, Args&&...args)

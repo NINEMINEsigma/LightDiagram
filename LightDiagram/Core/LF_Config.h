@@ -1515,13 +1515,13 @@ static std::string _LF_C_API(Func_VarParas) format(const char* fmt, ...)
 
 namespace ld
 {
-	template<typename Pr, typename T>
-	decltype(auto) element_pr(Pr&& pr, T&& first, T&& second)
+	template<typename Pr, typename T,typename Q>
+	decltype(auto) element_pr(Pr&& pr, T&& first, Q&& second)
 	{
-		if (pr(static_cast<const T&>(first), static_cast<const T&>(second)))
+		if (pr(static_cast<const T&>(first), static_cast<const Q&>(second)))
 			return std::forward<T>(first);
 		else
-			return std::forward<T>(second);
+			return std::forward<Q>(second);
 	}
 	template<typename Pr, typename T, typename ...Args>
 	decltype(auto) element_pr(Pr&& pr, T&& first, T&& second, Args&&... args)
@@ -1532,13 +1532,13 @@ namespace ld
 			return element_pr(std::forward<T>(second), std::forward<Args>(args)...);
 	}
 
-	template<typename T>
-	decltype(auto) Max(T&& first, T&& second)
+	template<typename T, typename Q>
+	decltype(auto) Max(T&& first, Q&& second)
 	{
 		return first > second ? first : second;
 	}
-	template<typename T>
-	decltype(auto) Min(T&& first, T&& second)
+	template<typename T, typename Q>
+	decltype(auto) Min(T&& first, Q&& second)
 	{
 		return first < second ? first : second;
 	}
@@ -1551,27 +1551,6 @@ namespace ld
 	decltype(auto) Min(T&& first, T&& second, Args&&... args)
 	{
 		return Min(Min(std::forward<T>(first), std::forward<T>(second)), std::forward<Args>(args)...);
-	}
-
-	template<typename T>
-	decltype(auto) Max(const T& first, const T& second)
-	{
-		return first > second ? first : second;
-	}
-	template<typename T>
-	decltype(auto) Min(const T& first, const T& second)
-	{
-		return first < second ? first : second;
-	}
-	template<typename T, typename ...Args>
-	decltype(auto) Max(const T& first, const T& second, const Args&... args)
-	{
-		return Max(Max(first, second), args...);
-	}
-	template<typename T, typename ...Args>
-	decltype(auto) Min(const T& first, const T& second, const Args&... args)
-	{
-		return Min(Min(first, second), args...);
 	}
 	namespace constexpr_kit
 	{
