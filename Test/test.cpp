@@ -1,112 +1,91 @@
 ﻿#define _CRT_SECURE_NO_WARNINGS
 
-/*
-#include<LightDiagram.h>
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <climits>
+#include <string>
 
-using namespace ld;
-using namespace ld::resources;
-using namespace std;
-
-int main(int argc, char** argv)
-{
-	config_instance __config__(argc, argv);
-}
-*/
-
-#include<iostream>
-#include<vector>
-#include<queue>
-#include<algorithm>
-
-using namespace std;
-
-template<typename T,typename Q>
+template<typename T, typename Q>
 decltype(auto) Max(T&& first, Q&& second)
 {
-	return first > second ? first : second;
+    return first > second ? first : second;
 }
-template<typename T,typename Q>
+template<typename T, typename Q>
 decltype(auto) Min(T&& first, Q&& second)
 {
-	return first < second ? first : second;
+    return first < second ? first : second;
 }
 template<typename T, typename ...Args>
 decltype(auto) Max(T&& first, T&& second, Args&&... args)
 {
-	return Max(Max(std::forward<T>(first), std::forward<T>(second)), std::forward<Args>(args)...);
+    return Max(Max(std::forward<T>(first), std::forward<T>(second)), std::forward<Args>(args)...);
 }
 template<typename T, typename ...Args>
 decltype(auto) Min(T&& first, T&& second, Args&&... args)
 {
-	return Min(Min(std::forward<T>(first), std::forward<T>(second)), std::forward<Args>(args)...);
+    return Min(Min(std::forward<T>(first), std::forward<T>(second)), std::forward<Args>(args)...);
 }
 
-/*
+using namespace std;
 
-struct node
-{
-	int cost;
-	int ah;
-
-	bool operator>(const node& right) const
-	{
-		return cost > right.cost;
-	}
-	bool operator<(const node& right) const
-	{
-		return cost < right.cost;
-	}
-};
-
-vector<node> nodes;
+short dp[10010][10010];
 
 int main()
 {
-	int n, m, k;
-	cin >> n >> m >> k;
-	priority_queue<node> pq;
-	for (int i = 0; i < n; i++)
-	{
-		int cost, ah;
-		cin >> cost >> ah;
-		pq.push({ cost, ah });
-	}
-	while (!pq.empty() && m - pq.top().ah > 0 && pq.top().cost > k)
-	{
-		node top = pq.top();
-		pq.pop();
-		m -= top.ah;
-		top.cost -= 1;
-		pq.push(top);
-	}
-	if (pq.empty())
-		cout << k << endl;
-	else
-		cout << Max(k, pq.top().cost) << endl;
-	return 0;
-}
-*/
+    int t, k;
+    cin >> t >> k;
+    vector<int> taskTimes(t);
+    for (auto& item : taskTimes)
+    {
+        cin >> item;
+    }
+    // 前缀和数组
+    vector<int> prefixSum(t + 1, 0);
+    for (int i = 1; i <= t; ++i)
+    {
+        prefixSum[i] = prefixSum[i - 1] + taskTimes[i - 1];
+    }
 
-int k;
+    // 动态规划数组
+    for (int j = 0; j <= k; ++j)
+    {
+        dp[0][j] = 0;
+    }
 
-class node
-{
-public:
-	vector<int> costs;
-	node() :costs(k) {}
-};
+    // 填充动态规划数组
+    for (int i = 1; i <= t; ++i)
+    {
+        for (int j = 1; j <= k; ++j)
+        {
+            for (int p = 0; p < i; ++p)
+            {
+                dp[i][j] = Min(dp[i][j], dp[p][j - 1] + (prefixSum[i] - prefixSum[p]));
+            }
+        }
+    }
 
-int main()
-{
-	int n, m, k;
-	cin >> n >> m >> k;
-	vector<node> nodes(n);
-	for(auto& i:nodes)
-	{
-		for (auto& item : i.costs)
-		{
-			cin >> item;
-		}
-	}
-	return 0;
+    // 回溯任务分配
+    vector<pair<int, int>> result(k, { 0, 0 });
+    int i = t, j = k;
+    while (j > 0)
+    {
+        for (int p = 0; p < i; ++p)
+        {
+            if (dp[i][j] == dp[p][j - 1] + (prefixSum[i] - prefixSum[p]))
+            {
+                result[j - 1] = { p + 1, i };
+                i = p;
+                break;
+            }
+        }
+        --j;
+    }
+
+    // 格式化输出
+    for (auto& [start, end] : result)
+    {
+        cout << to_string(start) + " " + to_string(end) + "\n";
+    }
+    return 0;
 }

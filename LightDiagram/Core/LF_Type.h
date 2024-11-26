@@ -66,13 +66,13 @@ template<typename T>
 _LF_C_API(OStruct) LDType_Indicator
 {
 	//	is indicator type
-	constexpr static bool is_idc = if_type_exist(tag) < T > && if_property_exist(value) < T > ;
+	constexpr static bool is_idc = if_type_exist(tag) < T > && if_property_exist(value) < T, bool > ;
 	//	is key indicator
 	constexpr static bool is_key = std::is_same_v<T, key_indicator>;
 	//	is type indicator
 	constexpr static bool is_tid = if_type_exist(type_indicator) < T > ;
 	//	is pseudo indicator(contain indicator element)
-	constexpr static bool is_pse = if_type_exist(tag) < T > != if_property_exist(value) < T > ;
+	constexpr static bool is_pse = if_type_exist(tag) < T > != if_property_exist(value) < T, bool > ;
 
 	using tag = T;
 	constexpr static bool value = true;

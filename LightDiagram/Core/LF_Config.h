@@ -266,7 +266,6 @@ using namespace boost::placeholders;
 #include <ccomplex>
 #include <cfenv>
 #include <cinttypes>
-#include <cstdalign>
 #include <cstdbool>
 #include <cstdint>
 #include <ctgmath>
@@ -331,7 +330,7 @@ using namespace boost::placeholders;
 
 enum class platform_current
 {
-	linux_on_windows_platform,windows_platform,linux_platform
+	linux_on_windows_platform,windows_platform,linux_platform,unknown
 };
 
 #define NOMINMAX
@@ -349,9 +348,7 @@ struct platform_indicator
 	constexpr static platform_current mode = platform_current::linux_on_windows_platform;
 	constexpr static bool is_mscv = false;
 };
-#endif
-
-#if defined(_WINDOW_)
+#elif defined(_WINDOW_)
 #include <Windows.h>
 #include <io.h>
 #include <wingdi.h>
@@ -368,9 +365,7 @@ struct platform_indicator
 	constexpr static bool is_mscv = false;
 #endif // _MSC_VER
 };
-#endif
-
-#if defined(_LINUX_)
+#elif defined(_LINUX_)
 #include <unistd.h>
 #include <sys/epoll.h>
 #include <sys/eventfd.h>
@@ -394,9 +389,19 @@ struct platform_indicator
 	constexpr static platform_current mode = platform_current::linux_platform;
 	constexpr static bool is_mscv = false;
 };
+#else
+struct platform_indicator
+{
+	using tag = void;
+	constexpr static bool value = false;
+	constexpr static const char* name = "unknown";
+	constexpr static platform_current mode = platform_current::unknown;
+	constexpr static bool is_mscv = false;
+};
+#endif
+
 #ifndef abstract
 #define abstract =0
-#endif
 #endif
 
 using type_info = std::type_info;
@@ -1542,15 +1547,15 @@ namespace ld
 	{
 		return first < second ? first : second;
 	}
-	template<typename T, typename ...Args>
-	decltype(auto) Max(T&& first, T&& second, Args&&... args)
+	template<typename T, typename Q, typename ...Args>
+	decltype(auto) Max(T&& first, Q&& second, Args&&... args)
 	{
-		return Max(Max(std::forward<T>(first), std::forward<T>(second)), std::forward<Args>(args)...);
+		return Max(Max(std::forward<T>(first), std::forward<Q>(second)), std::forward<Args>(args)...);
 	}
-	template<typename T, typename ...Args>
-	decltype(auto) Min(T&& first, T&& second, Args&&... args)
+	template<typename T, typename Q, typename ...Args>
+	decltype(auto) Min(T&& first, Q&& second, Args&&... args)
 	{
-		return Min(Min(std::forward<T>(first), std::forward<T>(second)), std::forward<Args>(args)...);
+		return Min(Min(std::forward<T>(first), std::forward<Q>(second)), std::forward<Args>(args)...);
 	}
 	namespace constexpr_kit
 	{

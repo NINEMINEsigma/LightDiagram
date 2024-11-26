@@ -759,7 +759,7 @@ public:
 private:
 	field_info(field C:: * _right_ptr, const char* field_name) :
 		field_info(
-			static_cast<size_t>(reinterpret_cast<int>(*(void**)(&_right_ptr))),
+			reinterpret_cast<size_t>(*(void**)(&_right_ptr)),
 			field_name,
 			string(typeid(C).name()) + "::" + field_name,
 			typeid(field)) {}

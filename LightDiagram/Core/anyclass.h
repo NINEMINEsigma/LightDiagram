@@ -206,12 +206,12 @@ public:
 	{
 		return from;
 	}
-	template<typename T> any_class* StaticShare(_Inout_ T** object_ptr) const
+	template<typename T> any_class* StaticShare(_Inout_ T** object_ptr)
 	{
 		*object_ptr = static_cast<T*>(this);
 		return this;
 	}
-	template<typename T> any_class* DynamicShare(_Inout_ T** object_ptr) const
+	template<typename T> any_class* DynamicShare(_Inout_ T** object_ptr)
 	{
 		*object_ptr = dynamic_cast<T*>(this);
 		return this;
@@ -472,7 +472,7 @@ vptr_t get_vptr(_T* from)
 template<typename _T>
 void set_vptr(_T* from, vptr_t vptr)
 {
-	*reinterpret_cast<vptr_t>(from) = vptr;
+	*reinterpret_cast<vptr_t>(from) = *vptr;
 }
 
 #pragma pack(pop)

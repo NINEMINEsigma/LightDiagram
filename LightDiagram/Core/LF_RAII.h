@@ -628,9 +628,9 @@ namespace ld
 		template<typename TargetType> constexpr static int index_result_of_type_list = type_list_tag:: template is_type_list_contains<TargetType>(0);
 
 		template<size_t index>
-		result_of_type_list<index> get_value_ptr()
+		result_of_type_list<index>* get_value_ptr()
 		{
-			return static_cast<result_of_type_list<index>>(this->get_ptr()->operator[](index));
+			return static_cast<result_of_type_list<index>*>(this->get_ptr()->operator[](index));
 		}
 		template<typename TargetType>
 		auto get_value_ptr()
@@ -642,11 +642,11 @@ namespace ld
 		{
 			this->get_ptr()->operator[](index) = ptr;
 		}
-		template<typename TargetType>
-		void get_value_ptr(const decltype(get_value_ptr<index_result_of_type_list<TargetType>>())& ptr)
-		{
-			set_value_ptr<index_result_of_type_list<TargetType>>(ptr);
-		}
+		//template<typename TargetType>
+		//void get_value_ptr(const decltype(result_of_type_list<index_result_of_type_list<TargetType>>())& ptr)
+		//{
+		//	set_value_ptr<index_result_of_type_list<TargetType>>(ptr);
+		//}
 
 		void swap(my_type_tag& from)noexcept
 		{
@@ -1971,7 +1971,7 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 
 		std::string ToString() const override
 		{
-			return this->get_ref().string<_CharTy>();
+			return this->get_ref().template string<_CharTy>();
 		}
 
 		auto get_filesystem_status() const noexcept
@@ -2078,26 +2078,26 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 
 		istream_tag to_ifstream(std::ios::openmode mode = std::ios_base::in)
 		{
-			return istream_tag(this->get_ref().string<_CharTy, std::char_traits<_CharTy>>(), mode);
+			return istream_tag(this->get_ref().template string<_CharTy, std::char_traits<_CharTy>>(), mode);
 		}
 
 		instance<istream_tag> to_ifstream_instance(std::ios::openmode mode = std::ios_base::in)
 		{
 			return new((alloc_instance_inside_ptr_handler(sizeof(istream_tag)))) istream_tag(
-				this->get_ref().string<_CharTy, std::char_traits<_CharTy>>(), mode);
+				this->get_ref().template string<_CharTy, std::char_traits<_CharTy>>(), mode);
 		}
 
 		using ostream_tag = std::basic_ofstream<_CharTy, std::char_traits<_CharTy>>;
 
 		ostream_tag to_ofstream(std::ios::openmode mode = std::ios_base::out| std::ios_base::ate)
 		{
-			return ostream_tag(this->get_ref().string<_CharTy, std::char_traits<_CharTy>>(), mode);
+			return ostream_tag(this->get_ref().template string<_CharTy, std::char_traits<_CharTy>>(), mode);
 		}
 
 		instance<ostream_tag> to_ofstream_instance(std::ios::openmode mode = std::ios_base::out| std::ios_base::ate)
 		{
 			return new((alloc_instance_inside_ptr_handler(sizeof(ostream_tag)))) ostream_tag(
-				this->get_ref().string<_CharTy, std::char_traits<_CharTy>>(), mode);
+				this->get_ref().template string<_CharTy, std::char_traits<_CharTy>>(), mode);
 		}
 
 		using iostream_tag = std::basic_fstream<_CharTy, std::char_traits<_CharTy>>;
