@@ -116,7 +116,10 @@ namespace ld
 	}
 
 
-	bool LString::operator==(const LString& from) noexcept
+	bool LString::operator==(const LString& from)
+#ifndef _DEBUG 
+		noexcept
+#endif
 	{
 #ifdef _DEBUG
 		auto mstr = LString2String<string_char>(u_index);

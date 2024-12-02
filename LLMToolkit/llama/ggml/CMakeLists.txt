@@ -239,13 +239,13 @@ set_target_properties(ggml PROPERTIES PUBLIC_HEADER "${GGML_PUBLIC_HEADERS}")
 #endif()
 
 #install(TARGETS ggml PUBLIC_HEADER)
-install(FILES ${GGML_PUBLIC_HEADERS} DESTINATION ${Install_Path}/include/llama)
+install(FILES ${GGML_PUBLIC_HEADERS} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/llama)
 
 if (BUILD_SHARED_LIBS)
     install(TARGETS ggml 
-        RUNTIME DESTINATION ${Install_Path}/bin
-        LIBRARY DESTINATION ${Install_Path}/lib
-        ARCHIVE DESTINATION ${Install_Path}/lib/static)
+        RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+        LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/static)
 endif()
 
 if (GGML_METAL)
@@ -256,12 +256,12 @@ if (GGML_METAL)
             OWNER_WRITE
             GROUP_READ
             WORLD_READ
-        DESTINATION ${Install_Path})
+        DESTINATION ${CMAKE_INSTALL_PREFIX})
 
     if (NOT GGML_METAL_EMBED_LIBRARY)
         install(
             FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/default.metallib
-            DESTINATION ${Install_Path}
+            DESTINATION ${CMAKE_INSTALL_PREFIX}
         )
     endif()
 endif()

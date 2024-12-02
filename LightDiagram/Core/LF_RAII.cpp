@@ -345,6 +345,7 @@ namespace ld
 		return instance<void>::operator==(from);
 	}
 
+#ifdef _MSC_VER
 	_NODISCARD instance<std::thread>::tag::native_handle_type instance<std::thread>::native_handle() noexcept
 	{
 		if (this->instance_ptr)
@@ -352,6 +353,7 @@ namespace ld
 		else
 			return {};
 	}
+#endif
 	_NODISCARD instance<std::thread>::tag::id instance<std::thread>::get_id() const noexcept
 	{
 		if (this->instance_ptr)

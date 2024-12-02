@@ -1,15 +1,24 @@
 # Make Setting
+# All Configs
 cmake_minimum_required (VERSION 3.12)
 list(APPEND CMAKE_PREFIX_PATH "C:/Boost")
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(ENABLE_OPEN_XLSX OFF)
-set(ENABLE_LLM_TOOLKIT OFF)
+set(ENABLE_LLM_TOOLKIT ON)
 set(ENABLE_LIGHT_MATH OFF)
 set(ENABLE_LINE_SCRIPT OFF)
 set(ENABLE_TEST ON)
-add_compile_definitions(not_monitor_the_constructor_of_anyclass)
+
+set(ENABLE_LF_EXPORT OFF)
+set(ENABLE_LF_ANYCLASS_MONITOR OFF)
+# Disable anyclass's monitor
+if(ENABLE_LF_ANYCLASS_MONITOR)
+	add_compile_definitions(not_monitor_the_constructor_of_anyclass)
+endif()
 # Enable Export
-# add_compile_definitions(_Source_DLL_EXPORT)
+if(ENABLE_LF_EXPORT)
+	add_compile_definitions(_Source_DLL_EXPORT)
+endif()
 # Enable C++17
 set(CMAKE_CXX_STANDARD 17)
 # Enable C11
@@ -28,25 +37,21 @@ if (POLICY CMP0141)
   set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
-set(Install_Path ${CMAKE_BINARY_DIR}/Buildup/default)
 set(Platform_Name "Unknown")
 if (DEFINED _LINUX_ON_WINDOWS)
 	message ( STATUS "current window will support some linux features")
 	message ( STATUS ${_LINUX_ON_WINDOWS})
 	add_compile_definitions(_LINUX_ON_WINDOW_)
-	set(Install_Path ${CMAKE_BINARY_DIR}/Buildup/Linux_On_Windows_${_LINUX_ON_WINDOWS})
 	set(Platform_Name "Windows")
 elseif (DEFINED _WINDOWS)
 	message ( STATUS "current on windows")
 	message ( STATUS ${_WINDOWS})
 	add_compile_definitions(_WINDOW_)
-	set(Install_Path ${CMAKE_BINARY_DIR}/Buildup/Windows_${_WINDOWS})
 	set(Platform_Name "Windows")
 elseif(DEFINED _LINUX)
 	message ( STATUS "current on linux")
 	message ( STATUS ${_LINUX})
 	add_compile_definitions(_LINUX_)
-	set(Install_Path ${CMAKE_BINARY_DIR}/Buildup/Linux_${_LINUX})
 	set(Platform_Name "Linux")
 endif()
 
@@ -60,8 +65,8 @@ set (LightDiagram_VERSION_MINOR 0)
 
 # Sub Project(buf from third-party)
 if(ENABLE_OPEN_XLSX)
-add_compile_definitions(__REF_OPEN_XLSX)
-add_subdirectory ("OpenXLSX")
+	add_compile_definitions(__REF_OPEN_XLSX)
+	add_subdirectory ("OpenXLSX")
 endif()
 # Sub Project
 include_directories ("${PROJECT_SOURCE_DIR}/LightDiagram")
@@ -82,8 +87,6 @@ endif()
 if(ENABLE_TEST)
 	add_subdirectory("Test")
 endif()
-
-set(CMAKE_INSTALL_PREFIX "${PROJECT_SOURCE_DIR}/out/")
 
 message("CMAKE_CXX_STANDARD = ${CMAKE_CXX_STANDARD}" )
 message("CMAKE_CXX_FLAGS = ${CMAKE_CXX_FLAGS}")

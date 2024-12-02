@@ -270,42 +270,42 @@ endif ()
 # Some basic stuff we'll need in this section
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
-set(ConfigPackageLocation ${Install_Path}/include/cmake/OpenXLSX)
+set(ConfigPackageLocation ${CMAKE_INSTALL_PREFIX}/include/cmake/OpenXLSX)
 
 # Install interface headers
 install(
         FILES ${OPENXLSX_CXX_INTERFACE_HEADERS}
-        DESTINATION ${Install_Path}/include/OpenXLSX/${dir}
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/include/OpenXLSX/${dir}
 )
 
 # Install export header
 install(
         FILES ${CMAKE_CURRENT_BINARY_DIR}/OpenXLSX-Exports.hpp
-        DESTINATION ${Install_Path}/include/OpenXLSX/headers
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/include/OpenXLSX/headers
 )
 
 file(GLOB OPENXLSX_HEADER_LIST ${CMAKE_CURRENT_LIST_DIR}/headers/*.hpp)
 install(
         FILES ${OPENXLSX_HEADER_LIST}
-        DESTINATION ${Install_Path}/include/OpenXLSX/headers
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/include/OpenXLSX/headers
 )
 
 install(
         FILES ${CMAKE_CURRENT_LIST_DIR}/OpenXLSX.hpp
-        DESTINATION ${Install_Path}/include/OpenXLSX
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/include/OpenXLSX
 )
 
 # Targets
 install(
         TARGETS OpenXLSX
         EXPORT OpenXLSXTargets
-        LIBRARY DESTINATION ${Install_Path}/lib
+        LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
         COMPONENT lib
-        ARCHIVE DESTINATION ${Install_Path}/lib/static
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/static
         COMPONENT lib
-        RUNTIME DESTINATION ${Install_Path}/bin
+        RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
         #COMPONENT bin
-        #INCLUDES DESTINATION ${Install_Path}/include/OpenXLSX
+        #INCLUDES DESTINATION ${CMAKE_INSTALL_PREFIX}/include/OpenXLSX
 )
 
 set_target_properties(OpenXLSX PROPERTIES FOLDER libs VERSION ${OPENXLSX_MAJOR_VERSION}.${OPENXLSX_MINOR_VERSION}.${OPENXLSX_MICRO_VERSION} SOVERSION ${OPENXLSX_MAJOR_VERSION})

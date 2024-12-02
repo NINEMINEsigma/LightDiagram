@@ -1,6 +1,11 @@
 #Project Setting
 option(ENABLE_MPI "Enable MPI parallelization" ON)
 set(MPI_NO_SYSTEM_PATHS ON) 
+
+if(NOT DEFINED Install_Path)
+    set(Platform_Name "Unknown")
+endif()
+
 find_package(MPI)
 if(MPI_FOUND)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MPI_FLAGS}")
@@ -64,14 +69,14 @@ endif()
 
 file(GLOB LightDiagram_Header_List ${PROJECT_SOURCE_DIR}/LightDiagram/Core/*.h)
 #file(GLOB LightDiagram_cFiles_List ${PROJECT_SOURCE_DIR}/LightDiagram/Core/*.c)
-install(FILES ${LightDiagram_Header_List} DESTINATION  ${Install_Path}/include/Core)
-#install(FILES ${LightDiagram_cFiles_List} DESTINATION  ${Install_Path}/include/Core)
-install(FILES ${PROJECT_SOURCE_DIR}/LightDiagram/LightDiagram.h DESTINATION ${Install_Path}/include/)
+install(FILES ${LightDiagram_Header_List} DESTINATION  ${CMAKE_INSTALL_PREFIX}/include/Core)
+#install(FILES ${LightDiagram_cFiles_List} DESTINATION  ${CMAKE_INSTALL_PREFIX}/include/Core)
+install(FILES ${PROJECT_SOURCE_DIR}/LightDiagram/LightDiagram.h DESTINATION ${CMAKE_INSTALL_PREFIX}/include/)
 install(TARGETS LightDiagram 
-        RUNTIME DESTINATION ${Install_Path}/bin
-        LIBRARY DESTINATION ${Install_Path}/lib
-        ARCHIVE DESTINATION ${Install_Path}/lib/static)
+        RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+        LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/static)
 
 file(GLOB LightDiagram_Engines_List ${PROJECT_SOURCE_DIR}/LightDiagram/Engine/*.h)
-install(FILES ${LightDiagram_Engines_List} DESTINATION  ${Install_Path}/include/Engine)
+install(FILES ${LightDiagram_Engines_List} DESTINATION  ${CMAKE_INSTALL_PREFIX}/include/Engine)
 

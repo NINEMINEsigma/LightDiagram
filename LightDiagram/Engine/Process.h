@@ -10,8 +10,12 @@ namespace ld
 #if defined(_WINDOW_)||defined(_LINUX_ON_WINDOW_)
 		using start_info_type = STARTUPINFOA;
 		using process_info_type = PROCESS_INFORMATION;
-#else defined(_LINUX_)
-
+#elif defined(_LINUX_)
+		using start_info_type = int;
+		using process_info_type = int;
+#else
+		using start_info_type = int;
+		using process_info_type = int;
 #endif // _WINDOW_
 	private:
 		start_info_type start_info;

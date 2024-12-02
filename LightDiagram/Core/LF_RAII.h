@@ -2139,8 +2139,6 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 		template<typename _StreamTy, typename Arg>
 		instance& write(_In_ Arg* buffer, int length = auto_io_length)
 		{
-			if (my_hoster.get_ptr() == nullptr)
-				throw std::exception("hoster not active");
 			auto _stream = dynamic_cast<_StreamTy*>(my_hoster.get_ptr());
 			if (_stream == nullptr)
 				throw std::bad_cast();
@@ -2153,8 +2151,6 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 		template<typename _StreamTy, typename Arg>
 		instance& read(_In_ Arg* buffer, int length = auto_io_length)
 		{
-			if (my_hoster.get_ptr() == nullptr)
-				throw std::exception("hoster not active");
 			auto _stream = dynamic_cast<_StreamTy*>(my_hoster.get_ptr());
 			if (_stream == nullptr)
 				throw std::bad_cast();
@@ -2481,7 +2477,9 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 		bool operator==(const instance& from) const noexcept;
 		bool equals(const instance& from) const noexcept;
 
+#ifdef _MSC_VER
 		_NODISCARD tag::native_handle_type native_handle() noexcept;
+#endif
 		_NODISCARD tag::id get_id() const noexcept;
 		void detach() noexcept;
 		void join() noexcept;

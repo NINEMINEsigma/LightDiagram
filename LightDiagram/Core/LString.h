@@ -45,7 +45,11 @@ namespace ld
 		LString& operator=(const LString& from) noexcept;
 		virtual ~LString();
 
-		bool operator==(const LString& from) noexcept;
+		bool operator==(const LString& from)
+#ifndef _DEBUG
+			noexcept
+#endif
+			;
 		operator std::string() const;
 
 		virtual std::string ToString() const override;

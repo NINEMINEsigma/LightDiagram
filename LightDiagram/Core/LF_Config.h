@@ -1002,6 +1002,10 @@ Enable warning C4005 to find the forbidden define.
 #endif // _STL_COMPILER_PREPROCESSOR
 #endif // _XKEYCHECK_H
 
+#ifndef _NODISCARD
+#define _NODISCARD [[nodiscard]]
+#endif // !_NODISCARD
+
 #pragma endregion
 
 #pragma region MSVC Features
@@ -1823,12 +1827,12 @@ namespace std
 	}
 
 	template<typename _RetT,typename _LeftT>
-	inline _RetT Combine(const _RetT& first, const _LeftT& arg)
+	inline decltype(auto) Combine(const _RetT& first, const _LeftT& arg)
 	{
 		return to_string(first) + to_string(arg);
 	}
 	template<typename _RetT, typename... Args>
-	inline _RetT Combine(const _RetT& first, const Args&...args)
+	inline decltype(auto) Combine(const _RetT& first, const Args&...args)
 	{
 		return to_string(first) + Combine<std::string>(std::to_string(args)...);
 	}

@@ -42,13 +42,13 @@ message("CMAKE_CXX_STANDARD(LLM) = ${CMAKE_CXX_STANDARD}" )
 
 #Spack
 file(GLOB LLMToolKit_Spack_Header_List ${Spack_Part_Dir}/include/*.h)
-install(FILES ${LLMToolKit_Spack_Header_List} DESTINATION ${Install_Path}/include/${Spack_Part_Path})
-install(FILES ${PROJECT_SOURCE_DIR}/LLMToolkit/Windows/Spark/3.5/v1.1/libs/${_WINDOWS}/SparkChain.dll DESTINATION ${Install_Path}/lib)
+install(FILES ${LLMToolKit_Spack_Header_List} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${Spack_Part_Path})
+install(FILES ${PROJECT_SOURCE_DIR}/LLMToolkit/Windows/Spark/3.5/v1.1/libs/${_WINDOWS}/SparkChain.dll DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 #ToolKit
 file(GLOB LLMToolKit_Header_List ${PROJECT_SOURCE_DIR}/LLMToolKit/LLM/*.h)
-install(FILES ${LLMToolKit_Header_List} DESTINATION ${Install_Path}/include/LLM/)
-install(FILES ${PROJECT_SOURCE_DIR}/LLMToolKit/LLMToolKit.h DESTINATION ${Install_Path}/include/)
+install(FILES ${LLMToolKit_Header_List} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/LLM/)
+install(FILES ${PROJECT_SOURCE_DIR}/LLMToolKit/LLMToolKit.h DESTINATION ${CMAKE_INSTALL_PREFIX}/include/)
 install(TARGETS LLMToolKit 
-        RUNTIME DESTINATION ${Install_Path}/bin
-        LIBRARY DESTINATION ${Install_Path}/lib
-        ARCHIVE DESTINATION ${Install_Path}/lib/static)
+        RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+        LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/static)

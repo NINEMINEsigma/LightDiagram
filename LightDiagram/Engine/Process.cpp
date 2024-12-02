@@ -4,7 +4,11 @@ using namespace std;
 
 namespace ld
 {
-	process_kit::process_kit() :stats(false), start_info({}), pinfo({}) {}
+	process_kit::process_kit() :stats(false)
+#if defined(_WINDOW_)||defined(_LINUX_ON_WINDOW_) 
+		,start_info({}), pinfo({})
+#endif
+	{}
 	process_kit::process_kit(
 		std::string commandline,
 		const config_type& config) :process_kit()

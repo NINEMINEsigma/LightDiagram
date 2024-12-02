@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.14) # for add_link_options and implicit target 
 project("llama.cpp" C CXX)
 include(CheckIncludeFileCXX)
 
+if(NOT DEFINED Install_Path)
+    set(Platform_Name "Unknown")
+endif()
+
 #set(CMAKE_WARN_DEPRECATED YES)
 set(CMAKE_WARN_UNUSED_CLI YES)
 
@@ -160,26 +164,26 @@ get_target_property(GGML_LINK_LIBRARIES ggml LINK_LIBRARIES)
 
 set_target_properties(llama PROPERTIES PUBLIC_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/llama.h)
 install(TARGETS llama 
-        RUNTIME DESTINATION ${Install_Path}/bin
-        LIBRARY DESTINATION ${Install_Path}/lib
-        ARCHIVE DESTINATION ${Install_Path}/lib/static)
+        RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+        LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/static)
 
 configure_package_config_file(
         ${CMAKE_CURRENT_SOURCE_DIR}/cmake/llama-config.cmake.in
         ${CMAKE_CURRENT_BINARY_DIR}/llama-config.cmake
-    INSTALL_DESTINATION ${Install_Path}/cmake/llama
+    INSTALL_DESTINATION ${CMAKE_INSTALL_PREFIX}/cmake/llama
     PATH_VARS LLAMA_INCLUDE_INSTALL_DIR
               LLAMA_LIB_INSTALL_DIR
               LLAMA_BIN_INSTALL_DIR )
 
 write_basic_package_version_file(
         ${CMAKE_CURRENT_BINARY_DIR}/llama-version.cmake
-    VERSION ${Install_Path}
+    VERSION ${CMAKE_INSTALL_PREFIX}
     COMPATIBILITY SameMajorVersion)
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/llama-config.cmake
               ${CMAKE_CURRENT_BINARY_DIR}/llama-version.cmake
-        DESTINATION ${Install_Path}/cmake/llama)
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/cmake/llama)
 
 #install(
 #    FILES convert_hf_to_gguf.py
@@ -198,8 +202,8 @@ configure_file(cmake/llama.pc.in
         @ONLY)
 
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/llama.pc"
-        DESTINATION ${Install_Path}/lib/pkgconfig)
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/pkgconfig)
         
 file(GLOB LLMToolKit_LLAMA_Header_List include/*.h)
-install(FILES ${LLMToolKit_LLAMA_Header_List} DESTINATION ${Install_Path}/include/llama)
+install(FILES ${LLMToolKit_LLAMA_Header_List} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/llama)
 

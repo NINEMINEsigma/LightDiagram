@@ -10,6 +10,6 @@ target_link_libraries(WebServer LightDiagram)
 add_subdirectory(base)
 
 install(TARGETS WebServer 
-        RUNTIME DESTINATION ${Install_Path}/bin
-        LIBRARY DESTINATION ${Install_Path}/lib
-        ARCHIVE DESTINATION ${Install_Path}/lib/static)
+        RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+        LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/static)
