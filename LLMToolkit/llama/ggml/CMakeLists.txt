@@ -239,7 +239,7 @@ set_target_properties(ggml PROPERTIES PUBLIC_HEADER "${GGML_PUBLIC_HEADERS}")
 #endif()
 
 #install(TARGETS ggml PUBLIC_HEADER)
-install(FILES ${GGML_PUBLIC_HEADERS} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/llama)
+install(TARGETS ggml PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_PREFIX}/include/llama)
 
 if (BUILD_SHARED_LIBS)
     install(TARGETS ggml 

@@ -7,7 +7,9 @@
 //*
 
 #include <LightDiagram.h>
+#ifdef _REF_SPARK
 #include <LLM/Spark.h>
+#endif
 #ifdef __REF_LLAMA
 #include <llama/include/llama.h>
 #endif // __REF_LLAMA

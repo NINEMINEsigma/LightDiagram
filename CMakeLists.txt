@@ -32,14 +32,16 @@ add_compile_definitions(UNICODE)
 
 message("PROJECT_BINARY_DIR = ${PROJECT_BINARY_DIR}")
 
+# MSVC Policy
 if (POLICY CMP0141)
   cmake_policy(SET CMP0141 NEW)
   set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
+# Defined Platfrom
 set(Platform_Name "Unknown")
 if (DEFINED _LINUX_ON_WINDOWS)
-	message ( STATUS "current window will support some linux features")
+	message ( STATUS "current on window, but support some linux features")
 	message ( STATUS ${_LINUX_ON_WINDOWS})
 	add_compile_definitions(_LINUX_ON_WINDOW_)
 	set(Platform_Name "Windows")
@@ -53,37 +55,53 @@ elseif(DEFINED _LINUX)
 	message ( STATUS ${_LINUX})
 	add_compile_definitions(_LINUX_)
 	set(Platform_Name "Linux")
+elseif(DEFINED _ANDROID)
+	message	( STATUS "current on android")
+	message	( STATUS ${_ANDROID})
+	add_compile_definitions(_ANDROID_)
+	set(Platform_Name "Android")
+elseif(DEFINED _MACOS)
+	message	( STATUS "current on android")
+	message	( STATUS ${_MACOS})
+	add_compile_definitions(_MACOS_)
+	set(Platform_Name "Android")
 endif()
 
+# Threads Enable
 add_compile_definitions(_PTHREADS)
 
+# Project
 project ("LightDiagram")
 
 # Version
 set (LightDiagram_VERSION_MAJOR 1)
-set (LightDiagram_VERSION_MINOR 0)
+set (LightDiagram_VERSION_MINOR 1)
 
 # Sub Project(buf from third-party)
 if(ENABLE_OPEN_XLSX)
 	add_compile_definitions(__REF_OPEN_XLSX)
 	add_subdirectory ("OpenXLSX")
 endif()
-# Sub Project
+# Project
 include_directories ("${PROJECT_SOURCE_DIR}/LightDiagram")
 add_subdirectory ("LightDiagram")
 if(ENABLE_LLM_TOOLKIT)
 	add_subdirectory ("LLMToolkit")
 endif()
+# Linux WebServer
 if(DEFINED _LINUX OR DEFINED _LINUX_ON_WINDOWS)
 	include_directories ("${PROJECT_SOURCE_DIR}/WebServer")
 	add_subdirectory ("WebServer")
 endif()
+# LightMath
 if(ENABLE_LIGHT_MATH)
 	add_subdirectory("LightMath")
 endif()
+# LineScript
 if(ENABLE_LINE_SCRIPT)
 	add_subdirectory("LineScript")
 endif()
+# Test Demo
 if(ENABLE_TEST)
 	add_subdirectory("Test")
 endif()

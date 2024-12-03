@@ -162,11 +162,18 @@ if (GGML_TARGET_DEFINES)
 endif()
 get_target_property(GGML_LINK_LIBRARIES ggml LINK_LIBRARIES)
 
-set_target_properties(llama PROPERTIES PUBLIC_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/llama.h)
+set(LLAMA_PUBLIC_HEADERS
+    include/llama.h 
+    include/llamakit.h
+    )
+set_target_properties(llama PROPERTIES PUBLIC_HEADER "${LLAMA_PUBLIC_HEADERS}")
 install(TARGETS llama 
-        RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
-        LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/static)
+        PUBLIC_HEADER DESTINATION   ${CMAKE_INSTALL_PREFIX}/include/llama
+        RUNTIME DESTINATION         ${CMAKE_INSTALL_PREFIX}/bin
+        LIBRARY DESTINATION         ${CMAKE_INSTALL_PREFIX}/lib
+        ARCHIVE DESTINATION         ${CMAKE_INSTALL_PREFIX}/lib/static)
+#file(GLOB LLMToolKit_LLAMA_Header_List include/*.h)
+#install(FILES ${LLMToolKit_LLAMA_Header_List} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/llama)
 
 configure_package_config_file(
         ${CMAKE_CURRENT_SOURCE_DIR}/cmake/llama-config.cmake.in
@@ -204,6 +211,3 @@ configure_file(cmake/llama.pc.in
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/llama.pc"
         DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/pkgconfig)
         
-file(GLOB LLMToolKit_LLAMA_Header_List include/*.h)
-install(FILES ${LLMToolKit_LLAMA_Header_List} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/llama)
-
