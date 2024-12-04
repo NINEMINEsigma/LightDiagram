@@ -1,7 +1,7 @@
 #ifndef __FILE_PROCESS
 #define __FILE_PROCESS
 
-#include<Core/LF_Config.h>
+#include "LF_Config.h"
 
 namespace ld
 {

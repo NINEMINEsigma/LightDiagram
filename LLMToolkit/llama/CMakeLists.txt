@@ -3,7 +3,7 @@ project("llama.cpp" C CXX)
 include(CheckIncludeFileCXX)
 
 if(NOT DEFINED Install_Path)
-    set(Platform_Name "Unknown")
+    set(PlatformName "Unknown")
 endif()
 
 #set(CMAKE_WARN_DEPRECATED YES)

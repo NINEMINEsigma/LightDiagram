@@ -1,4 +1,4 @@
-#include<Engine/Process.h>
+#include "Process.h"
 
 using namespace std;
 
@@ -16,7 +16,7 @@ namespace ld
 #if defined(_WINDOW_)||defined(_LINUX_ON_WINDOW_)
 		memset(&start_info, 0, sizeof(start_info));
 		char* cl = new char[commandline.size() + 10];
-		strcpy(cl, commandline.c_str());
+		strcpy_s(cl, commandline.size() + 10, commandline.c_str());
 		start_info.cb = sizeof(start_info);
 		if (CreateProcessA(
 			0,
@@ -49,7 +49,7 @@ namespace ld
 		memset(&start_info, 0, sizeof(start_info));
 		string clstr = executer + " " + commandline_args;
 		char* cl = new char[clstr.size() + 10];
-		strcpy(cl, clstr.c_str());
+		strcpy_s(cl, clstr.size() + 10, clstr.c_str());
 		start_info.cb = sizeof(start_info);
 		if (CreateProcessA(
 			exepath,

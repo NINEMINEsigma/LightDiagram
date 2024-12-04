@@ -2,8 +2,8 @@
 #define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
 #endif
 
-#include <Core/unicode.h>
-#include <Core/unicode-data.h>
+#include "unicode.h"
+#include "unicode-data.h"
 
 #include <algorithm>
 #include <cassert>

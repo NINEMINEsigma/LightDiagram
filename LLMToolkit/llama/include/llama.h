@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-#include <Core/LF_Config.h>
+#include "Core/LF_Config.h"
 
 #if defined(_LFramework_Config_API_DLL)&&(0)
 #define LLAMA_API _LFramework_Config_API_DLL

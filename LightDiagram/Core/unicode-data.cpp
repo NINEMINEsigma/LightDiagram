@@ -1,6 +1,6 @@
 // generated with scripts/gen-unicode-data.py
 
-#include <Core/unicode-data.h>
+#include "unicode-data.h"
 
 #include <cstdint>
 #include <vector>

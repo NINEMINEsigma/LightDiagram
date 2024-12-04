@@ -2,7 +2,7 @@
 
 #define __FILE_STATIC_EXIST
 
-#include<Core/LF_Config.h>
+#include "LF_Config.h"
 
 #pragma region Exist (Static)
 

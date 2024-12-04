@@ -140,7 +140,7 @@ static int update(printbuffer *p)
 	char *str;
 	if (!p || !p->buffer) return 0;
 	str=p->buffer+p->offset;
-	return p->offset+strlen(str);
+	return (int)p->offset+strlen(str);
 }
 
 /* Render the number nicely from the given item into a string. */

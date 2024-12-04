@@ -6,7 +6,7 @@
 # include <stdlib.h>
 # include <stdio.h>
 # include <tchar.h>
-# include <Core/uni_utility.h>
+# include "uni_utility.h"
 
 std::map<int, std::fstream> __uni_helper_fd_map;
 std::set<int> __uni_helper_fd_index;

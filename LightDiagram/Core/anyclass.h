@@ -1,7 +1,7 @@
 ﻿#ifndef __FILE_ANY_CLASS
 #define __FILE_ANY_CLASS
 
-#include<Core/LF_Config.h>
+#include "LF_Config.h"
 
 #pragma pack(push, 8)
 

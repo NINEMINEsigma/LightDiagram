@@ -6035,7 +6035,7 @@ static void llm_load_hparams(
         case LLM_ARCH_CHAMELEON:
             {
                 ml.get_key(LLM_KV_ATTENTION_LAYERNORM_RMS_EPS, hparams.f_norm_rms_eps);
-                hparams.f_norm_eps = 1e-5;  // eps for qk-norm, torch default
+                hparams.f_norm_eps = static_cast<float>(1e-5);  // eps for qk-norm, torch default
                 ml.get_key(LLM_KV_SWIN_NORM, hparams.swin_norm);
 
                 switch (hparams.n_layer) {

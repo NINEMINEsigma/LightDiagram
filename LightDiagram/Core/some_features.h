@@ -1,9 +1,9 @@
 #ifndef __FILE_SOME_FEATURES
 #define __FILE_SOME_FEATURES
 
-#include <Core/LF_Config.h>
-#include <Core/static_indicator.h>
-#include <Core/anyclass.h>
+#include "LF_Config.h"
+#include "static_indicator.h"
+#include "anyclass.h"
 
 namespace ld
 {

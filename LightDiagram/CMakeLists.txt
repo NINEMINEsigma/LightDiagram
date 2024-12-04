@@ -1,11 +1,10 @@
 #Project Setting
+message("LightDiagram: ----- ----- ----- ----- -----")
 option(ENABLE_MPI "Enable MPI parallelization" ON)
-set(MPI_NO_SYSTEM_PATHS ON) 
+set(MPI_NO_SYSTEM_PATHS ON)
+set(BOOST_ROOT "C:/Boost")
 
-if(NOT DEFINED Install_Path)
-    set(Platform_Name "Unknown")
-endif()
-
+# MPI
 find_package(MPI)
 if(MPI_FOUND)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MPI_FLAGS}")
@@ -15,68 +14,58 @@ if(MPI_FOUND)
     MESSAGE( STATUS "MPI_C_HEADER_DIR = ${MPI_C_HEADER_DIR}") 
     include_directories(${MPI_C_ADDITIONAL_INCLUDE_DIRS})
     MESSAGE( STATUS "MPI_C_ADDITIONAL_INCLUDE_DIRS = ${MPI_C_ADDITIONAL_INCLUDE_DIRS}") 
-    MESSAGE( "MPI setting successfully")
+    MESSAGE( "LightDiagram: MPI setting successfully")
 else()
-    MESSAGE( "MPI setting faild")
+    MESSAGE( "LightDiagram: MPI setting faild")
 endif()
 
+# Boost
 set(Boost_NO_SYSTEM_PATHS ON) 
-set(BOOST_ROOT "C:\\Boost")
-find_package(Boost 1.85.0)
+find_package(Boost)
 if(Boost_FOUND)
 	#add_compile_definitions(__REF_BOOST)
     include_directories(${Boost_INCLUDE_DIR})
     MESSAGE( STATUS "Boost_INCLUDE_DIR = ${Boost_INCLUDE_DIR}.")
     MESSAGE( STATUS "Boost_LIB_VERSION = ${Boost_LIB_VERSION}.")
-    message("Boost setting successfully")
+    message("LightDiagram: Boost setting successfully")
 else()
-    set(Boost_Preset_Dir "E:/boost_1_85_0/out/build")
-    if( EXISTS Boost_Preset_Dir )
-    	#add_compile_definitions(__REF_BOOST)
-        set(Boost_INCLUDE_DIR "E:/boost_1_85_0/out/build/include/boost-1_85/boost")
-        include_directories(${Boost_INCLUDE_DIR})
-        target_link_libraries(LightDiagram "E:/boost_1_85_0/out/build/lib")
-        MESSAGE( STATUS "Boost_INCLUDE_DIR = ${Boost_INCLUDE_DIR}.")
-        MESSAGE( STATUS "Boost_LIB_VERSION = ${Boost_LIB_VERSION}.")
-        message("Boost setting successfully")
-    else()
-        message("Boost setting failed and ${Boost_Preset_Dir} not find")
+    message("LightDiagram: Boost setting failed and ${Boost_Preset_Dir} not find")
+    if(DEFINED __REF_BOOST)
+        remove_definitions(__REF_BOOST)
     endif()
 endif()
 
-include_directories     ("${PROJECT_SOURCE_DIR}/LightDiagram" "${PROJECT_SOURCE_DIR}/LightDiagram/Core")
 aux_source_directory    (. Main_Cpp_List)
 aux_source_directory    (./Core Core_Cpp_List)
 aux_source_directory    (./Engine Engine_Cpp_List)
 message( STATUS "main part cpp = ${Main_Cpp_List}")
 message( STATUS "core part cpp = ${Core_Cpp_List}")
-message( STATUS "engine part cpp = ${Engine_Cpp_List}")
-add_library (LightDiagram ${Main_Cpp_List} ${Core_Cpp_List} ${Engine_Cpp_List})
-if(MPI_FOUND)
-    target_link_libraries(LightDiagram ${MPI_C_LIBRARIES})
-    set_property(TARGET LightDiagram PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-    message( STATUS "MPI_C_LIBRARIES = ${MPI_C_LIBRARIES}")
-endif()
-
-if(Boost_FOUND)
-    target_link_libraries (LightDiagram ${Boost_LIBRARIES})
-    message( STATUS "Boost_LIBRARIES = ${Boost_LIBRARIES}")
-endif()
+add_library (LightDiagram ${Main_Cpp_List} ${Core_Cpp_List})
+file(GLOB LightDiagram_Header_List Core/*.h)
+set_target_properties(LightDiagram PROPERTIES PUBLIC_HEADER "${LightDiagram_Header_List}")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET LightDiagram PROPERTY CXX_STANDARD 17)
 endif()
 
-file(GLOB LightDiagram_Header_List ${PROJECT_SOURCE_DIR}/LightDiagram/Core/*.h)
-#file(GLOB LightDiagram_cFiles_List ${PROJECT_SOURCE_DIR}/LightDiagram/Core/*.c)
-install(FILES ${LightDiagram_Header_List} DESTINATION  ${CMAKE_INSTALL_PREFIX}/include/Core)
-#install(FILES ${LightDiagram_cFiles_List} DESTINATION  ${CMAKE_INSTALL_PREFIX}/include/Core)
-install(FILES ${PROJECT_SOURCE_DIR}/LightDiagram/LightDiagram.h DESTINATION ${CMAKE_INSTALL_PREFIX}/include/)
-install(TARGETS LightDiagram 
-        RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
-        LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/static)
+if(MPI_FOUND)
+    target_link_libraries(LightDiagram      ${MPI_C_LIBRARIES})
+    set_property(TARGET LightDiagram PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    message(    STATUS   "MPI_C_LIBRARIES = ${MPI_C_LIBRARIES}")
+endif()
 
-file(GLOB LightDiagram_Engines_List ${PROJECT_SOURCE_DIR}/LightDiagram/Engine/*.h)
+if(Boost_FOUND)
+    target_link_libraries (LightDiagram     ${Boost_LIBRARIES})
+    message(    STATUS   "Boost_LIBRARIES = ${Boost_LIBRARIES}")
+endif()
+
+install(FILES LightDiagram.h DESTINATION    ${CMAKE_INSTALL_PREFIX}/include)
+install(TARGETS LightDiagram 
+        PUBLIC_HEADER DESTINATION           ${CMAKE_INSTALL_PREFIX}/include/Core
+        RUNTIME DESTINATION                 ${CMAKE_INSTALL_PREFIX}/bin
+        LIBRARY DESTINATION                 ${CMAKE_INSTALL_PREFIX}/lib
+        ARCHIVE DESTINATION                 ${CMAKE_INSTALL_PREFIX}/lib/static)
+
 install(FILES ${LightDiagram_Engines_List} DESTINATION  ${CMAKE_INSTALL_PREFIX}/include/Engine)
 
+message("LightDiagram: ----- ----- ----- ----- -----")

@@ -1,12 +1,12 @@
 ﻿#ifndef __FILE_LF_RAII
 #define __FILE_LF_RAII
 
-#include <Core/LF_Config.h>
-#include <Core/anyclass.h>
-#include <Core/static_traits.h>
-#include <Core/static_indicator.h>
-#include <Core/static_exist.h>
-#include <Core/LF_Exception.h>
+#include "LF_Config.h"
+#include "anyclass.h"
+#include "static_traits.h"
+#include "static_indicator.h"
+#include "static_exist.h"
+#include "LF_Exception.h"
 #include <filesystem>
 
 #pragma pack(push, 8)

@@ -3,7 +3,7 @@
 #ifndef __FILE_ALGORITHM
 #define __FILE_ALGORITHM
 
-#include<Core/LF_Config.h>
+#include "LF_Config.h"
 
 namespace ld
 {

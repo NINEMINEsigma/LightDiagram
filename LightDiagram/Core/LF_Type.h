@@ -2,7 +2,7 @@
 
 #define __FILE_LF_TYPE
 
-#include<Core/static_indicator.h>
+#include "static_indicator.h"
 
 #pragma region LDType
 

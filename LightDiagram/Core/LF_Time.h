@@ -1,7 +1,7 @@
 #ifndef __FILE_LF_TIME
 #define __FILE_LF_TIME
 
-#include <Core/LF_Config.h>
+#include "LF_Config.h"
 
 namespace ld
 {

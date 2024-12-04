@@ -1,4 +1,4 @@
-﻿#include<Core/LString.h>
+﻿#include "LString.h"
 
 using namespace std;
 

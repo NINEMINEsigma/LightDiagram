@@ -1,9 +1,9 @@
 ﻿#ifndef _FILE_LSTRING
 #define _FILE_LSTRING
 
-#include <Core/LF_Config.h>
-#include <Core/anyclass.h>
-#include <Core/LF_Exception.h>
+#include "LF_Config.h"
+#include "anyclass.h"
+#include "LF_Exception.h"
 
 namespace ld
 {

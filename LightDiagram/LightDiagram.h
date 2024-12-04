@@ -33,34 +33,34 @@
 //*
 
 #if defined(_LINUX_ON_WINDOW_)||defined(_WINDOW_)
-#include<Core/beepkit.h>
+#include "Core/beepkit.h"
 #endif
 
 //*
 //	Header
 //*
 
-#include<Core/LF_Config.h>
-#include<Core/unicode-data.h>
-#include<Core/unicode.h>
-#include<Core/static_indicator.h>
-#include<Core/static_traits.h>
-#include<Core/some_features.h>
+#include "Core/LF_Config.h"
+#include "Core/unicode-data.h"
+#include "Core/unicode.h"
+#include "Core/static_indicator.h"
+#include "Core/static_traits.h"
+#include "Core/some_features.h"
 #if defined(_LINUX_ON_WINDOW_)
-#include <Core/uni_utility.h>
+#include "Core/uni_utility.h"
 #endif
-#include<Core/LF_Type.h>
-#include<Core/anyclass.h>
-#include<Core/LF_Cache.h>
-#include<Core/LF_Exception.h>
-#include<Core/LF_Time.h>
-#include<Core/LF_RAII.h>
-#include<Core/LF_Container.h>
-#include<Core/algorithm.h>
-#include<Core/anygraph.h>
+#include "Core/LF_Type.h"
+#include "Core/anyclass.h"
+#include "Core/LF_Cache.h"
+#include "Core/LF_Exception.h"
+#include "Core/LF_Time.h"
+#include "Core/LF_RAII.h"
+#include "Core/LF_Container.h"
+#include "Core/algorithm.h"
+#include "Core/anygraph.h"
 
-#include<Core/LString.h>
-#include<Core/LF_Architecture.h>
+#include "Core/LString.h"
+#include "Core/LF_Architecture.h"
 
 #pragma region IO QUES
 
@@ -114,6 +114,6 @@ int main()\
 //	Engine
 //*
 
-#include<Engine/Process.h>
+#include "Core/Process.h"
 
 #endif // !__FILE_LIGHTDIAGRAM

@@ -2,8 +2,8 @@
 
 #define __FILE_STATIC_INDICATOR
 
-#include<Core/LF_Config.h>
-#include<Core/static_exist.h>
+#include "LF_Config.h"
+#include "static_exist.h"
 
 namespace std
 {
