@@ -66,6 +66,5 @@ install(TARGETS LightDiagram
         LIBRARY DESTINATION                 ${CMAKE_INSTALL_PREFIX}/lib
         ARCHIVE DESTINATION                 ${CMAKE_INSTALL_PREFIX}/lib/static)
 
-install(FILES ${LightDiagram_Engines_List} DESTINATION  ${CMAKE_INSTALL_PREFIX}/include/Engine)
-
 message("LightDiagram: ----- ----- ----- ----- -----")
+

@@ -1,7 +1,7 @@
 #ifndef __FILE_LANG
 #define __FILE_LANG
 
-#include<Config.h>
+#include "Config.h"
 
 namespace ls
 {

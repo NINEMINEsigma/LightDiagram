@@ -1,6 +1,6 @@
-#include<LightDiagram.h>
-#include<Math/CorrelationAnalysis.h>
-#include<iostream>
+#include <LightDiagram.h>
+#include "CorrelationAnalysis.h"
+#include <iostream>
 
 using namespace std;
 using namespace Eigen;

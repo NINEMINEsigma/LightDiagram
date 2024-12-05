@@ -1,15 +1,15 @@
 ﻿#ifndef __FILE_LIGHTMATH
 #define __FILE_LIGHTMATH
 
-#include<Math/MathConfig.h>
-#include<Math/CorrelationAnalysis.h>
-#include<Math/DistributionCheck.h>
-#include<Math/Pretreatment.h>
-#include<Math/Predict.h>
-#include<Math/Fourier.h>
-#include<Math/DecisionTree.h>
-#include<Math/Graph.h>
-#include<Math/OpenCVH.h>
+#include "MathConfig.h"
+#include "CorrelationAnalysis.h"
+#include "DistributionCheck.h"
+#include "Pretreatment.h"
+#include "Predict.h"
+#include "Fourier.h"
+#include "DecisionTree.h"
+#include "Graph.h"
+#include "OpenCVH.h"
 
 namespace ld
 {

@@ -1,7 +1,7 @@
 ﻿#ifndef _FILE_PRETREATMENT
 #define _FILE_PRETREATMENT
 
-#include<Math/MathConfig.h>
+#include "MathConfig.h"
 
 namespace ld
 {

@@ -1,8 +1,8 @@
 ﻿#ifndef __FILE_CORRELATION_ANALYSIS
 #define __FILE_CORRELATION_ANALYSIS
 
-#include<Math/MathConfig.h>
-#include<boost/math/statistics/linear_regression.hpp>
+#include "MathConfig.h"
+#include <boost/math/statistics/linear_regression.hpp>
 
 namespace ld
 {

@@ -3,7 +3,7 @@
 #define is_monitor_the_constructor_of_anyclass false
 #define binding_instance_manager
 
-#include<Lang.h>
+#include "Lang.h"
 
 sync_with_stdio_false(__auto__);
 

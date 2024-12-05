@@ -3,10 +3,10 @@
 #ifndef __FILE_MATHCONFIG
 #define __FILE_MATHCONFIG
 
-#include <Eigen/Eigen>
-#include <Eigen/Eigenvalues>
+#include "Eigen/Eigen"
+#include "Eigen/Eigenvalues"
 
-#include <LightDiagram.h>
+#include "LightDiagram.h"
 
 namespace ld
 {

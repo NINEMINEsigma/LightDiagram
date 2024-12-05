@@ -3,11 +3,13 @@
 #ifndef __FILE_FOURIER
 #define __FILE_FOURIER
 
-#include<Math/MathConfig.h>
-#include<vector>
-#include<Windows.h>
-#include<opencv2/opencv.hpp>
-#include<Eigen/Dense>
+#include "MathConfig.h"
+#include <vector>
+#ifdef _WINDOW_
+#include <Windows.h>
+#endif
+#include "opencv2/opencv.hpp"
+#include "Eigen/Dense"
 
 #define SHOW_AMPLITUDE 1
 

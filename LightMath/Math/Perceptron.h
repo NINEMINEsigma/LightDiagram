@@ -1,7 +1,7 @@
 ﻿#ifndef __FILE_PERCEPTRON
 #define __FILE_PERCEPTRON
 
-#include<Math/MathConfig.h>
+#include "MathConfig.h"
 
 namespace ld
 {

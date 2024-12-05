@@ -2,16 +2,12 @@ message("LightMath: ----- ----- ----- ----- -----")
 set(__LINK_STATIC_OPENCV OFF)
 set(BOOST_ROOT "C:/Boost")
 
-#include_directories(.)
-#include_directories(./Math)
-include_directories(./Eigen)
-include_directories(./opencv2)
-aux_source_directory	(./Math Math_Cpp_List)
-message( STATUS "math part cpp = ${Math_Cpp_List}")
-
 set(Boost_NO_SYSTEM_PATHS ON) 
 find_package(Boost)
 if(Boost_FOUND)
+    aux_source_directory	(./Math Math_Cpp_List)
+    message( STATUS "math part cpp = ${Math_Cpp_List}")
+
     add_compile_definitions(__REF_BOOST_MATH)
     include_directories(${Boost_INCLUDE_DIR})
     MESSAGE( STATUS "Boost_INCLUDE_DIR = ${Boost_INCLUDE_DIR}.")
@@ -19,6 +15,7 @@ if(Boost_FOUND)
     message("LightMath: Boost setting successfully")
     
     add_library(LightMath ${Math_Cpp_List} LightMath.cpp)
+    target_include_directories(LightMath PUBLIC . PUBLIC Math)
     
     target_link_libraries(LightMath LightDiagram)
     
@@ -37,7 +34,7 @@ if(Boost_FOUND)
     endif()
     
     file(GLOB LightMath_Header_List Math/*.h)
-    set_target_properties(LightMath PEOPWETIES PUBLIC_HEADER                    ${LightMath_Header_List})
+    set_target_properties(LightMath PROPERTIES PUBLIC_HEADER                    "${LightMath_Header_List}")
     install(FILES ${PROJECT_SOURCE_DIR}/LightMath/LightMath.h DESTINATION    ${CMAKE_INSTALL_PREFIX}/include)
     install(DIRECTORY ${PROJECT_SOURCE_DIR}/LightMath/Eigen DESTINATION      ${CMAKE_INSTALL_PREFIX}/include/)
     install(DIRECTORY ${PROJECT_SOURCE_DIR}/LightMath/opencv2 DESTINATION    ${CMAKE_INSTALL_PREFIX}/include/)

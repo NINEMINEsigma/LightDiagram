@@ -1,8 +1,8 @@
 #ifndef __FILE_PREDICT
 #define __FILE_PREDICT
 
-#include<Math/MathConfig.h>
-#include<Math/Perceptron.hpp>
+#include "MathConfig.h"
+#include "Perceptron.h"
 
 namespace ld
 {

@@ -1249,7 +1249,7 @@ namespace ld
 			in_file.close();
 		}
 
-		csv_instance() :base_instance(new((alloc_instance_inside_ptr_handler(sizeof(first_layer)))) first_layer()) {}
+		csv_instance() :base_instance(new_indicator{}) {}
 		csv_instance(std::ifstream & in_file) :base_instance(new((alloc_instance_inside_ptr_handler(sizeof(first_layer)))) first_layer())
 		{
 			read(in_file);
@@ -1258,7 +1258,7 @@ namespace ld
 		{
 			read(in_file);
 		}
-		csv_instance(const string_indicator::tag & path) :base_instance(new((alloc_instance_inside_ptr_handler(sizeof(first_layer)))) first_layer())
+		csv_instance(const string_indicator::tag& path) :base_instance(new_indicator{})
 		{
 			read(path);
 		}

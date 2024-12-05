@@ -1,8 +1,8 @@
 #ifndef __FILE_DISTRIBUTIONCHECK
 #define __FILE_DISTRIBUTIONCHECK
 
-#include<Math/MathConfig.h>
-#include<boost/math/distributions.hpp>
+#include "MathConfig.h"
+#include <boost/math/distributions.hpp>
 
 namespace ld
 {

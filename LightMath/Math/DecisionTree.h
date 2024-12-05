@@ -1,7 +1,7 @@
 ﻿#ifndef __FILE_DECISIONTREE
 #define __FILE_DECISIONTREE
 
-#include<Math/MathConfig.h>
+#include "MathConfig.h"
 
 namespace ld
 {

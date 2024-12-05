@@ -6,11 +6,11 @@ add_executable(LineScript ${LS_Cpp_List})
 
 target_link_libraries(LineScript LightDiagram)
 
-#file(GLOB OpenCV2_Lib_List ${PROJECT_SOURCE_DIR}/LightMath/opencv2-lib/static/*.lib)
-#target_link_libraries(demo_test ${OpenCV2_Lib_List})
+file(GLOB LSHeaders *.h)
+set_target_properties(LineScript PROPERTIES PUBLIC_HEADER       "${LSHeaders}")
 
 install(TARGETS LineScript 
-		#PUBLIC_HEADER DESTINATION								${CMAKE_INSTALL_PREFIX}/include/LLM
+		PUBLIC_HEADER DESTINATION								${CMAKE_INSTALL_PREFIX}/include/LineScript
         RUNTIME DESTINATION										${CMAKE_INSTALL_PREFIX}/bin
         LIBRARY DESTINATION										${CMAKE_INSTALL_PREFIX}/lib
         ARCHIVE DESTINATION										${CMAKE_INSTALL_PREFIX}/lib/static)

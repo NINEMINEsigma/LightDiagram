@@ -1,8 +1,8 @@
 ﻿#ifndef __FILE_GRAPH
 #define __FILE_GRAPH
 
-#include <LightDiagram.h>
-#include <Math/MathConfig.h>
+#include "LightDiagram.h"
+#include "MathConfig.h"
 #include <boost/algorithm/algorithm.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/adjacency_list.hpp>

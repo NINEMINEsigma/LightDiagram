@@ -2,11 +2,13 @@
 #define __FILE_SPACK
 #include "LightDiagram.h"
 #if defined(_WINDOW_)||defined(_LINUX_ON_WINDOW_)
-#include <../LLMToolkit/Windows/Spark/3.5/v1.1/include/sparkchain.h>
-#include <../LLMToolkit/Windows/Spark/3.5/v1.1/include/sc_llm.h>
+#include <Windows/Spark/3.5/v1.1/include/sparkchain.h>
+#include <Windows/Spark/3.5/v1.1/include/sc_llm.h>
+#elif defined(_LINUX_)
+#include <Linux/Spark/3.5/v1.1/include/sparkchain.h>
+#include <Linux/Spark/3.5/v1.1/include/sc_llm.h>
 #else
-#include <../LLMToolkit/Linux/Spark/3.5/v1.1/include/sparkchain.h>
-#include <../LLMToolkit/Linux/Spark/3.5/v1.1/include/sc_llm.h>
+#error "Unknown Platform unable work Spack"
 #endif
 
 namespace llm
@@ -15,10 +17,9 @@ namespace llm
 	{
 		using namespace SparkChain;
 
-		_LF_C_API(Class)
-			Callback :
-		public LLMCallbacks Symbol_Link
-			_LF_Inherited(any_class)
+		_LF_C_API(Class) Callback 
+			Symbol_Push public LLMCallbacks
+			Symbol_Link public any_class
 		{
 		public:
 			Callback();
@@ -38,8 +39,8 @@ namespace llm
 		private:
 		};
 
-		_LF_C_API(Class)
-			LLMSystem : _LF_Inherited(ld::ISystem)
+		_LF_C_API(Class) LLMSystem
+			Symbol_Push public ld::ISystem
 		{
 		public:
 			bool InitSDK(const char* appID, const char* apiKey, const char* apiSecret);
@@ -65,8 +66,8 @@ namespace llm
 			//virtual std::string SymbolName() const override;
 		};
 
-		_LF_C_API(Class)
-			LLMArchitecture : _LF_Inherited(ld::IArchitecture)
+		_LF_C_API(Class) LLMArchitecture 
+			Symbol_Push public ld::IArchitecture
 		{
 		public:
 			virtual ~LLMArchitecture();

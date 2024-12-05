@@ -1,8 +1,8 @@
 #ifndef __FILE_OPENCVH
 #define __FILE_OPENCVH
 
-#include<Math/MathConfig.h>
-#include<opencv2/opencv.hpp>
+#include "MathConfig.h"
+#include "opencv2/opencv.hpp"
 
 namespace ld
 {
