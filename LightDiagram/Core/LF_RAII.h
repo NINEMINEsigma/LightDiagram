@@ -257,9 +257,13 @@ namespace ld
 		}
 		//build up instance by outside-ptr
 		instance(tag* ptr) : instance_ptr(ptr), instance<void>() {}
+		//build up instance by nullptr
+		instance(nullptr_t) : instance_ptr(nullptr), instance<void>() {}
 	public:
 		//build up instance by nullptr ( stats is empty )
-		instance() noexcept : instance(nullptr) {}
+		instance(void) noexcept : instance(nullptr) {}
+		//build up instance by nullptr ( stats is empty )
+		instance(empty_indicator make_empty_nullptr_instance) noexcept : instance(nullptr) {}
 		//build up instance by default-constructor
 		instance(new_indicator try_new_empty_ctr) noexcept : instance(new(alloc_instance_inside_ptr_handler(sizeof(tag))) tag()) {}
 		//build up instance by left-value copy constructor
@@ -280,6 +284,9 @@ namespace ld
 		//build up instance by constructor with args
 		template<typename... Args>
 		instance(Args&&... args) : instance(new(alloc_instance_inside_ptr_handler(sizeof(tag))) tag(std::forward<Args>(args)...)) {}
+		//build up instance by constructor with args
+		template<typename... Args>
+		instance(new_indicator try_new_empty_ctr, Args&&... args) : instance(new(alloc_instance_inside_ptr_handler(sizeof(tag))) tag(std::forward<Args>(args)...)) {}
 		virtual ~instance()
 		{
 			if (this->countable() != -1 && this->get_count() <= 1)
@@ -549,8 +556,8 @@ namespace ld
 		}
 	};
 
-	template<typename Ty, typename _InsTy>
-	decltype(auto) ref(const instance<_InsTy>& ins)
+	template<typename Ty, template<typename> class _Instance, typename _InsTy>
+	decltype(auto) ref(const _Instance<_InsTy>& ins)
 	{
 		if constexpr (std::is_same_v<Ty, _InsTy>)
 			return ins.get_ref();
@@ -1945,10 +1952,10 @@ r[i]+=r[t]*c;g[i]+=g[t]*c;b[i]+=b[t]*c;
 	public:
 		using tag = std::filesystem::path;
 		using base_instance = instance<tag>;
-		instance(const tag & path, bool is_host = false) :
-			base_instance(new((alloc_instance_inside_ptr_handler(sizeof(tag)))) tag(path)),
-			my_hoster(is_host ? new(((alloc_instance_inside_ptr_handler(sizeof(std::ifstream))))) std::ifstream(path) : nullptr),
-			my_hoster_type_info(typeid(void).hash_code()){}
+		instance(const tag& path) :
+			base_instance(path),
+			my_hoster(empty_indicator{}),
+			my_hoster_type_info(typeid(void).hash_code()) {}
 		instance(instance&& from) noexcept :
 			base_instance(std::move(from)), 
 			my_hoster(nullptr),
@@ -2744,14 +2751,9 @@ namespace ld
 			this->is_global_root = true;
 		}
 #define empty_init()  forward(nullptr), is_global_root(false) 
-		// init with ptr
-		binding_instance(nullptr_t) : base_instance(nullptr), init_ab_instance(), empty_init() {}
-		binding_instance() noexcept : base_instance(nullptr), init_ab_instance(), empty_init() {}
-		binding_instance(T* ptr) : base_instance(ptr), init_ab_instance(), empty_init() {}
-		binding_instance(any_binding_instance& forward, T* ptr)
-			: base_instance(ptr), init_ab_instance(), forward(addressof(forward)), is_global_root(false) {}
-		binding_instance(const global_indicator& forward, T* ptr) 
-			: base_instance(ptr), init_ab_instance(), forward(nullptr), is_global_root(true) {}
+		// build up with easy operator
+		binding_instance() noexcept : base_instance(empty_indicator{}), init_ab_instance(), empty_init() {}
+		binding_instance(empty_indicator _) : binding_instance() {}
 		// build up with move
 		binding_instance(base_instance& ins) noexcept : base_instance(ins), init_ab_instance(), empty_init() {}
 		binding_instance(base_instance&& ins) noexcept : base_instance(std::move(ins)), init_ab_instance(), empty_init() {}
@@ -2783,33 +2785,55 @@ namespace ld
 		binding_instance(T&& arg) : base_instance(std::move(arg)), init_ab_instance(), empty_init() {}
 		binding_instance(const T& arg) : base_instance(arg), init_ab_instance(), empty_init() {}
 		template<typename... Args>
-		binding_instance(nullptr_t, Args&&... args) : base_instance(args...), init_ab_instance(), empty_init() {}
+		binding_instance(any_binding_instance& forward, Args&&... args) :
+			base_instance(new_indicator{}, std::forward<Args>(args)...),
+			init_ab_instance(),
+			forward(addressof(forward)),
+			is_global_root(false) {}
 		template<typename... Args>
-		binding_instance(any_binding_instance& forward, Args&&... args) : base_instance(args...), init_ab_instance(), forward(addressof(forward)), is_global_root(false) {}
-		template<typename... Args>
-		binding_instance(const global_indicator& forward, Args&&... args) : base_instance(args...), init_ab_instance(), forward(nullptr), is_global_root(true) {}
+		binding_instance(const global_indicator& forward, Args&&... args) :
+			base_instance(new_indicator{}, std::forward<Args>(args)...),
+			init_ab_instance(),
+			forward(nullptr),
+			is_global_root(true) {}
 		virtual ~binding_instance() {}
 #undef empty_init
 
 		template< typename _SubT>
 		binding_instance& operator=(const binding_instance<_SubT>& from) noexcept
 		{
+			if (this->is_init() == false)
+			{
+				this->init_forward(from.forward);
+			}
 			base_instance::operator=(from);
 			return *this;
 		}
 		binding_instance& operator=(binding_instance& from) noexcept
 		{
+			if (this->is_init() == false)
+			{
+				this->init_forward(from.forward);
+			}
 			base_instance::operator=(from);
 			return *this;
 		}
 		template<typename _SubT>
 		binding_instance& operator=(binding_instance<_SubT>&& from) noexcept
 		{
+			if (this->is_init() == false)
+			{
+				this->init_forward(from.forward);
+			}
 			base_instance::operator=(std::move(from));
 			return *this;
 		}
 		binding_instance& operator=(binding_instance&& from) noexcept
 		{
+			if (this->is_init() == false)
+			{
+				this->init_forward(from.forward);
+			}
 			base_instance::operator=(std::move(from));
 			return *this;
 		}
@@ -2954,7 +2978,7 @@ namespace ld
 #define declare_binding_instance(type, member)\
 	binding_instance<type> member;
 #define declare_global_binding_instance(type,name)\
-	auto name = make_binding_instance<type>(global_indicator{},nullptr)
+	auto name = make_binding_instance<type>(global_indicator{})
 #define defined_global_binding_instance(type,name,...)\
 	auto name = make_binding_instance<type>(global_indicator{},__VA_ARGS__);\
 	try_init_class(name)
@@ -2975,23 +2999,13 @@ namespace ld
 	}
 	template<
 		typename _Member,
-		typename ArgPtr>
+		typename RValRef>
 	decltype(auto) binding(
 		_Member& member,
-		ArgPtr* ptr)
+		RValRef&& arg)
 	{
-		member = ptr;
-		try_init_class(member);
-		return member;
-	}
-	template<
-		typename _Member,
-		typename ArgRef>
-	decltype(auto) binding(
-		_Member& member,
-		ArgRef&& arg)
-	{
-		member.get_ref() = std::forward<ArgRef>(arg);
+		using T = typename _Member::tag;
+		member.get_ref() = static_cast<T>(std::forward<RValRef>(arg));
 		try_init_class(member);
 		return member;
 	}

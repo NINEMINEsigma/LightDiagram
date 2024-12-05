@@ -14,6 +14,7 @@ set(ENABLE_LF_EXPORT OFF)
 set(ENABLE_LF_ANYCLASS_MONITOR OFF)
 # Disable anyclass's monitor
 if(ENABLE_LF_ANYCLASS_MONITOR)
+else()
 	add_compile_definitions(not_monitor_the_constructor_of_anyclass)
 endif()
 # Enable Export

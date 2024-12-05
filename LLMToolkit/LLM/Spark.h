@@ -2,11 +2,11 @@
 #define __FILE_SPACK
 #include "LightDiagram.h"
 #if defined(_WINDOW_)||defined(_LINUX_ON_WINDOW_)
-#include <Windows/Spark/3.5/v1.1/include/sparkchain.h>
-#include <Windows/Spark/3.5/v1.1/include/sc_llm.h>
+#include "Windows/Spark/3.5/v1.1/include/sparkchain.h"
+#include "Windows/Spark/3.5/v1.1/include/sc_llm.h"
 #elif defined(_LINUX_)
-#include <Linux/Spark/3.5/v1.1/include/sparkchain.h>
-#include <Linux/Spark/3.5/v1.1/include/sc_llm.h>
+#include "Linux/Spark/3.5/v1.1/include/sparkchain.h"
+#include "Linux/Spark/3.5/v1.1/include/sc_llm.h"
 #else
 #error "Unknown Platform unable work Spack"
 #endif

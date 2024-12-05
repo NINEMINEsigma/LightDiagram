@@ -1826,6 +1826,11 @@ namespace std
 		return str;
 	}
 
+	template<typename _T>
+	inline decltype(auto) Combine(const _T& first)
+	{
+		return to_string(first);
+	}
 	template<typename _RetT,typename _LeftT>
 	inline decltype(auto) Combine(const _RetT& first, const _LeftT& arg)
 	{

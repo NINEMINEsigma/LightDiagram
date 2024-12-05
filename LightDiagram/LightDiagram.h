@@ -77,7 +77,7 @@
 				}\
 				else std::cout << ld::ConsoleColor::Red << name << "<empty, no ans> " << ld::ConsoleColor::None;\
 			}while(false)
-#define try_solve_io_ques(__path__)\
+#define try_solve_io_ques(__path_forward__)\
 using namespace ld;\
 using namespace std; \
 int main()\
@@ -86,11 +86,12 @@ int main()\
 		tool_file __dir__(ques_path);\
 		auto dir_itor = __dir__.get_dir_itor();\
 		int e = 0;\
-		for(auto&& _ : dir_itor) e++;\
+		for(auto&& file_entry : dir_itor) if(file_entry.path().extension()==".in") e++;\
 		for (int i = 1; i <= e; i++)\
 		{\
 			console.LogMessage(to_string(i));\
-			string path = __path__;\
+			string path = to_string(__dir__)+"/"+__path_forward__;\
+			console.LogWarning(Combine("Current Base Path = ",path,i,".in"));\
 			tool_file input(path + to_string(i) + ".in");\
 			input.redirect_cin();\
 			auto anss = ifstream(path + to_string(i) + ".ans");\

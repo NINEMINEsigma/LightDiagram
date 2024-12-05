@@ -154,6 +154,6 @@ catch(...)                                              \
 #endif // clear_ThrowLDException
 
 #define GlobalExceptionInit try{
-#define GlobalExcpetionApply }CatchingLDException();
+#define GlobalExcpetionApply }CatchingLDException(...);
 
 #endif // !__FILE_LF_EXCEPTION
