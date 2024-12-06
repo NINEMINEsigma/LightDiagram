@@ -413,10 +413,6 @@ namespace ld
 	{
 		return "Console";
 	}
-	any_class* ConsolePro::GetClone() const 	
-	{
-		return new ConsolePro(*this);
-	}
 }
 
 ld::ConsolePro console;

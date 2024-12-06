@@ -37,10 +37,9 @@ endif()
 
 aux_source_directory    (. Main_Cpp_List)
 aux_source_directory    (./Core Core_Cpp_List)
-aux_source_directory    (./Engine Engine_Cpp_List)
 message( STATUS "main part cpp = ${Main_Cpp_List}")
 message( STATUS "core part cpp = ${Core_Cpp_List}")
-add_library (LightDiagram ${Main_Cpp_List} ${Core_Cpp_List})
+add_library (LightDiagram STATIC ${Main_Cpp_List} ${Core_Cpp_List})
 file(GLOB LightDiagram_Header_List Core/*.h)
 set_target_properties(LightDiagram PROPERTIES PUBLIC_HEADER "${LightDiagram_Header_List}")
 

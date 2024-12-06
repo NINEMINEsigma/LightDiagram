@@ -9,15 +9,16 @@
 namespace ld
 {
 	constexpr static size_t max_strlen_return = 1 << 18;
+	using ld_internal_string_impl_unit = size_t;
 
-	extern _LF_C_API(Func) [[nodiscarded]] size_t strlen(const char* str);
-	extern _LF_C_API(Func) [[nodiscarded]] size_t strlen(const std::string& str);
-	extern _LF_C_API(Func) [[nodiscarded]] size_t strlen(const wchar_t* str);
-	extern _LF_C_API(Func) [[nodiscarded]] size_t strlen(const std::wstring& str);
+	extern _LF_C_API(Func) [[nodiscard]] size_t strlen(const char* str);
+	extern _LF_C_API(Func) [[nodiscard]] size_t strlen(const std::string& str);
+	extern _LF_C_API(Func) [[nodiscard]] size_t strlen(const wchar_t* str);
+	extern _LF_C_API(Func) [[nodiscard]] size_t strlen(const std::wstring& str);
 
 	namespace internal
 	{
-		class ld_internal_string_impl;
+		using ld_internal_string_impl = std::basic_string<ld_internal_string_impl_unit>;
 		extern _LF_C_API(Func) instance<ld_internal_string_impl> bulidup_lstring_memory(const void* start,const void* end, size_t unit_size, size_t length);
 		//extern _LF_C_API(Func) 
 	}
@@ -28,7 +29,7 @@ namespace ld
 	{
 		string_index_type string_index;
 	public:
-		constexpr static size_t max_unit_size = sizeof(size_t);
+		constexpr static size_t max_unit_size = sizeof(ld_internal_string_impl_unit);
 
 		// empty build up
 		LString();
@@ -38,12 +39,12 @@ namespace ld
 		LString(const LString& from) noexcept;
 		// init on short
 		LString(const char* cstr);
-		LString(const char* cstr, size_t size = 0);
+		LString(const char* cstr, size_t size);
 		template<size_t size>
 		LString(char cstr[size]) :LString(cstr, size) {}
 		// init on width
 		LString(const wchar_t* cwstr);
-		LString(const wchar_t* cwstr, size_t size = 0);
+		LString(const wchar_t* cwstr, size_t size);
 		template<size_t size>
 		LString(wchar_t cwstr[size]) :LString(cwstr, size) {}
 		// init on memory block
@@ -62,7 +63,7 @@ namespace ld
 		template<typename _CharTy>
 		std::basic_string<_CharTy> GetString() const
 		{
-
+			return std::to_xstring<_CharTy>(string_index);
 		}
 	};
 }

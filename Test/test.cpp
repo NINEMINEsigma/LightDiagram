@@ -44,15 +44,9 @@ void solve(ANSIO& anss)
 
 //try_solve_io_ques("");
 
-struct int_conter
-{
-    easy_init(value);
-    declare_binding_instance(int, value);
-};
-
 int main()
 {
-    declare_global_binding_instance(int_conter, conter);
-    auto&& first = binding(conter->value, conter, 5);
-    cout << conter->value.get_ref() << endl;
+    LString str("123546");
+    cout << to_string(str);
+    LString str2("123546");
 }

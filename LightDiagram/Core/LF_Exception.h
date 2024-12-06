@@ -113,7 +113,6 @@ namespace ld
         virtual const type_info& GetType() const override;
         virtual std::string ToString() const override;
         virtual std::string SymbolName() const override;
-        virtual any_class* GetClone() const override;
     };
 
     template<typename _Message>

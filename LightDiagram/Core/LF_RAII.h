@@ -363,6 +363,7 @@ namespace ld
 			else
 			{
 				this->get_ref() = from;
+				return *this;
 			}
 		}
 		//set up instance by right-value move operator
@@ -373,6 +374,7 @@ namespace ld
 			else
 			{
 				this->get_ref() = std::move(from);
+				return *this;
 			}
 		}
 		//set up instance by left-value cpoy operator
@@ -383,6 +385,7 @@ namespace ld
 			else
 			{
 				this->get_ref() = from;
+				return *this;
 			}
 		}
 		//is instance same one

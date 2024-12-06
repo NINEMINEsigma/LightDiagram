@@ -1812,18 +1812,56 @@ namespace std
 		return converter.from_bytes(input);
 #endif 
 	}
+	inline std::wstring& to_wstring(std::wstring& str)
+	{
+		return str;
+	}
+	inline std::wstring to_wstring(const std::wstring& str)
+	{
+		return str;
+	}
+
 	inline std::string back_to_string(const char* input)
 	{
 		return to_string(to_wstring(input));
 	}
 
-	inline std::wstring& to_wstring(std::wstring& str)
+	// convert Xstring to string 
+	template<
+		typename result_char_type,
+		typename _Elem
+	>
+	std::basic_string<result_char_type> to_xstring(const std::basic_string<_Elem>& from)
 	{
-		return str;
-	}
-	inline std::wstring to_string(std::wstring& str)
-	{
-		return str;
+		using result_type = std::basic_string<result_char_type>;
+		result_type result;
+		result.reserve(from.size() * sizeof(_Elem) / sizeof(result_char_type) + 1);
+		if constexpr (sizeof(_Elem) <= sizeof(result_char_type))
+		{
+			for (auto&& iter : from)
+			{
+				result.push_back(static_cast<result_char_type>(iter));
+			}
+		}
+		else
+		{
+			constexpr size_t sidetime =
+				sizeof(_Elem) / sizeof(result_char_type) +
+				(sizeof(_Elem) % sizeof(result_char_type) == 0 ? 0 : 1);
+			result_type buffer;
+			for (auto head = from.cbegin(), tail = from.cend(); head != tail;head++)
+			{
+				_Elem och[2] = { *head,0 };
+				for (auto i = 0; i < sidetime && head != tail; i++)
+				{
+					result_char_type ch = *(reinterpret_cast<result_char_type*>(&och) + i);
+					buffer.push_back(ch);
+				}
+				result += buffer;
+				buffer.clear();
+			}
+		}
+		return result;
 	}
 
 	template<typename _T>
@@ -1841,6 +1879,7 @@ namespace std
 	{
 		return to_string(first) + Combine<std::string>(std::to_string(args)...);
 	}
+
 }
 
 template<typename T> constexpr bool enable_to_string =
