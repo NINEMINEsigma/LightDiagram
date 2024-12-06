@@ -136,7 +136,8 @@ _LF_C_API(Struct) void_ptr_t
 
 class any_class;
 template<typename T> class null_package;
-template<typename T> _LF_C_API(TDLL) null_package<T> make_null_package(any_class* ptr);
+_LF_C_API(TDLL) 
+template<typename T> null_package<T> make_null_package(any_class* ptr);
 
 _LF_C_API(OClass)
 type_class
@@ -145,7 +146,6 @@ public:
 	virtual const type_info& GetType() const abstract;
 	virtual std::string ToString() const abstract;
 	virtual std::string SymbolName() const abstract;
-	virtual any_class* GetClone() const abstract;
 };
 _LF_C_API(OClass)
 any_class : public type_class
@@ -228,10 +228,6 @@ public:
 	virtual std::string SymbolName() const
 	{
 		return GetType().name();
-	}
-	virtual any_class* GetClone() const
-	{
-		return nullptr;
 	}
 
 	template<typename T, typename Ret, typename C> any_class* IfIam(Ret(C::* foo)(T*), C* user)
