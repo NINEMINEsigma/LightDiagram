@@ -15,6 +15,7 @@ namespace ld
         tag* instance_ptr;
         void destruct_and_free_instance_ptr()
         {
+            is_instance_safe_env;
             if (instance_ptr == nullptr)
                 return;
             llama_sampler_free(instance_ptr);
@@ -184,6 +185,7 @@ namespace ld
         tag* instance_ptr;
         void destruct_and_free_instance_ptr()
         {
+            is_instance_safe_env;
             if (instance_ptr == nullptr)
                 return;
             llama_free(instance_ptr);
@@ -372,6 +374,7 @@ namespace ld
         tag* instance_ptr;
         void destruct_and_free_instance_ptr()
         {
+            is_instance_safe_env;
             if (instance_ptr == nullptr)
                 return;
             llama_free_model(instance_ptr);

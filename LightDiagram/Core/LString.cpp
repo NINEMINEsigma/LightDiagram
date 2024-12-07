@@ -34,8 +34,7 @@ namespace ld
 			map<ld_internal_string_impl_unit, instance<string_impl_data_source>> leafs;
 		};
 
-		//static 
-			instance<string_impl_data_source> impl_mapper(empty_indicator{});
+		static instance<string_impl_data_source> impl_mapper(empty_indicator{});
 
 		instance<ld_internal_string_impl> bulidup_lstring_memory(const void* start, const void* end, size_t unit_size, size_t length)
 		{

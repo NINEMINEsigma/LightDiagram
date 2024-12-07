@@ -19,6 +19,18 @@ if_func_exist_def(get_ref);
 
 namespace ld
 {
+	static std::atomic_bool instance_safe_locker;
+
+	static void init_lf_instance_env()
+	{
+		instance_safe_locker = true;
+	}
+	static void break_lf_instance_env()
+	{
+		instance_safe_locker = false;
+	}
+#define is_instance_safe_env if(instance_safe_locker==false)return
+
 #ifndef instance_size_tag
 		using size_tag = size_t;
 #else
@@ -249,11 +261,10 @@ namespace ld
 		tag* instance_ptr;
 		void destruct_and_free_instance_ptr()
 		{
+			is_instance_safe_env;
 			if (instance_ptr == nullptr)
 				return;
-			instance_ptr->~Tag();
-			free_instance_inside_ptr_handler(instance_ptr);
-			instance_ptr = nullptr;
+			__tool_destruct_and_free_instance_ptr(this->instance_ptr, free_instance_inside_ptr_handler);
 		}
 		//build up instance by outside-ptr
 		instance(tag* ptr) : instance_ptr(ptr), instance<void>() {}
@@ -3091,5 +3102,17 @@ decltype(auto) Unwrapped2Ptr(_Ty& from)
 		return addressof(from);
 #endif
 }
+
+class LDRAII_safelocker
+{
+public:
+	LDRAII_safelocker() { ld::init_lf_instance_env(); }
+	~LDRAII_safelocker() { ld::break_lf_instance_env(); }
+
+	operator bool() const
+	{
+		return ld::instance_safe_locker;
+	}
+};
 
 #endif // !__FILE_LF_RAII

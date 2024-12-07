@@ -250,13 +250,15 @@ namespace ld
 {
 	void instance<std::thread>::destruct_and_free_instance_ptr()
 	{
+		is_instance_safe_env;
 		if (instance_ptr == nullptr)
 			return;
 		if (instance_ptr->joinable() && is_need_join_when_destructor)
 			instance_ptr->join();
-		instance_ptr->~tag();
-		free_instance_inside_ptr_handler(instance_ptr);
-		instance_ptr = nullptr;
+		__tool_destruct_and_free_instance_ptr(this->instance_ptr, free_instance_inside_ptr_handler);
+		//instance_ptr->~tag();
+		//free_instance_inside_ptr_handler(instance_ptr);
+		//instance_ptr = nullptr;
 	}
 	instance<std::thread>::instance() :
 		instance_ptr(new(alloc_instance_inside_ptr_handler(sizeof(tag))) tag()),

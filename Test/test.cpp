@@ -46,7 +46,12 @@ void solve(ANSIO& anss)
 
 int main()
 {
-    LString str("123546");
-    cout << to_string(str);
-    LString str2("123546");
+    LDRAII_safelocker env;
+    if (env)
+    {
+        LString str("123546");
+        cout << to_string(str) << endl;
+        LString str2("123546");
+        cout << "end";
+    }
 }

@@ -1836,13 +1836,37 @@ namespace std
 		using result_type = std::basic_string<result_char_type>;
 		result_type result;
 		result.reserve(from.size() * sizeof(_Elem) / sizeof(result_char_type) + 1);
+		// source unit is smaller than target unit
+		// push muti source units on single traget unit
 		if constexpr (sizeof(_Elem) <= sizeof(result_char_type))
 		{
-			for (auto&& iter : from)
+			//for (auto&& iter : from)
+			//{
+			//	result.push_back(static_cast<result_char_type>(iter));
+			//}
+
+			constexpr size_t sidetime =
+				sizeof(result_char_type) / sizeof(_Elem) +
+				(sizeof(result_char_type) % sizeof(_Elem) == 0 ? 0 : 1);
+			for (auto head = from.cbegin(), tail = from.cend(); head != tail; head++)
 			{
-				result.push_back(static_cast<result_char_type>(iter));
+				result_char_type buffer[2] = { 0,0 };
+				auto offset = head;
+				for (size_t i = sidetime; i > 0 && offset != tail; i--)
+				{
+					offset++;
+				}
+				do
+				{
+					*(reinterpret_cast<_Elem*>(&buffer) + i) = *offset;
+				} while (offset-- != head);
+				if (buffer[0] != 0)
+					result += buffer[0];
+				result += buffer[1];
 			}
 		}
+		// source unit is bigger than target unit
+		// split source unit to muti target units
 		else
 		{
 			constexpr size_t sidetime =
@@ -1851,8 +1875,67 @@ namespace std
 			result_type buffer;
 			for (auto head = from.cbegin(), tail = from.cend(); head != tail;head++)
 			{
-				_Elem och[2] = { *head,0 };
-				for (auto i = 0; i < sidetime && head != tail; i++)
+				_Elem och[2] = { 0,*head };
+				for (size_t i = sidetime - 1; i >= 0 && head != tail; i--)
+				{
+					result_char_type ch = *(reinterpret_cast<result_char_type*>(&och) + i);
+					buffer.push_back(ch);
+				}
+				result += buffer;
+				buffer.clear();
+			}
+		}
+		return result;
+	}
+	// convert memory to string 
+	template<
+		typename result_char_type
+	>
+	std::basic_string<result_char_type> to_xstring(
+		const void* start,
+		const void* end,
+		size_t unit_size,
+		size_t length)
+	{
+		using result_type = std::basic_string<result_char_type>;
+		result_type result;
+		result.reserve(from.size() * unit_size / sizeof(result_char_type) + 1);
+		// source unit is smaller than target unit
+		// push muti source units on single traget unit
+		if constexpr (unit_size <= sizeof(result_char_type))
+		{
+			//for (auto&& iter : from)
+			//{
+			//	result.push_back(static_cast<result_char_type>(iter));
+			//}
+
+			constexpr size_t sidetime =
+				sizeof(result_char_type) / unit_size +
+				(sizeof(result_char_type) % unit_size == 0 ? 0 : 1);
+			for (auto head = start, tail = end; head < tail;)
+			{
+				result_char_type buffer[2] = { 0,0 };
+				auto offset = reinterpret_cast<void*>(reinterpret_cast<size_t>(head) + unit_size);
+				
+				if (buffer[0] != 0)
+					result += buffer[0];
+				result += buffer[1];
+				// next step
+				head = offset;
+			}
+		}
+		// source unit is bigger than target unit
+		// split source unit to muti target units
+		else
+		{
+			constexpr size_t sidetime =
+				unit_size / sizeof(result_char_type) +
+				(unit_size % sizeof(result_char_type) == 0 ? 0 : 1);
+			result_type buffer;
+			for (auto head = from.cbegin(), tail = from.cend(); head != tail; head++)
+			{
+				_Elem och[2] = { 0,*head };
+				for (size_t i = sidetime - 1; i >= 0 && head != tail; i--)
 				{
 					result_char_type ch = *(reinterpret_cast<result_char_type*>(&och) + i);
 					buffer.push_back(ch);
@@ -2110,5 +2193,19 @@ public:
 #define bit_detect(value,pos)		(bit_opt_and(value,(1<<pos)))
 
 #pragma endregion
+
+#pragma region Internal Kit
+
+template<typename Tag,typename _Handler>
+void __tool_destruct_and_free_instance_ptr(Tag*& instance_ptr, _Handler&& handler)
+{
+	instance_ptr->~Tag();
+	handler(instance_ptr);
+	instance_ptr = nullptr;
+}
+#define quit_func_if_ptr_is_nullptr(ptr) if(ptr==nullptr)return
+
+#pragma endregion
+
 
 #endif // !__FILE_LF_CONFIG
